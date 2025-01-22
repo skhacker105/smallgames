@@ -1,0 +1,16 @@
+<div class="game">
+    <h1>Snake Game</h1>
+    <div class="score">Score: {{ score }}</div>
+    <div class="grid">
+        <div *ngFor="let cell of [].constructor(gridSize * gridSize); let i = index" [ngClass]="{
+            'snake': isSnakeCell(i),
+            'food': isfoodCell(i)
+        }"></div>
+    </div>
+    <div class="controls">
+        <button (click)="changeDirection('UP')">Up</button>
+        <button (click)="changeDirection('LEFT')">Left</button>
+        <button (click)="changeDirection('DOWN')">Down</button>
+        <button (click)="changeDirection('RIGHT')">Right</button>
+    </div>
+</div>

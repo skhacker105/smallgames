@@ -1,0 +1,17 @@
+.game-icon-container {
+    padding: 10px;
+    border: solid 1px white;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+
+    &.disabled {
+        opacity: 0.5;
+        color: gray;
+    }
+
+    :hover {
+        background-color: #efefef;
+        color: black;
+    }
+}

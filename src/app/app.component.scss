@@ -1,0 +1,34 @@
+.container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-image: url('../assets/bodybg.jpg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+
+    .header {
+        opacity: 0.8;
+        max-height: 50px;
+        background-image: url('../assets/headerbg.jpg');
+        background-position: left;
+        border-bottom: solid 1px #396193;
+        padding: 10px;
+        color: white;
+
+        display: flex;
+
+        .title,
+        .action,
+        .spacer {
+            margin: auto;
+        }
+
+        .title {
+            font-size: x-large;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+        }
+    }
+}

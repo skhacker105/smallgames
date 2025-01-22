@@ -1,0 +1,11 @@
+.home-container {
+    display: flex;
+    flex-wrap: wrap;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 10px;
+
+    ::ng-deep app-game-dashboard-icon {
+        margin: auto;
+    }
+}

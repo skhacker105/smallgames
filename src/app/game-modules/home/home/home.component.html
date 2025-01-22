@@ -1,0 +1,6 @@
+<div class="home-container">
+    <ng-container *ngFor="let gameInfo of gameDashboardService.games">
+        <app-game-dashboard-icon [gameInfo]="gameInfo" (iconClicked)="handleGameIconClick(gameInfo)">
+        </app-game-dashboard-icon>
+    </ng-container>
+</div>

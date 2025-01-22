@@ -1,0 +1,41 @@
+.game {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.score {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(20, 20px);
+    grid-gap: 1px;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.grid div {
+    width: 20px;
+    height: 20px;
+    background-color: #eee;
+}
+
+.grid .snake {
+    background-color: green;
+}
+
+.grid .food {
+    background-color: red;
+}
+
+.controls {
+    margin-top: 10px;
+}
+
+button {
+    margin: 5px;
+    padding: 10px;
+    font-size: 1em;
+}

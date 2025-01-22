@@ -1,0 +1,38 @@
+.game {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.winner {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+    color: green;
+}
+
+button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 1em;
+}
+
+table {
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+
+td {
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    font-size: 1.5em;
+    border: 1px solid #000;
+}
+
+.cell {
+    cursor: pointer;
+}
+
+.cell-filled {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+}
