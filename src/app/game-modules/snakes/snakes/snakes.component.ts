@@ -15,7 +15,7 @@ interface SnakeGameState {
   styleUrl: './snakes.component.scss'
 })
 export class SnakesComponent extends BaseComponent {
-  gridSize = 20;
+  gridSize = Math.floor(screen.width / 20);
   intervalId: any;
 
   snake: { x: number; y: number }[] = [{ x: 10, y: 10 }];

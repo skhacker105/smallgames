@@ -1,0 +1,28 @@
+<div class="sudoku-container">
+
+  <div class="difficulti-level">
+    <label for="level">Choose Difficulty:</label>
+    <select id="level" [(ngModel)]="level" (change)="onLevelChange(level)">
+      <option *ngFor="let lvl of levels" [value]="lvl">{{ lvl }}</option>
+    </select>
+  </div>
+
+  <div class="sudoku-board-container">
+    <div class="sudoku-board">
+      <div *ngFor="let row of board; let i = index" class="sudoku-row">
+        <div *ngFor="let cell of row; let j = index" class="sudoku-cell" [ngClass]="getCellCLass(i, j)">
+          <input type="number" min="1" [attr.max]="size" [(ngModel)]="board[i][j]"
+            [readonly]="isPrefilled(i, j)"
+            (focus)="onFocus($event)"
+            (keyup)="handleInputChange(i, j, $event)" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="buttons">
+    <button (click)="resetGame(); generateNewGame()">New Game</button>
+    <button (click)="resetGame()" *ngIf="!winner">Reset</button>
+    <button *ngIf="winner">Winner</button>
+  </div>
+</div>
