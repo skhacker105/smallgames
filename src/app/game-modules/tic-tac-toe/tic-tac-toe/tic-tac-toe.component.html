@@ -1,5 +1,4 @@
 <div class="game">
-    <h1>Tic Tac Toe</h1>
     <div *ngIf="winner" class="winner">Winner: {{ winner }}</div>
     <table>
       <tr *ngFor="let row of board; let rowIndex = index">

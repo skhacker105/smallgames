@@ -3,17 +3,16 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    background-image: url('../assets/bodybg.jpg');
+    background-image: url('../assets/bodybg.png');
     background-repeat: no-repeat;
     background-position: center;
-    background-size: cover;
+    background-size: 100% 100%;
 
     .header {
         opacity: 0.8;
         max-height: 50px;
-        background-image: url('../assets/headerbg.jpg');
         background-position: left;
-        border-bottom: solid 1px #396193;
+        border-bottom: solid 1px #6a70a0;
         padding: 10px;
         color: white;
 

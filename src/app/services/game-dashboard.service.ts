@@ -12,35 +12,35 @@ export class GameDashboardService {
     {
       key: 'tictactoe',
       name: 'Tic Tac Toe',
-      image: '',
+      image: 'assets/tictactoe_icon.png',
       route: 'tictactoe',
       settingsIconNeeded: false
     },
     {
       key: 'snakes',
       name: 'Snakes',
-      image: '',
+      image: 'assets/snakes_icon.png',
       route: 'snakes',
       settingsIconNeeded: true
     },
     {
       key: 'sudoku',
       name: 'Sudoku',
-      image: '',
+      image: 'assets/sudoku_icon.png',
       route: 'sudoku',
       settingsIconNeeded: true
     },
     {
       key: 'snakeNLadder',
-      name: 'Snake And Ladder',
-      image: '',
+      name: 'Snake N Ladder',
+      image: 'assets/snakenladder_icon.png',
       route: 'snakeNLadder',
       settingsIconNeeded: true
     },
     {
       key: 'ludo',
       name: 'Ludo',
-      image: '',
+      image: 'assets/ludo_icon.png',
       route: 'ludo',
       settingsIconNeeded: true
     }

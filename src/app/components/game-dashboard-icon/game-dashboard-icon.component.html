@@ -1,6 +1,10 @@
-<div class="game-icon-container" *ngIf="gameInfo" (click)="iconClicked.emit()"
-[ngClass]="{
+<div class="game-icon-container" *ngIf="gameInfo" (click)="iconClicked.emit()" [ngClass]="{
     'disabled': !gameInfo.route
 }">
-    {{ gameInfo.name }}
+    <ng-container *ngIf="gameInfo.image">
+        <img [attr.src]="gameInfo.image" class="icon-image">
+    </ng-container>
+    <div class="game-name">
+        {{ gameInfo.name }}
+    </div>
 </div>

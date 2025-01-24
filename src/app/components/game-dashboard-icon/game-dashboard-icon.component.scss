@@ -2,8 +2,19 @@
     padding: 10px;
     border: solid 1px white;
     border-radius: 10px;
-    color: white;
+    background-color: white;
     cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    width: 85px;
+    height: 70px;
+    border-style: none;
+    box-shadow: #21436e 0 -18px 25px inset;
+    color: #000000;
+    font-family: -apple-system, sans-serif;
+    font-weight: bold;
+    text-align: center;
+    
 
     &.disabled {
         opacity: 0.5;
@@ -13,5 +24,15 @@
     :hover {
         background-color: #efefef;
         color: black;
+    }
+
+    .icon-image {
+        width: 20px;
+        margin: auto;
+        padding-bottom: 5px;
+    }
+
+    .game-name {
+        margin: auto;
     }
 }
