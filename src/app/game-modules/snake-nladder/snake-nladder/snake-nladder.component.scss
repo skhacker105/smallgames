@@ -1,0 +1,133 @@
+.game-container {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    height: calc(100% - 40px);
+}
+
+.player-info {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.player-info .active {
+    font-weight: bold;
+    color: green;
+}
+
+.board {
+    display: flex;
+    flex-direction: column-reverse;
+    margin: 20px auto;
+    width: 100%;
+    height: 500px;
+    border: 2px solid #333;
+    position: relative;
+    overflow: hidden;
+    background-repeat: no-repeat;
+    background-size: contain;
+
+    .row {
+        display: flex;
+        flex: 1 auto;
+    }
+
+    .reverse-row {
+        display: flex;
+        flex-direction: row-reverse; /* Reverses the order of cells in odd rows */
+    }
+}
+
+.cell {
+    border: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8em;
+    text-align: center;
+    flex: 1 auto;
+    position: relative;
+}
+
+
+.cell-number {
+    top: 2px;
+    left: 2px;
+    font-size: 0.7em;
+    color: #555;
+}
+
+@keyframes blinkBackground {
+    0% {
+        background-color: #ff0000;
+        color: #ffffff;
+    } /* Red background, white text */
+    50% {
+        background-color: #0000ff;
+        color: #ffffff;
+    } /* Blue background, white text */
+    100% {
+        background-color: #ff0000;
+        color: #ffffff;
+    }; /* Back to red background */
+}
+
+.player {
+    animation: blinkBackground 1.5s infinite;
+    position: absolute;
+    z-index: 2;
+    background: #ffeb3b;
+    padding: 2px 4px;
+    border-radius: 3px;
+    border: 1px solid #333;
+    font-size: 0.7em;
+    width: fit-content;
+    height: fit-content;
+    // white-space: nowrap;
+    left: 0;
+    top: 30%;
+    opacity: 0.8;
+    font-weight: bold;
+
+    // Hover
+    &:hover {
+        animation: none;
+        background: black;
+        opacity: 1;
+        color: white;
+        width: 100%;
+        height: 40%;
+        z-index: 1000;
+    }
+}
+
+.controls {
+    margin-top: 20px;
+}
+
+.controls button {
+    padding: 10px 20px;
+    font-size: 1em;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.controls button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.dice {
+    margin-top: 10px;
+    font-size: 1.2em;
+}
+
+.winner {
+    margin-top: 20px;
+    font-size: 1.5em;
+    color: purple;
+    font-weight: bold;
+}

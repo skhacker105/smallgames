@@ -1,1 +1,32 @@
-<p>snake-nladder works!</p>
+<div class="game-container" *ngIf="selectedBoard">
+
+    <div class="board" [style.background]="'url('+ selectedBoard.background +')'" [style.backgroundSize]="'100% 100%'"
+        [style.backgroundRepeat]="'no-repeat'">
+        <div *ngFor="let row of arrNumbers;" class="row" [ngClass]="{'reverse-row': isRowLeftToRight(row) }">
+
+            <!-- Render board cells -->
+            <div *ngFor="let col of arrNumbers" class="cell">
+                <!-- <span class="cell-number">{{ (row - 1) * 10 + col }}</span> -->
+
+                <!-- Render players -->
+                <ng-container *ngFor="let player of players; let pi = index">
+                    <div *ngIf="playerPositions[pi] === ((row - 1) * 10 + col)" class="player"
+                        [style.top]="'calc(30% - '+(pi*3)+'px)'" [style.left]="(pi*3)+'px'">
+                        {{ player | shortName }}
+                    </div>
+                </ng-container>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button (click)="rollDice()" [disabled]="rolling || winner">
+            Roll Dice
+        </button>
+        <div class="dice" *ngIf="diceRoll > 0">Dice: {{ diceRoll }}</div>
+    </div>
+
+    <div *ngIf="winner" class="winner">
+        🎉 {{ winner }} wins the game! 🎉
+    </div>
+</div>
