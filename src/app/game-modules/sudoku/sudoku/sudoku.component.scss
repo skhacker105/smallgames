@@ -4,13 +4,49 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    background: linear-gradient(145deg, #0f172a, #1e293b);
+    color: #e0e0e0; /* Light text */
 
     .difficulti-level {
         padding: 10px;
+        font-size: 1.5em;
+        margin-bottom: 10px;
+        font-weight: bold;
+        color: #ff9800; /* Warm amber accent */
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
 
-        .level {
-            margin: auto;
+        #level {
+            margin-left: 10px;
+            padding: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            color: #ffffff; /* Light text color */
+            background-color: #424242; /* Dark dropdown background */
+            border: 2px solid #ff9800; /* Amber border */
+            border-radius: 5px;
+            outline: none;
+            appearance: none; /* Removes default browser styling */
+            transition: all 0.3s ease;
+
+            &:hover {
+                background-color: #ff9800; /* Amber hover background */
+                color: #000000; /* Dark text */
+                cursor: pointer;
+            }
+
+            &:focus {
+                box-shadow: 0 0 5px 2px #ff9800; /* Glow effect on focus */
+            }
+
+            &::after {
+                content: '▼';
+                position: absolute;
+                right: 10px;
+                color: #ffffff;
+                pointer-events: none;
+            }
         }
+
     }
 
     .sudoku-board-container {
@@ -22,45 +58,53 @@
             display: flex;
             width: 80%;
             flex-direction: column;
-            background-color: white;
+            background-color: #1e1e1e; /* Slightly lighter dark background */
+            border: 2px solid #424242; /* Subtle border */
+            border-radius: 10px;
 
             .sudoku-row {
                 display: flex;
 
                 .sudoku-cell {
                     width: 11.11111%;
+                    border: 1px solid #424242; /* Soft border for grid cells */
 
                     input {
                         font-size: 20px;
                         width: 100%;
-                        height: 20px;
+                        height: 40px; /* Increased height for better visibility */
                         text-align: center;
                         border: 0;
                         background-color: transparent;
+                        color: #e0e0e0; /* Light text color */
+                        outline: none;
                     }
 
                     &.winner {
-                      background-color: #00b200;
+                        background-color: #388e3c; /* Green for winners */
+                        box-shadow: 0 0 10px 2px #4caf50; /* Subtle glow effect */
 
-                      input {
-                        color: yellow;
-                      }
+                        input {
+                            color: #fff; /* Bright text */
+                        }
                     }
 
                     &.prefilled {
-                      background-color: #636363;
+                        background-color: #424242; /* Dark gray for prefilled cells */
 
-                      input {
-                        color: #b5b5b5;
-                      }
+                        input {
+                            color: #bdbdbd; /* Lighter gray text */
+                        }
                     }
 
                     &.user-fill {
-                      background-color: #99cbf9;
+                        background-color: #1976d2; /* Deep blue */
+                        box-shadow: inset 0 0 5px 1px #90caf9; /* Soft inner glow */
                     }
 
                     &.duplicate {
-                      background-color: red;
+                        background-color: #d32f2f; /* Deep red for duplicates */
+                        color: #ffffff; /* Bright text for contrast */
                     }
                 }
             }
@@ -74,104 +118,106 @@
 
         button {
             margin: auto;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: #424242; /* Dark button background */
+            transition: all 0.3s ease;
+
+            &:hover {
+                background-color: #ff9800; /* Amber on hover */
+                color: #000; /* #fff text */
+                box-shadow: 0 0 10px 2px #ff9800; /* Glow effect */
+            }
         }
     }
 }
 
 
 .lt {
-    // border-left-width: 2px !important;
-    // border-top-width: 2px !important;
-    // border-right-width: 1px !important;
-    // border-bottom-width: 1px !important;
+    border-left-color: #fff !important;
+    border-top-color: #fff !important;
+    border-right-color: #606060 !important;
+    border-bottom-color: #606060 !important;
 
-    border-left-color: black !important;
-    border-top-color: black !important;
-    border-right-color: #aaaaaa !important;
-    border-bottom-color: #aaaaaa !important;
-
-    border: solid 1px;
+    // border: solid 1px;
 }
 .top {
     // border-top-width: 2px !important;
 
-    border-left-color: #aaaaaa !important;
-    border-top-color: black !important;
-    border-right-color: #aaaaaa !important;
-    border-bottom-color: #aaaaaa !important;
+    border-left-color: #606060 !important;
+    border-top-color: #fff !important;
+    border-right-color: #606060 !important;
+    border-bottom-color: #606060 !important;
 
-    border: solid 1px;
+    // border: solid 1px;
 }
 .rt {
-    // border-right-width: 2px !important;
-    // border-top-width: 2px !important;
+    border-left-color: #606060 !important;
+    border-top-color: #fff !important;
+    border-right-color: #fff !important;
+    border-bottom-color: #606060 !important;
 
-    border-left-color: #aaaaaa !important;
-    border-top-color: black !important;
-    border-right-color: black !important;
-    border-bottom-color: #aaaaaa !important;
-
-    border: solid 1px;
+    // border: solid 1px;
 }
 
 .left {
-    // border-left-width: 2px !important;
-
-    border-left-color: black !important;
-    border-top-color: #aaaaaa !important;
-    border-right-color: #aaaaaa !important;
-    border-bottom-color: #aaaaaa !important;
+    border-left-color: #fff !important;
+    border-top-color: #606060 !important;
+    border-right-color: #606060 !important;
+    border-bottom-color: #606060 !important;
 
     border: solid 1px;
 }
 
 .right {
-    // border-right-width: 2px !important;
+    border-left-color: #606060 !important;
+    border-top-color: #606060 !important;
+    border-right-color: #fff !important;
+    border-bottom-color: #606060 !important;
 
-    border-left-color: #aaaaaa !important;
-    border-top-color: #aaaaaa !important;
-    border-right-color: black !important;
-    border-bottom-color: #aaaaaa !important;
-
-    border: solid 1px;
+    // border: solid 1px;
 }
 .center {
-    border-left-color: #aaaaaa !important;
-    border-top-color: #aaaaaa !important;
-    border-right-color: #aaaaaa !important;
-    border-bottom-color: #aaaaaa !important;
+    border-left-color: #606060 !important;
+    border-top-color: #606060 !important;
+    border-right-color: #606060 !important;
+    border-bottom-color: #606060 !important;
 
-    border: solid 1px;
+    // border: solid 1px;
 }
 .bl {
     // border-left-width: 2px !important;
     // border-bottom-width: 2px !important;
 
-    border-left-color: black !important;
-    border-top-color: #aaaaaa !important;
-    border-right-color: #aaaaaa !important;
-    border-bottom-color: black !important;
+    border-left-color: #fff !important;
+    border-top-color: #606060 !important;
+    border-right-color: #606060 !important;
+    border-bottom-color: #fff !important;
 
-    border: solid 1px;
+    // border: solid 1px;
 }
 .bottom {
     // border-bottom-width: 2px !important;
 
-    border-left-color: #aaaaaa !important;
-    border-top-color: #aaaaaa !important;
-    border-right-color: #aaaaaa !important;
-    border-bottom-color: black !important;
+    border-left-color: #606060 !important;
+    border-top-color: #606060 !important;
+    border-right-color: #606060 !important;
+    border-bottom-color: #fff !important;
 
-    border: solid 1px;
+    // border: solid 1px;
 }
 .br {
     // border-right-width: 2px !important;
     // border-bottom-width: 2px !important;
 
-    border-left-color: #aaaaaa !important;
-    border-top-color: #aaaaaa !important;
-    border-right-color: black !important;
-    border-bottom-color: black !important;
+    border-left-color: #606060 !important;
+    border-top-color: #606060 !important;
+    border-right-color: #fff !important;
+    border-bottom-color: #fff !important;
 
-    border: solid 1px;
+    // border: solid 1px;
 }

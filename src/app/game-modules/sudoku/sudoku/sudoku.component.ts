@@ -28,19 +28,21 @@ export class SudokuComponent extends BaseComponent {
 
   override ngOnInit(): void {
     super.ngOnInit();
-    this.generateNewGame();
+    this.loadGameState();
   }
 
   loadGameState(): void {
     const savedState = this.gameDashboardService.loadGameState();
     if (savedState) {
-      const { board, solution, level, size, prefilledCells } = savedState;
+      const { board, solution, level, size, prefilledCells, winner } = savedState;
       this.board = board;
       this.solution = solution;
       this.level = level;
       this.size = size;
       this.prefilledCells = prefilledCells;
-    }
+      this.winner = winner;
+    } else
+      this.generateNewGame();
   }
 
   saveGameState(): void {
@@ -49,7 +51,8 @@ export class SudokuComponent extends BaseComponent {
       solution: this.solution,
       level: this.level,
       size: this.size,
-      prefilledCells: this.prefilledCells
+      prefilledCells: this.prefilledCells,
+      winner: this.winner
     };
     this.gameDashboardService.saveGameState(state);
   }
@@ -61,7 +64,8 @@ export class SudokuComponent extends BaseComponent {
         if (this.isPrefilled(i, j)) this.board[i][j] = this.solution[i][j];
         else this.board[i][j] = 0;
       })
-    })
+    });
+    this.saveGameState();
   }
 
   generateNewGame(): void {
@@ -72,8 +76,8 @@ export class SudokuComponent extends BaseComponent {
 
   onLevelChange(newLevel: number): void {
     this.level = newLevel;
-    // this.size = newLevel > 5 ? 16 : 9; // Adjust size for complexity
     this.resetGame();
+    this.generateNewGame();
   }
 
   createSudoku(level: number): { puzzle: number[][]; solution: number[][] } {
@@ -102,7 +106,7 @@ export class SudokuComponent extends BaseComponent {
     // Adjust initial filled cells based on difficulty level
     const cellsToFill = Math.max(20, 81 - level * 8); // Number of cells to prefill
     this.prefilledCells = [];
-    const levelLimit = level >= 1 && level <= 4 ? 0.8 : level > 7 && level <= 8 ? 0.6 : 0.5
+    const levelLimit = level >= 1 && level <= 4 ? 0.8 : level > 7 && level <= 8 ? 0.5 : 0.3
     puzzle.forEach((row, i) => {
       row.forEach((_, j) => {
         if (Math.random() < levelLimit) {
@@ -206,8 +210,9 @@ export class SudokuComponent extends BaseComponent {
     if (!num || +num < 0 || +num > 9)
       this.board[i][j] = 0;
     else
-      this.board[i][j] = num;
+      this.board[i][j] = +num;
     if (this.checkWinner()) this.winner = true;
+    this.saveGameState();
   }
 
   onFocus(event: FocusEvent): void {

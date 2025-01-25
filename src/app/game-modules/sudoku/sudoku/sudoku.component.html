@@ -1,5 +1,7 @@
 <div class="sudoku-container">
 
+  <div class="spacer"></div>
+
   <div class="difficulti-level">
     <label for="level">Choose Difficulty:</label>
     <select id="level" [(ngModel)]="level" (change)="onLevelChange(level)">
@@ -14,7 +16,7 @@
           <input type="number" min="1" [attr.max]="size" [(ngModel)]="board[i][j]"
             [readonly]="isPrefilled(i, j)"
             (focus)="onFocus($event)"
-            (keyup)="handleInputChange(i, j, $event)" />
+            (change)="handleInputChange(i, j, $event)" />
         </div>
       </div>
     </div>
@@ -25,4 +27,6 @@
     <button (click)="resetGame()" *ngIf="!winner">Reset</button>
     <button *ngIf="winner">Winner</button>
   </div>
+  
+  <div class="spacer"></div>
 </div>
