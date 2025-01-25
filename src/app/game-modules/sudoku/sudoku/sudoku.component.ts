@@ -136,7 +136,7 @@ export class SudokuComponent extends BaseComponent {
 
     return true;
   }
-  override checkWinner(): boolean {
+  checkWinner(): boolean {
     return this.solution.join(',') === this.board.join(',');
   }
 

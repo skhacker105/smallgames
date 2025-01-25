@@ -1,13 +1,23 @@
 <div class="game">
-    <div *ngIf="winner" class="winner">Winner: {{ winner }}</div>
-    <table>
-      <tr *ngFor="let row of board; let rowIndex = index">
-        <td *ngFor="let cell of row; let colIndex = index"
-            (click)="makeMove(rowIndex, colIndex)"
-            [class]="{'cell': true, 'cell-filled': cell}">
-          {{ cell }}
-        </td>
-      </tr>
-    </table>
-    <button (click)="resetGame()">Reset Game</button>
-  </div>
+  <div class="spacer"></div>
+  <div *ngIf="winnerResult" class="winner">Winner: {{ winnerResult.winner }}</div>
+  <table>
+    <tr *ngFor="let row of board; let rowIndex = index">
+      <td *ngFor="let cell of row; let colIndex = index" (click)="makeMove(rowIndex, colIndex)" [class]="{
+          'cell': true,
+          'cell-filled': cell,
+          'x-cell': cell === 'X',
+          'o-cell': cell === 'O',
+          'winner-cell': isWinnerCell(rowIndex, colIndex, cell),
+          'horizontal': winnerResult?.cut === 'horizontal',
+          'vertical': winnerResult?.cut === 'vertical',
+          'diagonal-left': winnerResult?.cut === 'diagonal_left',
+          'diagonal-right': winnerResult?.cut === 'diagonal_right'
+          }">
+        {{ cell }}
+      </td>
+    </tr>
+  </table>
+  <button (click)="resetGame()">Reset Game</button>
+  <div class="spacer"></div>
+</div>
