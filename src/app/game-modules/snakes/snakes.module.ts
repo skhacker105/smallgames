@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 
 import { SnakesRoutingModule } from './snakes-routing.module';
 import { SnakesComponent } from './snakes/snakes.component';
+import { SwipeDirectionDirective } from '../../directives/swipe-direction.directive';
+import { MatDialogModule } from '@angular/material/dialog';
 
 
 @NgModule({
@@ -11,7 +13,9 @@ import { SnakesComponent } from './snakes/snakes.component';
   ],
   imports: [
     CommonModule,
-    SnakesRoutingModule
+    SnakesRoutingModule,
+    SwipeDirectionDirective,
+    MatDialogModule
   ]
 })
 export class SnakesModule { }

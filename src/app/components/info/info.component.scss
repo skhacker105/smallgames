@@ -1,0 +1,47 @@
+.popup-container {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(145deg, #1e293b, #0f172a); /* Matches page background */
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+  }
+  
+  mat-dialog-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #f3f4f6; /* Light text for contrast */
+  }
+  
+  mat-dialog-content p {
+    font-size: 1.2em;
+    color: #cbd5e1; /* Softer light color for readability */
+    margin-top: 10px;
+  }
+  
+  mat-dialog-actions {
+    margin-top: 20px;
+  }
+  
+  button {
+    font-size: 1em;
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #3b82f6, #1e40af); /* Vibrant blue button */
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  button:hover {
+    background: linear-gradient(145deg, #1e40af, #3b82f6);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6);
+  }
+  
+  button:active {
+    background: #1e3a8a; /* Slightly darker blue for pressed state */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+  

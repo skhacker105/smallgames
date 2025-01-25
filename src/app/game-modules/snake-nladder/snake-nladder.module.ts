@@ -8,12 +8,12 @@ import { ShortNamePipe } from '../../pipe/short-name.pipe';
 
 @NgModule({
   declarations: [
-    SnakeNLadderComponent,
-    ShortNamePipe
+    SnakeNLadderComponent
   ],
   imports: [
     CommonModule,
-    SnakeNLadderRoutingModule
+    SnakeNLadderRoutingModule,
+    ShortNamePipe
   ]
 })
 export class SnakeNLadderModule { }

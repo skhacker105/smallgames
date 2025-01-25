@@ -1,16 +1,22 @@
-<div class="game">
-    <h1>Snake Game</h1>
+<div class="game" appSwipeDirection (swipe)="changeDirection($event)">
     <div class="score">Score: {{ score }}</div>
-    <div class="grid">
+    <div class="grid" [style.gridTemplateColumns]="gridTemplateColumns">
         <div *ngFor="let cell of [].constructor(gridSize * gridSize); let i = index" [ngClass]="{
             'snake': isSnakeCell(i),
-            'food': isfoodCell(i)
+            'food': isfoodCell(i),
+            'snake-head': isSnakeHead(i)
         }"></div>
     </div>
     <div class="controls">
-        <button (click)="changeDirection('UP')">Up</button>
-        <button (click)="changeDirection('LEFT')">Left</button>
-        <button (click)="changeDirection('DOWN')">Down</button>
-        <button (click)="changeDirection('RIGHT')">Right</button>
+
+        <ng-container *ngIf="!intervalId">
+            <button (click)="startGame()">Start Game</button>
+        </ng-container>
+
+        <ng-container *ngIf="intervalId">
+            <button (click)="stopGame()">Stop Game</button>
+        </ng-container>
+        
+        <button (click)="resetGame()">Reset Game</button>
     </div>
 </div>

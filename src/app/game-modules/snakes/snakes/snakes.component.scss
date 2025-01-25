@@ -1,41 +1,82 @@
+/* Enhanced CSS for Snake Game */
 .game {
     text-align: center;
     margin-top: 20px;
+    color: #f3f4f6;
+    font-family: 'Arial', sans-serif;
 }
 
 .score {
-    font-size: 1.2em;
+    font-size: 1.5em;
     margin-bottom: 10px;
+    font-weight: bold;
+    color: #ffcc00;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
 }
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(20, 20px);
-    grid-gap: 1px;
+    grid-template-columns: repeat(18, 5%);
+    grid-gap: 2px;
     justify-content: center;
     margin: 0 auto;
+    background: linear-gradient(145deg, #0f172a, #1e293b);
+    border: 5px solid #64748b;
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
 }
 
 .grid div {
     width: 20px;
     height: 20px;
-    background-color: #eee;
+    // background-color: #475569;
+    border-radius: 4px;
+    transition: background-color 0.2s ease-in-out;
 }
 
 .grid .snake {
-    background-color: green;
+    background: linear-gradient(145deg, #10b981, #065f46);
+    box-shadow: 0 0 10px 4px rgba(16, 185, 129, 0.8);
+    border-radius: 4px;
 }
 
+.grid .snake-head {
+    background: linear-gradient(145deg, #fbbf24, #f59e0b); /* Gold tones for a premium look */
+    box-shadow: 0 0 20px 8px rgba(251, 191, 36, 0.9); /* Enhanced glow for luxury effect */
+    border-radius: 50%;
+}
+
+
 .grid .food {
-    background-color: red;
+    background: radial-gradient(circle, #f87171, #991b1b);
+    box-shadow: 0 0 12px 5px rgba(248, 113, 113, 0.8);
+    border-radius: 50%;
 }
 
 .controls {
-    margin-top: 10px;
+    margin-top: 15px;
 }
 
 button {
     margin: 5px;
-    padding: 10px;
+    padding: 10px 15px;
     font-size: 1em;
+    color: #ffffff;
+    background: linear-gradient(145deg, #9333ea, #6b21a8);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+button:hover {
+    background: linear-gradient(145deg, #6b21a8, #9333ea);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+button:active {
+    background: #4c1d95;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
