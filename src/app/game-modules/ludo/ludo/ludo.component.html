@@ -1,49 +1,86 @@
 <div class="ludo-game">
-  
+
     <!-- Winner Announcement -->
     <div *ngIf="winner" class="winner">
-      <h2>{{ winner }} Wins!</h2>
-      <button (click)="resetGame()">Play Again</button>
+        <h2>{{ winner }} Wins!</h2>
+        <button (click)="resetGame()">Play Again</button>
     </div>
-  
+
     <!-- Game Board -->
     <div class="board-container" *ngIf="!winner">
-      <div class="board">
-        <!-- Base Areas -->
-        <div class="base-area red">
-          <div class="coin" *ngFor="let coin of players[0]?.ludoCoins; let i = index" [style.background]="players[0]?.color">
-          </div>
+        <div class="board">
+            <!-- Base Areas -->
+            <div class="base-area red">
+                <ng-container *ngFor="let coin of players[0]?.ludoCoins; let i = index">
+                    <div class="coin-container">
+                        <div class="coin" [style.background]="players[0]?.color"
+                            [style.borderColor]="players[0]?.color">
+                        </div>
+                    </div>
+                </ng-container>
+            </div>
+            <div class="base-area green">
+                <ng-container *ngFor="let coin of players[1]?.ludoCoins; let i = index">
+                    <div class="coin-container">
+                        <div class="coin" [style.background]="players[1]?.color"
+                            [style.borderColor]="players[1]?.color">
+                        </div>
+                    </div>
+                </ng-container>
+            </div>
+            <div class="base-area yellow">
+                <ng-container *ngFor="let coin of players[2]?.ludoCoins; let i = index">
+                    <div class="coin-container">
+                        <div class="coin" [style.background]="players[2]?.color"
+                            [style.borderColor]="players[2]?.color">
+                        </div>
+                    </div>
+                </ng-container>
+            </div>
+            <div class="base-area blue">
+                <ng-container *ngFor="let coin of players[3]?.ludoCoins; let i = index">
+                    <div class="coin-container">
+                        <div class="coin" [style.background]="players[3]?.color"
+                            [style.borderColor]="players[3]?.color">
+                        </div>
+                    </div>
+                </ng-container>
+            </div>
+
+            <!-- Center and Paths -->
+            <div class="center">
+                <div class="square red"></div>
+                <div class="square green"></div>
+                <div class="square yellow"></div>
+                <div class="square blue"></div>
+            </div>
+
+            <!-- Path Cells -->
+            <ng-container *ngFor="let path of paths">
+                <div class="path" [style.left]="getPathPosition(path.cellNumber - 1, 'col')"
+                    [style.top]="getPathPosition(path.cellNumber - 1, 'row')" [ngClass]="{
+                        'is-safe': path.isSafe
+                    }" [style.backgroundColor]="path.safeColor">
+                </div>
+
+                <ng-container *ngIf="path.finishPath">
+                    <ng-container *ngFor="let fPath of path.finishPath">
+                        <div class="path" [style.backgroundColor]="fPath.allowedColor"
+                            [style.left]="getPathPosition(fPath.cellNumber - 1, 'col')"
+                            [style.top]="getPathPosition(fPath.cellNumber - 1, 'row')">
+                        </div>
+                    </ng-container>
+                </ng-container>
+            </ng-container>
         </div>
-        <div class="base-area green">
-          <div class="coin" *ngFor="let coin of players[1]?.ludoCoins; let i = index" [style.background]="players[1]?.color">
-          </div>
-        </div>
-        <div class="base-area yellow">
-          <div class="coin" *ngFor="let coin of players[2]?.ludoCoins; let i = index" [style.background]="players[2]?.color">
-          </div>
-        </div>
-        <div class="base-area blue">
-          <div class="coin" *ngFor="let coin of players[3]?.ludoCoins; let i = index" [style.background]="players[3]?.color">
-          </div>
-        </div>
-  
-        <!-- Center and Paths -->
-        <div class="center">
-          <div class="triangle red"></div>
-          <div class="triangle green"></div>
-          <div class="triangle yellow"></div>
-          <div class="triangle blue"></div>
-        </div>
-      </div>
     </div>
-  
+
     <!-- Dice and Controls -->
     <div class="controls">
-      <button (click)="rollDice()">Roll Dice</button>
-      <div class="dice">
-        <span>{{ lastDiceRoll }}</span>
-      </div>
-      <button (click)="resetGame()">Reset Game</button>
+        <button (click)="rollDice()">Roll Dice</button>
+        <div class="dice">
+            <span>{{ lastDiceRoll }}</span>
+        </div>
+        <button (click)="resetGame()">Reset Game</button>
     </div>
-  </div>
-  
+</div>

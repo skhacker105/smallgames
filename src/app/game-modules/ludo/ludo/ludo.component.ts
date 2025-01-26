@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
-import { IPlayer } from '../../../interfaces';
+import { IPathCell, IPlayer } from '../../../interfaces';
 import { BaseComponent } from '../../../components/base.component';
+import { LUDO_PATHS } from '../ludo-path';
 
 @Component({
   selector: 'app-ludo',
@@ -14,7 +15,8 @@ export class LudoComponent extends BaseComponent {
   rolling: boolean = false;
   totalDiceRoll: number = 0;
   winner: string | null = null;
-  
+
+  paths = LUDO_PATHS;
 
   loadGameState(): void {
     // Load game state logic
@@ -52,13 +54,21 @@ export class LudoComponent extends BaseComponent {
     localStorage.setItem('ludoGameState', JSON.stringify(state));
   }
 
+  getPathPosition(cellIndex: number, type: 'col' | 'row' = 'row'): string {
+    const row = Math.floor(cellIndex / 15);
+    if (type === 'row')
+      return (row * 6).toString() + 'vw';
+    else
+      return ((cellIndex - (row * 15)) * 6).toString() + 'vw';
+  }
+
   askForPlayers(): void {
     const playerCount = prompt('Enter the number of players (2-4):', '2');
     if (!playerCount || +playerCount < 2 || +playerCount > 4) {
       alert('Invalid number of players!');
       return;
     }
-    const colors = ['red', 'blue', 'green', 'yellow'];
+    const colors = ['red', 'green', 'yellow', 'blue'];
     this.players = Array.from({ length: +playerCount }, (_, i) => ({
       name: `Player ${i + 1}`,
       color: colors[i],

@@ -11,18 +11,19 @@
 
 .board {
   display: grid;
-  grid-template-columns: repeat(15, 40px);
-  grid-template-rows: repeat(15, 40px);
+  grid-template-columns: repeat(15, 6vw);
+  grid-template-rows: repeat(15, 6vw);
   position: relative;
-  width: 600px;
-  height: 600px;
+  width: 90vw;
+  height: 90vw;
   border: 2px solid #333;
+  background-color: #fff;
 }
 
 .base-area {
   position: absolute;
-  width: 200px;
-  height: 200px;
+  width: 36vw;
+  height: 36vw;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -53,59 +54,124 @@
   background-color: #6ba8ff;
 }
 
-.coin {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #fff;
-  margin: 5px;
-  border: 2px solid #000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.coin-container {
+    width: 50%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
 }
+
+.coin {
+    width: 5vw; /* Slightly smaller size */
+    height: 5vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0%, #e6e6e6 30%, #b0b0b0 60%, #8a8a8a 100%); /* Metallic gradient */
+    margin: 5px;
+    border: 2px solid #555; /* Darker border for contrast */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 
+        0px 4px 8px rgba(0, 0, 0, 0.3), /* Outer shadow */
+        inset 0px 2px 4px rgba(255, 255, 255, 0.5), /* Top inner shine */
+        inset 0px -2px 4px rgba(0, 0, 0, 0.3); /* Bottom inner shadow */
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth interaction effect */
+}
+
+.coin::before {
+content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.8), transparent 60%);
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.coin::after {
+    content: '';
+    position: absolute;
+    top: 15%;
+    left: 15%;
+    width: 70%;
+    height: 70%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.4), transparent 80%);
+    pointer-events: none;
+    mix-blend-mode: screen; /* Creates a polished highlight */
+}
+
+.coin:hover {
+transform: scale(1.1); /* Slight zoom on hover */
+box-shadow: 
+    0px 6px 12px rgba(0, 0, 0, 0.4), /* More pronounced shadow on hover */
+    inset 0px 2px 6px rgba(255, 255, 255, 0.6), 
+    inset 0px -3px 5px rgba(0, 0, 0, 0.4);
+}
+  
+  
 
 .center {
   position: absolute;
-  width: 200px;
-  height: 200px;
+  width: 18vw;
+  height: 18vw;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) rotate(315deg);
   background: #333;
-  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
 }
 
-.triangle {
+.square {
   position: absolute;
-  width: 50%;
-  height: 50%;
+  width: 9vw;
+  height: 9vw;
   background: transparent;
-  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
 }
 
-.triangle.red {
+.square.red {
   background: #ff6b6b;
   top: 0;
   left: 0;
 }
 
-.triangle.green {
+.square.green {
   background: #6bcf6b;
   top: 0;
   right: 0;
 }
 
-.triangle.yellow {
+.square.yellow {
   background: #f7e76b;
   bottom: 0;
   right: 0;
 }
 
-.triangle.blue {
+.square.blue {
   background: #6ba8ff;
   bottom: 0;
   left: 0;
+}
+
+.path {
+    position: absolute;
+    width: 6vw;
+    height: 6vw;
+    background-color: white;
+    border: solid 1px #572885;
+
+    &.is-safe {
+        background-color: #b99445;
+    }
+}
+
+.path.finish {
+
 }
 
 .controls {
