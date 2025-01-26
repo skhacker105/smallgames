@@ -1,7 +1,12 @@
 import { Component } from '@angular/core';
-import { IPathCell, IPlayer } from '../../../interfaces';
+import { IPathCell, IPlayer, IPlayerAskConfig } from '../../../interfaces';
 import { BaseComponent } from '../../../components/base.component';
 import { LUDO_PATHS } from '../ludo-path';
+import { GameDashboardService } from '../../../services/game-dashboard.service';
+import { MatDialog } from '@angular/material/dialog';
+import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
+import { take } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-ludo',
@@ -18,16 +23,23 @@ export class LudoComponent extends BaseComponent {
 
   paths = LUDO_PATHS;
 
+  constructor(private gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router) {
+    super()
+  }
+
   loadGameState(): void {
     // Load game state logic
-    const savedState = localStorage.getItem('ludoGameState');
+    const savedState = this.gameDashboardService.loadGameState();
+    console.log('savedState = ', savedState)
     if (savedState) {
-      const state = JSON.parse(savedState);
-      this.players = state.players;
-      this.currentPlayer = state.currentPlayer;
-      this.lastDiceRoll = state.lastDiceRoll;
-      this.totalDiceRoll = state.totalDiceRoll;
-      this.winner = state.winner;
+      this.players = savedState.players;
+      this.currentPlayer = savedState.currentPlayer;
+      this.lastDiceRoll = savedState.lastDiceRoll;
+      this.totalDiceRoll = savedState.totalDiceRoll;
+      this.winner = savedState.winner;
+      if (this.winner || this.players.length === 0) {
+        this.askForPlayers();
+      }
     } else {
       this.askForPlayers();
     }
@@ -51,7 +63,7 @@ export class LudoComponent extends BaseComponent {
       totalDiceRoll: this.totalDiceRoll,
       winner: this.winner
     };
-    localStorage.setItem('ludoGameState', JSON.stringify(state));
+    this.gameDashboardService.saveGameState(state);
   }
 
   getPathPosition(cellIndex: number, type: 'col' | 'row' = 'row'): string {
@@ -63,17 +75,43 @@ export class LudoComponent extends BaseComponent {
   }
 
   askForPlayers(): void {
-    const playerCount = prompt('Enter the number of players (2-4):', '2');
-    if (!playerCount || +playerCount < 2 || +playerCount > 4) {
-      alert('Invalid number of players!');
-      return;
-    }
-    const colors = ['red', 'green', 'yellow', 'blue'];
-    this.players = Array.from({ length: +playerCount }, (_, i) => ({
-      name: `Player ${i + 1}`,
-      color: colors[i],
-      ludoCoins: Array(4).fill({ position: 0, finished: false })
-    }));
+    const ref = this.dialog.open(PlayersConfigComponent, {
+      data: {
+        askForName: true,
+        minPlayerCount: 2,
+        maxPlayerCount: 4,
+        preFillPlayers: this.players.length > 0 ? this.players : undefined
+      } as IPlayerAskConfig
+    })
+    ref.afterClosed().pipe(take(1))
+      .subscribe((players: IPlayer[] | undefined) => {
+        if (!players) {
+          // if (this.playerPositions.every(position => position === 0))
+            this.router.navigateByUrl('');
+        }
+        else {
+          const colors = ['red', 'green', 'yellow', 'blue'];
+          this.players = players.map((player, index) => ({
+            name: player.name,
+            color: colors[index],
+            ludoCoins: Array(4).fill({ position: 0, finished: false })
+          } as IPlayer));
+          this.currentPlayer = 0;
+          this.winner = null;
+          this.saveGameState();
+        }
+      })
+    // const playerCount = prompt('Enter the number of players (2-4):', '2');
+    // if (!playerCount || +playerCount < 2 || +playerCount > 4) {
+    //   alert('Invalid number of players!');
+    //   return;
+    // }
+    // const colors = ['red', 'green', 'yellow', 'blue'];
+    // this.players = Array.from({ length: +playerCount }, (_, i) => ({
+    //   name: `Player ${i + 1}`,
+    //   color: colors[i],
+    //   ludoCoins: Array(4).fill({ position: 0, finished: false })
+    // }));
   }
 
   rollDice(): void {
