@@ -76,11 +76,36 @@
     </div>
 
     <!-- Dice and Controls -->
-    <div class="controls">
-        <button (click)="rollDice()">Roll Dice</button>
-        <div class="dice">
-            <span>{{ lastDiceRoll }}</span>
+    <div class="controls" *ngIf="!winner">
+        <div>
+            
+            <button (click)="askForPlayers()">
+                <mat-icon>manage_accounts</mat-icon>
+            </button>
+
+            <div class="current-player">
+                <div class="player-display">
+                    <span class="player-name">{{ players[currentPlayer].name }}</span>
+                    <ng-container *ngIf="totalDiceRoll >= 6">
+                        <span class="dice-total">({{ totalDiceRoll }})</span>
+                    </ng-container>
+                </div>
+            </div>
+            <div class="spacer"></div>
+            <div class="dice-container">
+                <div class="dice" (click)="rollDice()" *ngIf="!rolling">
+                    <div class="dice-face" [ngClass]="'face-static-' + lastDiceRoll">
+                    </div>
+                </div>
+                <div class="dice" [class.rolling]="rolling" *ngIf="rolling">
+                    <div class="dice-face" *ngFor="let face of [1,2,3,4,5,6]; let i = index"
+                        [ngClass]="'face-' + (i + 1)">
+                    </div>
+                </div>
+            </div>
+            <button (click)="resetGame()">
+                <mat-icon>restart_alt</mat-icon>
+            </button>
         </div>
-        <button (click)="resetGame()">Reset Game</button>
     </div>
 </div>
