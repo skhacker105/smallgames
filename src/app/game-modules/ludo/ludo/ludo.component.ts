@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IPathCell, IPlayer, IPlayerAskConfig } from '../../../interfaces';
+import { IPlayer, IPlayerAskConfig } from '../../../interfaces';
 import { BaseComponent } from '../../../components/base.component';
 import { LUDO_PATHS } from '../ludo-path';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
@@ -15,6 +15,7 @@ import { Router } from '@angular/router';
 })
 export class LudoComponent extends BaseComponent {
   players: IPlayer[] = [];
+  playerColors: string[] = [];
   currentPlayer: number = 0;
   lastDiceRoll: number = 1;
   rolling: boolean = false;
@@ -30,13 +31,13 @@ export class LudoComponent extends BaseComponent {
   loadGameState(): void {
     // Load game state logic
     const savedState = this.gameDashboardService.loadGameState();
-    console.log('savedState = ', savedState)
     if (savedState) {
       this.players = savedState.players;
       this.currentPlayer = savedState.currentPlayer;
       this.lastDiceRoll = savedState.lastDiceRoll;
       this.totalDiceRoll = savedState.totalDiceRoll;
       this.winner = savedState.winner;
+      this.playerColors = savedState.playerColors
       if (this.winner || this.players.length === 0) {
         this.askForPlayers();
       }
@@ -46,12 +47,12 @@ export class LudoComponent extends BaseComponent {
   }
 
   resetGame(): void {
-    this.players = [];
     this.currentPlayer = 0;
     this.lastDiceRoll = 1;
     this.rolling = false;
     this.totalDiceRoll = 0;
     this.winner = null;
+    this.playerColors = [];
     this.askForPlayers();
   }
 
@@ -61,7 +62,8 @@ export class LudoComponent extends BaseComponent {
       currentPlayer: this.currentPlayer,
       lastDiceRoll: this.lastDiceRoll,
       totalDiceRoll: this.totalDiceRoll,
-      winner: this.winner
+      winner: this.winner,
+      playerColors: this.playerColors
     };
     this.gameDashboardService.saveGameState(state);
   }
@@ -72,6 +74,39 @@ export class LudoComponent extends BaseComponent {
       return (row * 6).toString() + 'vw';
     else
       return ((cellIndex - (row * 15)) * 6).toString() + 'vw';
+  }
+
+  getPlayerColors(numPlayers: number): string[] {
+    const colors = ['red', 'green', 'yellow', 'blue'];
+    
+    // For two players
+    if (numPlayers === 2) {
+      const pair1 = ['red', 'yellow'];
+      const pair2 = ['green', 'blue'];
+      const randomPair = Math.random() < 0.5 ? pair1 : pair2;
+      return randomPair;
+    }
+  
+    // For three players
+    if (numPlayers === 3) {
+      const pair1 = ['red', 'yellow'];
+      const pair2 = ['green', 'blue'];
+      const randomPair = Math.random() < 0.5 ? pair1 : pair2;
+      const remainingColors = randomPair === pair1 ? pair2 : pair1;
+      
+      // Select third color from the remaining set
+      const thirdColor = remainingColors[Math.floor(Math.random() * remainingColors.length)];
+      
+      return [...randomPair, thirdColor];
+    }
+  
+    // For four players, use all colors
+    if (numPlayers === 4) {
+      return colors;
+    }
+  
+    // Return empty array for invalid number of players
+    return [];
   }
 
   askForPlayers(): void {
@@ -86,14 +121,14 @@ export class LudoComponent extends BaseComponent {
     ref.afterClosed().pipe(take(1))
       .subscribe((players: IPlayer[] | undefined) => {
         if (!players) {
-          // if (this.playerPositions.every(position => position === 0))
+          if (this.players.length === 0)
             this.router.navigateByUrl('');
         }
         else {
-          const colors = ['red', 'green', 'yellow', 'blue'];
+          this.playerColors = this.getPlayerColors(players.length);
           this.players = players.map((player, index) => ({
             name: player.name,
-            color: colors[index],
+            color: this.playerColors[index],
             ludoCoins: Array(4).fill({ position: 0, finished: false })
           } as IPlayer));
           this.currentPlayer = 0;
@@ -101,17 +136,13 @@ export class LudoComponent extends BaseComponent {
           this.saveGameState();
         }
       })
-    // const playerCount = prompt('Enter the number of players (2-4):', '2');
-    // if (!playerCount || +playerCount < 2 || +playerCount > 4) {
-    //   alert('Invalid number of players!');
-    //   return;
-    // }
-    // const colors = ['red', 'green', 'yellow', 'blue'];
-    // this.players = Array.from({ length: +playerCount }, (_, i) => ({
-    //   name: `Player ${i + 1}`,
-    //   color: colors[i],
-    //   ludoCoins: Array(4).fill({ position: 0, finished: false })
-    // }));
+  }
+
+  getBareAreaPlayer(color: string): IPlayer | undefined {
+    const colorIndex = this.playerColors.findIndex(pc => pc === color);
+    if (colorIndex === -1) return;
+
+    return this.players[colorIndex];
   }
 
   rollDice(): void {

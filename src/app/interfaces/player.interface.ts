@@ -1,7 +1,10 @@
+export interface ILudoCoin {
+    position: number; finished: boolean
+}
 export interface IPlayer {
     name: string;
     color?: string;
-    ludoCoins?: { position: number; finished: boolean }[];
+    ludoCoins?: ILudoCoin[];
 }
 
 export interface IPlayerAskConfig {

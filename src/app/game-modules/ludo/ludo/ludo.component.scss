@@ -43,7 +43,6 @@
   left: 0;
   background: radial-gradient(circle, #ffbaba, #ff6666, #b44f4f); /* Softer red gradient */
   border: 3px solid #880000; /* Deep border for definition */
-  animation: glowRed 2s infinite;
 }
 
 /* Green Base Area */
@@ -52,7 +51,6 @@
   right: 0;
   background: radial-gradient(circle, #a5f3a5, #6bcf6b, #2a8b2a); /* Vibrant green gradient */
   border: 3px solid #238023; /* Strong green border */
-  animation: glowGreen 2s infinite;
 }
 
 /* Yellow Base Area */
@@ -61,7 +59,6 @@
   right: 0;
   background: radial-gradient(circle, #fff9c2, #f7e76b, #b89c00); /* Vibrant yellow gradient */
   border: 3px solid #b88a00; /* Strong yellow border */
-  animation: glowYellow 2s infinite;
 }
 
 /* Blue Base Area */
@@ -70,44 +67,6 @@
   left: 0;
   background: radial-gradient(circle, #bcdcff, #6ba8ff, #0043cc); /* Vibrant blue gradient */
   border: 3px solid #0038a5; /* Strong blue border */
-  animation: glowBlue 2s infinite;
-}
-
-/* Glowing Animations */
-@keyframes glowRed {
-  0%, 100% {
-    box-shadow: 0px 4px 12px rgba(255, 102, 102, 0.6); /* Softer red glow */
-  }
-  50% {
-    box-shadow: 0px 6px 16px rgba(255, 102, 102, 0.8);
-  }
-}
-
-@keyframes glowGreen {
-  0%, 100% {
-    box-shadow: 0px 4px 12px rgba(107, 207, 107, 0.6);
-  }
-  50% {
-    box-shadow: 0px 6px 16px rgba(107, 207, 107, 0.8);
-  }
-}
-
-@keyframes glowYellow {
-  0%, 100% {
-    box-shadow: 0px 4px 12px rgba(247, 231, 107, 0.6);
-  }
-  50% {
-    box-shadow: 0px 6px 16px rgba(247, 231, 107, 0.8);
-  }
-}
-
-@keyframes glowBlue {
-  0%, 100% {
-    box-shadow: 0px 4px 12px rgba(107, 168, 255, 0.6);
-  }
-  50% {
-    box-shadow: 0px 6px 16px rgba(107, 168, 255, 0.8);
-  }
 }
 
 /* Hover Effect for All Colors */
@@ -192,32 +151,33 @@ box-shadow:
   background: #333;
 }
 
-.square {
+.finish {
   position: absolute;
   width: 9vw;
   height: 9vw;
   background: transparent;
+  border-radius: 30%;
 }
 
-.square.red {
+.finish.red {
   background: #ff6b6b;
   top: 0;
   left: 0;
 }
 
-.square.green {
+.finish.green {
   background: #6bcf6b;
   top: 0;
   right: 0;
 }
 
-.square.yellow {
+.finish.yellow {
   background: #f7e76b;
   bottom: 0;
   right: 0;
 }
 
-.square.blue {
+.finish.blue {
   background: #6ba8ff;
   bottom: 0;
   left: 0;

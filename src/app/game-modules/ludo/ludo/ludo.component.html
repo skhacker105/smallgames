@@ -11,48 +11,36 @@
         <div class="board">
             <!-- Base Areas -->
             <div class="base-area red">
-                <ng-container *ngFor="let coin of players[0]?.ludoCoins; let i = index">
-                    <div class="coin-container">
-                        <div class="coin" [style.background]="players[0]?.color"
-                            [style.borderColor]="players[0]?.color">
-                        </div>
-                    </div>
-                </ng-container>
+                <ng-template [ngTemplateOutlet]="baseAreaCoin" [ngTemplateOutletContext]="{
+                        player: getBareAreaPlayer('red')
+                    }">
+                </ng-template>
             </div>
             <div class="base-area green">
-                <ng-container *ngFor="let coin of players[1]?.ludoCoins; let i = index">
-                    <div class="coin-container">
-                        <div class="coin" [style.background]="players[1]?.color"
-                            [style.borderColor]="players[1]?.color">
-                        </div>
-                    </div>
-                </ng-container>
+                <ng-template [ngTemplateOutlet]="baseAreaCoin" [ngTemplateOutletContext]="{
+                        player: getBareAreaPlayer('green')
+                    }">
+                </ng-template>
             </div>
             <div class="base-area yellow">
-                <ng-container *ngFor="let coin of players[2]?.ludoCoins; let i = index">
-                    <div class="coin-container">
-                        <div class="coin" [style.background]="players[2]?.color"
-                            [style.borderColor]="players[2]?.color">
-                        </div>
-                    </div>
-                </ng-container>
+                <ng-template [ngTemplateOutlet]="baseAreaCoin" [ngTemplateOutletContext]="{
+                        player: getBareAreaPlayer('yellow')
+                    }">
+                </ng-template>
             </div>
             <div class="base-area blue">
-                <ng-container *ngFor="let coin of players[3]?.ludoCoins; let i = index">
-                    <div class="coin-container">
-                        <div class="coin" [style.background]="players[3]?.color"
-                            [style.borderColor]="players[3]?.color">
-                        </div>
-                    </div>
-                </ng-container>
+                <ng-template [ngTemplateOutlet]="baseAreaCoin" [ngTemplateOutletContext]="{
+                        player: getBareAreaPlayer('blue')
+                    }">
+                </ng-template>
             </div>
 
             <!-- Center and Paths -->
             <div class="center">
-                <div class="square red"></div>
-                <div class="square green"></div>
-                <div class="square yellow"></div>
-                <div class="square blue"></div>
+                <div class="finish red"></div>
+                <div class="finish green"></div>
+                <div class="finish yellow"></div>
+                <div class="finish blue"></div>
             </div>
 
             <!-- Path Cells -->
@@ -78,7 +66,7 @@
     <!-- Dice and Controls -->
     <div class="controls" *ngIf="!winner">
         <div>
-            
+
             <button (click)="askForPlayers()">
                 <mat-icon>manage_accounts</mat-icon>
             </button>
@@ -109,3 +97,13 @@
         </div>
     </div>
 </div>
+
+<ng-template #baseAreaCoin let-player="player">
+    <ng-container *ngFor="let coin of (player?.ludoCoins ?? []); let i = index">
+        <div class="coin-container">
+            <div class="coin" [style.background]="player.color" [style.borderColor]="player.color"
+                [ngClass]="player.color">
+            </div>
+        </div>
+    </ng-container>
+</ng-template>
