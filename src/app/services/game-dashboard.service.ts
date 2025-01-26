@@ -21,28 +21,28 @@ export class GameDashboardService {
       name: 'Snakes',
       image: 'assets/snakes_icon.png',
       route: 'snakes',
-      settingsIconNeeded: true
+      settingsIconNeeded: false
     },
     {
       key: 'sudoku',
       name: 'Sudoku',
       image: 'assets/sudoku_icon.png',
       route: 'sudoku',
-      settingsIconNeeded: true
+      settingsIconNeeded: false
     },
     {
       key: 'snakeNLadder',
       name: 'Snake N Ladder',
       image: 'assets/snakenladder_icon.png',
       route: 'snakeNLadder',
-      settingsIconNeeded: true
+      settingsIconNeeded: false
     },
     {
       key: 'ludo',
       name: 'Ludo',
       image: 'assets/ludo_icon.png',
       route: 'ludo',
-      settingsIconNeeded: true
+      settingsIconNeeded: false
     }
   ];
 
