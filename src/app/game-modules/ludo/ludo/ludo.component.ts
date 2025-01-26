@@ -78,7 +78,7 @@ export class LudoComponent extends BaseComponent {
 
   getPlayerColors(numPlayers: number): string[] {
     const colors = ['red', 'green', 'yellow', 'blue'];
-    
+
     // For two players
     if (numPlayers === 2) {
       const pair1 = ['red', 'yellow'];
@@ -86,25 +86,25 @@ export class LudoComponent extends BaseComponent {
       const randomPair = Math.random() < 0.5 ? pair1 : pair2;
       return randomPair;
     }
-  
+
     // For three players
     if (numPlayers === 3) {
       const pair1 = ['red', 'yellow'];
       const pair2 = ['green', 'blue'];
       const randomPair = Math.random() < 0.5 ? pair1 : pair2;
       const remainingColors = randomPair === pair1 ? pair2 : pair1;
-      
+
       // Select third color from the remaining set
       const thirdColor = remainingColors[Math.floor(Math.random() * remainingColors.length)];
-      
+
       return [...randomPair, thirdColor];
     }
-  
+
     // For four players, use all colors
     if (numPlayers === 4) {
       return colors;
     }
-  
+
     // Return empty array for invalid number of players
     return [];
   }
@@ -129,7 +129,7 @@ export class LudoComponent extends BaseComponent {
           this.players = players.map((player, index) => ({
             name: player.name,
             color: this.playerColors[index],
-            ludoCoins: Array(4).fill({ position: 0, finished: false })
+            ludoCoins: Array(4).fill(null).map(() => ({ position: 0, finished: false }))
           } as IPlayer));
           this.currentPlayer = 0;
           this.winner = null;
