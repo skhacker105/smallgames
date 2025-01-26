@@ -1,7 +1,5 @@
-<div class="game-container" *ngIf="selectedBoard">
-
-    <div class="board" [style.background]="'url('+ selectedBoard.background +')'" [style.backgroundSize]="'100% 100%'"
-        [style.backgroundRepeat]="'no-repeat'">
+<div class="game-container" *ngIf="selectedBoard && players.length > 0">
+    <div class="board" [style.background]="'url('+ selectedBoard.background +') 0% 0% / 100% 100% no-repeat'">
         <div *ngFor="let row of arrNumbers;" class="row" [ngClass]="{'reverse-row': isRowLeftToRight(row) }">
 
             <!-- Render board cells -->
@@ -12,21 +10,50 @@
                 <ng-container *ngFor="let player of players; let pi = index">
                     <div *ngIf="playerPositions[pi] === ((row - 1) * 10 + col)" class="player"
                         [style.top]="'calc(30% - '+(pi*3)+'px)'" [style.left]="(pi*3)+'px'">
-                        {{ player | shortName }}
+                        {{ player.name| shortName }}
                     </div>
                 </ng-container>
             </div>
         </div>
     </div>
 
-    <div class="controls">
-        <button (click)="rollDice()" [disabled]="rolling || winner">
-            Roll Dice
-        </button>
-        <div class="dice" *ngIf="diceRoll > 0">Dice: {{ diceRoll }}</div>
+    <div class="controls" *ngIf="!winner">
+        <div>
+            
+            <button (click)="askForPlayers()">
+                <mat-icon>manage_accounts</mat-icon>
+            </button>
+
+            <div class="current-player">
+                <div class="player-display">
+                    <span class="player-name">{{ players[currentPlayer].name }}</span>
+                    <ng-container *ngIf="totalDiceRoll >= 6">
+                        <span class="dice-total">({{ totalDiceRoll }})</span>
+                    </ng-container>
+                </div>
+            </div>
+            <div class="spacer"></div>
+            <div class="dice-container">
+                <div class="dice" (click)="rollDice()" *ngIf="!rolling">
+                    <div class="dice-face" [ngClass]="'face-static-' + lastDiceRoll">
+                    </div>
+                </div>
+                <div class="dice" [class.rolling]="rolling" *ngIf="rolling">
+                    <div class="dice-face" *ngFor="let face of [1,2,3,4,5,6]; let i = index"
+                        [ngClass]="'face-' + (i + 1)">
+                    </div>
+                </div>
+            </div>
+            <button (click)="resetGame()">
+                <mat-icon>restart_alt</mat-icon>
+            </button>
+        </div>
     </div>
 
-    <div *ngIf="winner" class="winner">
-        🎉 {{ winner }} wins the game! 🎉
+    <div *ngIf="winner" class="winner dark-theme">
+        <div class="winner-message">
+            🎉 {{ winner.name }} wins the game! 🎉
+        </div>
     </div>
+    
 </div>

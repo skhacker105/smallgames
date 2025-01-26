@@ -1,0 +1,32 @@
+<!-- player-ask.component.html -->
+<div class="player-ask-wrapper">
+  <h1 class="title">Configure Players</h1>
+
+  <div class="player-list">
+    <div *ngFor="let player of players; let i = index" class="player-row">
+      <label for="playerName{{ i }}">{{ (i + 1) }}:</label>
+      <input type="text" id="playerName{{ i }}" [(ngModel)]="players[i].name" class="player-name"
+        placeholder="Enter player name" />
+
+      <div *ngIf="config.askForColor" class="color-picker-container">
+        <input type="color" id="playerColor{{ i }}" [(ngModel)]="players[i].color" class="color-input"
+          [style.backgroundColor]="players[i].color" />
+      </div>
+
+      <button class="remove-button" (click)="removePlayer(i)" [disabled]="players.length <= config.minPlayerCount">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+  </div>
+  <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+  <div class="controls">
+    <button mat-icon-button class="add-button" (click)="addPlayer()"
+      [disabled]="players.length >= config.maxPlayerCount">
+      <mat-icon>add</mat-icon>
+    </button>
+    <div class="spacer"></div>
+
+    <button class="submit-button" (click)="submit()">Submit</button>
+    <button class="submit-button" (click)="dialogRef.close()">Cancel</button>
+  </div>
+</div>

@@ -2,6 +2,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BaseComponent } from '../../../components/base.component';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
+import { IPlayer, IPlayerAskConfig } from '../../../interfaces';
+import { MatDialog } from '@angular/material/dialog';
+import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
+import { take } from 'rxjs';
+import { Router } from '@angular/router';
 
 export interface IGameBoard {
   name: string;
@@ -40,33 +45,32 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
       name: 'Board03',
       background: 'assets/snakenladderboard03.jpg',
       ladders: { 4: 25, 13: 46, 33: 49, 42: 63, 50: 69, 62: 81, 74: 92 },
-      snakes: { 27: 5, 40: 3, 43: 18, 54: 31, 66: 45, 89: 53, 95: 45, 99: 41 },
+      snakes: { 27: 5, 40: 3, 43: 18, 54: 31, 66: 45, 89: 53, 95: 77, 99: 41 },
       playerColor: 'black',
       playerBackgroundColor: '#ffeb3b'
     }
   ];
   selectedBoard?: IGameBoard;
-  players: string[] = [];
+  players: IPlayer[] = [];
   board: number[] = Array(100).fill(0);
   playerPositions: number[] = []; // Each player has a single coin
   currentPlayer: number = 0;
-  winner: string | null = null;
+  winner: IPlayer | null = null;
   snakes: Record<number, number> = {};
   ladders: Record<number, number> = {};
-  diceRoll: number = 0;
+  totalDiceRoll: number = 0;
+  lastDiceRoll = 1;
   rolling: boolean = false;
 
   // arrReverseNumbers = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
   arrNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-  constructor(private gameDashboardService: GameDashboardService) {
+  constructor(private gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router) {
     super();
   }
 
   override ngOnInit(): void {
     super.ngOnInit();
-    this.askForPlayers();
-    this.generateNewGame();
   }
 
   isRowLeftToRight(row: number): boolean {
@@ -84,6 +88,13 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
       this.snakes = savedState.snakes;
       this.ladders = savedState.ladders;
       this.selectedBoard = savedState.selectedBoard
+      if (this.winner || this.players.length === 0 || this.playerPositions.every(pos => pos === 0)) {
+        this.askForPlayers();
+        this.restartGame();
+      }
+    } else {
+      this.askForPlayers();
+      this.restartGame();
     }
   }
 
@@ -111,23 +122,51 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
     });
   }
 
-  resetGame(): void {
-    this.askForPlayers();
+  restartGame(): void {
+    this.resetGame();
     this.generateNewGame();
   }
 
-  askForPlayers(): void {
-    const playerCount = parseInt(prompt('Enter number of players (2 or more):', '2') || '2', 10);
-    this.players = Array.from({ length: playerCount }, (_, i) => `Player ${i + 1}`);
-    this.playerPositions = Array(playerCount).fill(0);
-    this.currentPlayer = 0;
+  resetGame(): void {
+    this.totalDiceRoll = 0;
+    this.lastDiceRoll = 1;
     this.winner = null;
+    this.playerPositions = Array(this.players.length).fill(0);
+    this.currentPlayer = 0;
+    this.rolling = false;
+    this.saveGameState();
+  }
+
+  askForPlayers(): void {
+    const ref = this.dialog.open(PlayersConfigComponent, {
+      data: {
+        askForName: true,
+        minPlayerCount: 2,
+        maxPlayerCount: 6,
+        preFillPlayers: this.players.length > 0 ? this.players : undefined
+      } as IPlayerAskConfig
+    })
+    ref.afterClosed().pipe(take(1))
+      .subscribe((players: IPlayer[] | undefined) => {
+        if (!players) {
+          if (this.playerPositions.every(position => position === 0))
+            this.router.navigateByUrl('');
+        }
+        else {
+          this.players = players;
+          this.playerPositions = Array(players.length).fill(0);
+          this.currentPlayer = 0;
+          this.winner = null;
+          this.saveGameState();
+        }
+      })
   }
 
   generateNewGame(): void {
     this.selectedBoard = this.allBoards[Math.floor(Math.random() * this.allBoards.length)];
     this.snakes = this.selectedBoard.snakes //this.generateRandomPositions('snake');
     this.ladders = this.selectedBoard.ladders //this.generateRandomPositions('ladder');
+    this.saveGameState();
   }
 
   generateRandomPositions(type: 'snake' | 'ladder'): Record<number, number> {
@@ -148,45 +187,67 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
     return positions;
   }
 
-  async rollDice(): Promise<void> {
-    this.diceRoll = Math.floor(Math.random() * 6) + 1;
-    await this.animateDiceRoll();
-    this.moveCoin();
+  rollDice(): void {
+    this.animatetotalDiceRoll();
   }
 
-  async animateDiceRoll(): Promise<void> {
+  animatetotalDiceRoll(): void {
     this.rolling = true;
-    for (let i = 0; i < 10; i++) {
-      this.diceRoll = Math.floor(Math.random() * 6) + 1;
-      await this.pause(100);
-    }
-    this.rolling = false;
-  }
 
-  async moveCoin(): Promise<void> {
-    if (this.diceRoll > 0) {
-      let newPosition = this.playerPositions[this.currentPlayer] + this.diceRoll;
-      const oldPosition = this.playerPositions[this.currentPlayer];
-
-      this.playerPositions[this.currentPlayer] = Math.min(newPosition, 100);
-      await this.pause(500);
-
-      if (newPosition in this.snakes) {
-        this.playerPositions[this.currentPlayer] = this.snakes[newPosition];
-        await this.pause(500);
-      } else if (newPosition in this.ladders) {
-        this.playerPositions[this.currentPlayer] = this.ladders[newPosition];
-        await this.pause(500);
-      }
-
-      if (this.checkWinner()) {
+    const rollDice = (iteration: number, appendPreviousRoll: boolean = false): void => {
+      if (iteration >= 10) {
+        this.rolling = false;
+        this.processDiceRoll(Math.floor(Math.random() * 6) + 1)
         return;
       }
+      setTimeout(() => rollDice(iteration + 1), 100);
+    };
 
-      this.diceRoll = 0;
-      this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
-      this.saveGameState();
+    rollDice(0);
+  }
+
+  processDiceRoll(diceRoll: number): void {
+    this.lastDiceRoll = diceRoll;
+    if (diceRoll === 6 && this.totalDiceRoll === 12) {
+      this.totalDiceRoll = 0;
+      this.lastDiceRoll;
+      this.moveCoin();
+    } else {
+      this.totalDiceRoll += diceRoll;
+      if (diceRoll !== 6) this.moveCoin();
     }
+  }
+
+
+  async moveCoin(): Promise<void> {
+    if (this.totalDiceRoll > 0) {
+      let newPosition = this.playerPositions[this.currentPlayer] + this.totalDiceRoll;
+      const oldPosition = this.playerPositions[this.currentPlayer];
+
+      if (newPosition <= 100) {
+
+        this.playerPositions[this.currentPlayer] = Math.min(newPosition, 100);
+        await this.pause(500);
+
+        if (newPosition in this.snakes) {
+          this.playerPositions[this.currentPlayer] = this.snakes[newPosition];
+          await this.pause(500);
+        } else if (newPosition in this.ladders) {
+          this.playerPositions[this.currentPlayer] = this.ladders[newPosition];
+          await this.pause(500);
+        }
+
+        if (this.checkWinner()) {
+          this.saveGameState();
+          return;
+        }
+      }
+
+      this.totalDiceRoll = 0;
+    }
+    if (this.lastDiceRoll !== 6 || this.totalDiceRoll === 0)
+      this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
+    this.saveGameState();
   }
 
   pause(ms: number): Promise<void> {
@@ -195,5 +256,3 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
 
 }
 
-
-// console.log({ start, end, startCol, startRow, cellHeight, cellWidth })

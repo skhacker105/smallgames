@@ -28,7 +28,6 @@ export class SudokuComponent extends BaseComponent {
 
   override ngOnInit(): void {
     super.ngOnInit();
-    this.loadGameState();
   }
 
   loadGameState(): void {
