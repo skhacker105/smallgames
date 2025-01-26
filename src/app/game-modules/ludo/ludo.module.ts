@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { LudoRoutingModule } from './ludo-routing.module';
 import { LudoComponent } from './ludo/ludo.component';
+import { MatIconModule } from '@angular/material/icon';
 
 
 @NgModule({
@@ -12,7 +13,8 @@ import { LudoComponent } from './ludo/ludo.component';
   ],
   imports: [
     CommonModule,
-    LudoRoutingModule
+    LudoRoutingModule,
+    MatIconModule
   ]
 })
 export class LudoModule { }

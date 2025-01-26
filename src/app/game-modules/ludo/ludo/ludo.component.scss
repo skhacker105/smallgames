@@ -1,0 +1,124 @@
+.ludo-game {
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.board-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px auto;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(15, 40px);
+  grid-template-rows: repeat(15, 40px);
+  position: relative;
+  width: 600px;
+  height: 600px;
+  border: 2px solid #333;
+}
+
+.base-area {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.base-area.red {
+  top: 0;
+  left: 0;
+  background-color: #ff6b6b;
+}
+
+.base-area.green {
+  top: 0;
+  right: 0;
+  background-color: #6bcf6b;
+}
+
+.base-area.yellow {
+  bottom: 0;
+  right: 0;
+  background-color: #f7e76b;
+}
+
+.base-area.blue {
+  bottom: 0;
+  left: 0;
+  background-color: #6ba8ff;
+}
+
+.coin {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  margin: 5px;
+  border: 2px solid #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.center {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #333;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.triangle {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  background: transparent;
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+.triangle.red {
+  background: #ff6b6b;
+  top: 0;
+  left: 0;
+}
+
+.triangle.green {
+  background: #6bcf6b;
+  top: 0;
+  right: 0;
+}
+
+.triangle.yellow {
+  background: #f7e76b;
+  bottom: 0;
+  right: 0;
+}
+
+.triangle.blue {
+  background: #6ba8ff;
+  bottom: 0;
+  left: 0;
+}
+
+.controls {
+  margin: 20px;
+}
+
+.dice {
+  margin: 20px auto;
+  font-size: 24px;
+  font-weight: bold;
+  background: #fff;
+  padding: 10px;
+  border: 2px solid #333;
+  border-radius: 5px;
+  display: inline-block;
+}
