@@ -12,25 +12,33 @@
             <!-- Base Areas -->
             <div class="base-area red">
                 <ng-template [ngTemplateOutlet]="baseAreaCoin" [ngTemplateOutletContext]="{
-                        player: getBareAreaPlayer('red')
+                        player: getBareAreaPlayer('red'),
+                        position: 0,
+                        finished: false
                     }">
                 </ng-template>
             </div>
             <div class="base-area green">
                 <ng-template [ngTemplateOutlet]="baseAreaCoin" [ngTemplateOutletContext]="{
-                        player: getBareAreaPlayer('green')
+                        player: getBareAreaPlayer('green'),
+                        position: 0,
+                        finished: false
                     }">
                 </ng-template>
             </div>
             <div class="base-area yellow">
                 <ng-template [ngTemplateOutlet]="baseAreaCoin" [ngTemplateOutletContext]="{
-                        player: getBareAreaPlayer('yellow')
+                        player: getBareAreaPlayer('yellow'),
+                        position: 0,
+                        finished: false
                     }">
                 </ng-template>
             </div>
             <div class="base-area blue">
                 <ng-template [ngTemplateOutlet]="baseAreaCoin" [ngTemplateOutletContext]="{
-                        player: getBareAreaPlayer('blue')
+                        player: getBareAreaPlayer('blue'),
+                        position: 0,
+                        finished: false
                     }">
                 </ng-template>
             </div>
@@ -49,13 +57,21 @@
                     [style.top]="getPathPosition(path.cellNumber - 1, 'row')" [ngClass]="{
                         'is-safe': path.isSafe
                     }" [style.backgroundColor]="path.safeColor">
+                    <ng-template [ngTemplateOutlet]="pathCoin" [ngTemplateOutletContext]="{
+                        cellNumber: path.cellNumber
+                    }">
+                    </ng-template>
                 </div>
 
                 <ng-container *ngIf="path.finishPath">
-                    <ng-container *ngFor="let fPath of path.finishPath">
+                    <ng-container *ngFor="let fPath of path.finishPath; let fIndex = index">
                         <div class="path" [style.backgroundColor]="fPath.allowedColor"
                             [style.left]="getPathPosition(fPath.cellNumber - 1, 'col')"
                             [style.top]="getPathPosition(fPath.cellNumber - 1, 'row')">
+                            <!-- <ng-template [ngTemplateOutlet]="pathCoin" [ngTemplateOutletContext]="{
+                                cellNumber: fPath.cellNumber - 1
+                            }">
+                            </ng-template> -->
                         </div>
                     </ng-container>
                 </ng-container>
@@ -98,12 +114,28 @@
     </div>
 </div>
 
-<ng-template #baseAreaCoin let-player="player">
+<ng-template #baseAreaCoin let-player="player" let-position="position" let-finished="finished" let-inPath="inPath">
     <ng-container *ngFor="let coin of (player?.ludoCoins ?? []); let i = index">
-        <div class="coin-container">
-            <div class="coin" [style.background]="player.color" [style.borderColor]="player.color"
-                [ngClass]="player.color">
+        <ng-container *ngIf="coin.position === position && (finished === undefined || coin.finished === finished)">
+            <div class="coin-container" [ngClass]="{
+                'in-path': !!inPath
+            }">
+                <div class="coin" [style.background]="player.color" [style.borderColor]="player.color"
+                    [ngClass]="player.color">
+                </div>
             </div>
-        </div>
+        </ng-container>
+    </ng-container>
+</ng-template>
+
+<ng-template #pathCoin let-cellNumber="cellNumber">
+    <ng-container *ngFor="let player of players">
+        <ng-template [ngTemplateOutlet]="baseAreaCoin" [ngTemplateOutletContext]="{
+            player: getBareAreaPlayer(player.color),
+            position: cellNumber,
+            finished: false,
+            inPath: true
+        }">
+        </ng-template>
     </ng-container>
 </ng-template>

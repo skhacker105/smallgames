@@ -1,5 +1,6 @@
 export interface ILudoCoin {
-    position: number; finished: boolean
+    position: number;
+    finished: boolean
 }
 export interface IPlayer {
     name: string;

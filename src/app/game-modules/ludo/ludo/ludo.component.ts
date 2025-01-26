@@ -134,11 +134,12 @@ export class LudoComponent extends BaseComponent {
           this.currentPlayer = 0;
           this.winner = null;
           this.saveGameState();
+          console.log(this.players)
         }
       })
   }
 
-  getBareAreaPlayer(color: string): IPlayer | undefined {
+  getBareAreaPlayer(color: string = 'red'): IPlayer | undefined {
     const colorIndex = this.playerColors.findIndex(pc => pc === color);
     if (colorIndex === -1) return;
 

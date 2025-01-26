@@ -86,6 +86,13 @@
     align-items: center;
 }
 
+.coin-container.in-path {
+  display: inherit;
+  .coin {
+    margin: 0px;
+  }
+}
+
 .coin {
     width: 5vw; /* Slightly smaller size */
     height: 5vw;
@@ -100,7 +107,7 @@
         0px 4px 8px rgba(0, 0, 0, 0.3), /* Outer shadow */
         inset 0px 2px 4px rgba(255, 255, 255, 0.5), /* Top inner shine */
         inset 0px -2px 4px rgba(0, 0, 0, 0.3); /* Bottom inner shadow */
-    position: relative;
+    position: absolute;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth interaction effect */
 }
