@@ -58,49 +58,55 @@
     color: #555;
 }
 
-@keyframes blinkBackground {
-    0% {
-        background-color: #ff0000;
-        color: #ffffff;
-    } /* Red background, white text */
-    50% {
-        background-color: #0000ff;
-        color: #ffffff;
-    } /* Blue background, white text */
-    100% {
-        background-color: #ff0000;
-        color: #ffffff;
-    }; /* Back to red background */
-}
-
 .player {
     animation: blinkBackground 1.5s infinite;
     position: absolute;
     z-index: 2;
-    background: #ffeb3b;
-    padding: 2px 4px;
-    border-radius: 3px;
-    border: 1px solid #333;
-    font-size: 0.7em;
+    background: radial-gradient(circle, #00d4ff, #007bff, #001f99); /* Cool gradient with blue tones */
+    padding: 2px 4px; /* Original size */
+    border-radius: 50%; /* Circular shape */
+    border: 2px solid #fff; /* White border for contrast */
+    font-size: 0.7em; /* Original font size */
+    text-align: center;
+    color: #ffffff; /* High-contrast text */
+    box-shadow: 
+        0px 3px 5px rgba(0, 0, 0, 0.4), /* Outer shadow for depth */
+        inset 0px 1px 2px rgba(255, 255, 255, 0.5), /* Inner shine */
+        inset 0px -1px 2px rgba(0, 0, 0, 0.2); /* Inner shadow */
     width: fit-content;
     height: fit-content;
-    // white-space: nowrap;
+    font-weight: bold;
+    opacity: 0.95; /* Slightly higher visibility */
+    cursor: pointer;
     left: 0;
     top: 30%;
-    opacity: 0.8;
-    font-weight: bold;
+    transition: box-shadow 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
 
-    // Hover
+    /* Hover Effect */
     &:hover {
         animation: none;
-        background: black;
+        background: radial-gradient(circle, #6affff, #00d4ff, #004d99); /* Enhanced shine with hover effect */
+        color: #000; /* Dark text for hover contrast */
+        box-shadow: 
+            0px 5px 8px rgba(0, 0, 0, 0.5), 
+            inset 0px 2px 4px rgba(255, 255, 255, 0.6), 
+            inset 0px -2px 4px rgba(0, 0, 0, 0.3);
         opacity: 1;
-        color: white;
-        width: 100%;
-        height: 40%;
-        z-index: 1000;
+        transform: scale(1.05); /* Slight zoom for interactivity */
+        z-index: 1000; /* Ensure visibility on hover */
     }
 }
+
+/* Keyframes for blink animation */
+@keyframes blinkBackground {
+    0%, 100% {
+        box-shadow: 0px 0px 10px rgba(0, 212, 255, 0.8); /* Neon blue glow */
+    }
+    50% {
+        box-shadow: 0px 0px 20px rgba(0, 212, 255, 1); /* Pulsing effect */
+    }
+}
+
 
 .controls {
     margin-top: 20px;

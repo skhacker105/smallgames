@@ -9,7 +9,7 @@
                 <!-- Render players -->
                 <ng-container *ngFor="let player of players; let pi = index">
                     <div *ngIf="playerPositions[pi] === ((row - 1) * 10 + col)" class="player"
-                        [style.top]="'calc(30% - '+(pi*3)+'px)'" [style.left]="(pi*3)+'px'">
+                        [style.top]="'calc(30% - '+(pi*5)+'px)'" [style.left]="(pi*5)+'px'">
                         {{ player.name| shortName }}
                     </div>
                 </ng-container>
