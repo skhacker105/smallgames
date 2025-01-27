@@ -294,6 +294,8 @@ export class LudoComponent extends BaseComponent {
     this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
     this.playableCoins.clear();
     this.saveGameState();
+    this.playableCoins.clear();
+    this.saveGameState();
   }
 
   checkWinner(): boolean {
