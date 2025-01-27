@@ -1,47 +1,44 @@
 
-import { IPathCell, IPlayer } from '../../interfaces';
+import { LUDO_COLOR } from '../../config';
+import { IPathCell } from '../../interfaces';
 
-
-function createColorAcceptanceMethod(color: string) {
-    return (player: IPlayer) => player.color === color;
-}
 
 export const LUDO_FINISH_PATH: { [color: string]: IPathCell[] } = {
     'green': [
-        { cellNumber: 23, allowedColor: '#6bcf6b', isPlayerAccepted: createColorAcceptanceMethod('green') },
-        { cellNumber: 38, allowedColor: '#6bcf6b', isPlayerAccepted: createColorAcceptanceMethod('green') },
-        { cellNumber: 53, allowedColor: '#6bcf6b', isPlayerAccepted: createColorAcceptanceMethod('green') },
-        { cellNumber: 68, allowedColor: '#6bcf6b', isPlayerAccepted: createColorAcceptanceMethod('green') },
-        { cellNumber: 83, allowedColor: '#6bcf6b', isPlayerAccepted: createColorAcceptanceMethod('green') }
+        { cellNumber: 23, backgroundColor: '#6bcf6b', isFinishingPath: true },
+        { cellNumber: 38, backgroundColor: '#6bcf6b', isFinishingPath: true },
+        { cellNumber: 53, backgroundColor: '#6bcf6b', isFinishingPath: true },
+        { cellNumber: 68, backgroundColor: '#6bcf6b', isFinishingPath: true },
+        { cellNumber: 83, backgroundColor: '#6bcf6b', isFinishingPath: true }
     ],
     'yellow': [
-        { cellNumber: 115, allowedColor: '#f7e76b', isPlayerAccepted: createColorAcceptanceMethod('yellow') },
-        { cellNumber: 116, allowedColor: '#f7e76b', isPlayerAccepted: createColorAcceptanceMethod('yellow') },
-        { cellNumber: 117, allowedColor: '#f7e76b', isPlayerAccepted: createColorAcceptanceMethod('yellow') },
-        { cellNumber: 118, allowedColor: '#f7e76b', isPlayerAccepted: createColorAcceptanceMethod('yellow') },
-        { cellNumber: 119, allowedColor: '#f7e76b', isPlayerAccepted: createColorAcceptanceMethod('yellow') }
+        { cellNumber: 119, backgroundColor: '#f7e76b', isFinishingPath: true },
+        { cellNumber: 118, backgroundColor: '#f7e76b', isFinishingPath: true },
+        { cellNumber: 117, backgroundColor: '#f7e76b', isFinishingPath: true },
+        { cellNumber: 116, backgroundColor: '#f7e76b', isFinishingPath: true },
+        { cellNumber: 115, backgroundColor: '#f7e76b', isFinishingPath: true }
     ],
     'blue': [
-        { cellNumber: 203, allowedColor: '#6ba8ff', isPlayerAccepted: createColorAcceptanceMethod('blue') },
-        { cellNumber: 188, allowedColor: '#6ba8ff', isPlayerAccepted: createColorAcceptanceMethod('blue') },
-        { cellNumber: 173, allowedColor: '#6ba8ff', isPlayerAccepted: createColorAcceptanceMethod('blue') },
-        { cellNumber: 158, allowedColor: '#6ba8ff', isPlayerAccepted: createColorAcceptanceMethod('blue') },
-        { cellNumber: 143, allowedColor: '#6ba8ff', isPlayerAccepted: createColorAcceptanceMethod('blue') },
+        { cellNumber: 203, backgroundColor: '#6ba8ff', isFinishingPath: true },
+        { cellNumber: 188, backgroundColor: '#6ba8ff', isFinishingPath: true },
+        { cellNumber: 173, backgroundColor: '#6ba8ff', isFinishingPath: true },
+        { cellNumber: 158, backgroundColor: '#6ba8ff', isFinishingPath: true },
+        { cellNumber: 143, backgroundColor: '#6ba8ff', isFinishingPath: true },
     ],
     'red': [
-        { cellNumber: 107, allowedColor: '#ff6b6b', isPlayerAccepted: createColorAcceptanceMethod('red') },
-        { cellNumber: 108, allowedColor: '#ff6b6b', isPlayerAccepted: createColorAcceptanceMethod('red') },
-        { cellNumber: 109, allowedColor: '#ff6b6b', isPlayerAccepted: createColorAcceptanceMethod('red') },
-        { cellNumber: 110, allowedColor: '#ff6b6b', isPlayerAccepted: createColorAcceptanceMethod('red') },
-        { cellNumber: 111, allowedColor: '#ff6b6b', isPlayerAccepted: createColorAcceptanceMethod('red') }
+        { cellNumber: 107, backgroundColor: '#ff6b6b', isFinishingPath: true },
+        { cellNumber: 108, backgroundColor: '#ff6b6b', isFinishingPath: true },
+        { cellNumber: 109, backgroundColor: '#ff6b6b', isFinishingPath: true },
+        { cellNumber: 110, backgroundColor: '#ff6b6b', isFinishingPath: true },
+        { cellNumber: 111, backgroundColor: '#ff6b6b', isFinishingPath: true }
     ]
 };
 
 export const LUDO_PATHS: IPathCell[] = [
     { cellNumber: 7 },
-    { cellNumber: 8, finishPath: LUDO_FINISH_PATH['green'] },
+    { cellNumber: 8, finishPath: LUDO_FINISH_PATH['green'], color: 'green' },
     { cellNumber: 9 },
-    { cellNumber: 24, isSafe: true, safeColor: '#6bcf6b' },
+    { cellNumber: 24, isSafe: true, backgroundColor: '#6bcf6b', color: 'green', isStart: true },
     { cellNumber: 39 },
     { cellNumber: 54 },
     { cellNumber: 69 },
@@ -52,9 +49,9 @@ export const LUDO_PATHS: IPathCell[] = [
     { cellNumber: 103, isSafe: true },
     { cellNumber: 104 },
     { cellNumber: 105 },
-    { cellNumber: 120, finishPath: LUDO_FINISH_PATH['yellow'] },
+    { cellNumber: 120, finishPath: LUDO_FINISH_PATH['yellow'], color: 'yellow' },
     { cellNumber: 135 },
-    { cellNumber: 134, isSafe: true, safeColor: '#f7e76b' },
+    { cellNumber: 134, isSafe: true, backgroundColor: '#f7e76b', color: 'yellow', isStart: true },
     { cellNumber: 133 },
     { cellNumber: 132 },
     { cellNumber: 131 },
@@ -65,9 +62,9 @@ export const LUDO_PATHS: IPathCell[] = [
     { cellNumber: 189, isSafe: true },
     { cellNumber: 204 },
     { cellNumber: 219 },
-    { cellNumber: 218, finishPath: LUDO_FINISH_PATH['blue'] },
+    { cellNumber: 218, finishPath: LUDO_FINISH_PATH['blue'], color: 'blue' },
     { cellNumber: 217 },
-    { cellNumber: 202, isSafe: true, safeColor: '#6ba8ff' },
+    { cellNumber: 202, isSafe: true, backgroundColor: '#6ba8ff', color: 'blue', isStart: true },
     { cellNumber: 187 },
     { cellNumber: 172 },
     { cellNumber: 157 },
@@ -78,9 +75,9 @@ export const LUDO_PATHS: IPathCell[] = [
     { cellNumber: 123, isSafe: true },
     { cellNumber: 122 },
     { cellNumber: 121 },
-    { cellNumber: 106, finishPath: LUDO_FINISH_PATH['red'] },
+    { cellNumber: 106, finishPath: LUDO_FINISH_PATH['red'], color: 'red' },
     { cellNumber: 91 },
-    { cellNumber: 92, isSafe: true, safeColor: '#ff6b6b' },
+    { cellNumber: 92, isSafe: true, backgroundColor: '#ff6b6b', color: 'red', isStart: true },
     { cellNumber: 93 },
     { cellNumber: 94 },
     { cellNumber: 95 },
@@ -91,3 +88,21 @@ export const LUDO_PATHS: IPathCell[] = [
     { cellNumber: 37, isSafe: true },
     { cellNumber: 22 },
 ];
+
+export const COLOR_PATHS: { [color in LUDO_COLOR]: IPathCell[] } = {
+    'green': createColorPath(24, 8),
+    'yellow': createColorPath(134, 120),
+    'blue': createColorPath(202, 218),
+    'red': createColorPath(92, 106),
+}
+
+
+function createColorPath(startCellNumber: number, endCellNumber: number): IPathCell[] {
+    const len = LUDO_PATHS.length;
+    const startIndex = LUDO_PATHS.findIndex(path => path.cellNumber === startCellNumber);
+    const endIndex = LUDO_PATHS.findIndex(path => path.cellNumber === endCellNumber);
+
+    return LUDO_PATHS.slice(startIndex, len)
+        .concat(LUDO_PATHS.slice(0, endIndex + 1))
+        .concat(LUDO_PATHS[endIndex].finishPath ?? [])
+}

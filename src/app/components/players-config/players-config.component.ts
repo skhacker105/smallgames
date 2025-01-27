@@ -24,7 +24,7 @@ export class PlayersConfigComponent {
 
   initializeExistingPlayersForm(players: IPlayer[]): void {
     players.forEach(player => {
-      const color = this.config.askForColor ? (player.color ?? '#ffffff') : undefined;
+      const color = this.config.askForColor ? (player.color ?? 'red') : undefined;
       this.players.push({ name: player.name, color });
     })
   }
@@ -32,13 +32,13 @@ export class PlayersConfigComponent {
   initializeDefaultPlayersForm(): void {
     // Initialize with minimum players
     for (let i = 0; i < this.config.minPlayerCount; i++) {
-      this.players.push({ name: '', color: this.config.askForColor ? '#ffffff' : undefined });
+      this.players.push({ name: '', color: this.config.askForColor ? 'red' : undefined });
     }
   }
 
   addPlayer(): void {
     if (this.players.length < this.config.maxPlayerCount) {
-      this.players.push({ name: '', color: this.config.askForColor ? '#ffffff' : undefined });
+      this.players.push({ name: '', color: this.config.askForColor ? 'red' : undefined });
     } else {
       this.errorMessage = `Cannot exceed maximum of ${this.config.maxPlayerCount} players.`;
     }

@@ -1,10 +1,13 @@
+import { PLAYER_COLOR } from "../config";
+
 export interface ILudoCoin {
+    id: number;
     position: number;
-    finished: boolean
+    finished: boolean;
 }
 export interface IPlayer {
     name: string;
-    color?: string;
+    color?: PLAYER_COLOR;
     ludoCoins?: ILudoCoin[];
 }
 
