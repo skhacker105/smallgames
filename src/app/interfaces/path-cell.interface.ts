@@ -4,7 +4,8 @@ export interface IPathCell {
     cellNumber: number;
     finishPath?: IPathCell[];
     isSafe?: boolean;
-    safeColor?: string;
-    allowedColor?: string;
-    isPlayerAccepted?: (player: IPlayer) => boolean;
+    color?: string;
+    isStart?: boolean;
+    backgroundColor?: string;
+    isFinishingPath?: boolean;
 }

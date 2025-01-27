@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
-import { IPlayer, IPlayerAskConfig } from '../../../interfaces';
+import { ILudoCoin, IPlayer, IPlayerAskConfig } from '../../../interfaces';
 import { BaseComponent } from '../../../components/base.component';
-import { LUDO_PATHS } from '../ludo-path';
+import { COLOR_PATHS, LUDO_PATHS } from '../ludo-path';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { MatDialog } from '@angular/material/dialog';
 import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
 import { take } from 'rxjs';
 import { Router } from '@angular/router';
+import { ALL_COLORS } from '../../../config';
 
 @Component({
   selector: 'app-ludo',
@@ -21,11 +22,18 @@ export class LudoComponent extends BaseComponent {
   rolling: boolean = false;
   totalDiceRoll: number = 0;
   winner: string | null = null;
+  colors = ALL_COLORS;
+
+  playableCoins = new Set<number>();
 
   paths = LUDO_PATHS;
 
+  get player(): IPlayer {
+    return this.players[this.currentPlayer]
+  }
+
   constructor(private gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router) {
-    super()
+    super();
   }
 
   loadGameState(): void {
@@ -37,7 +45,8 @@ export class LudoComponent extends BaseComponent {
       this.lastDiceRoll = savedState.lastDiceRoll;
       this.totalDiceRoll = savedState.totalDiceRoll;
       this.winner = savedState.winner;
-      this.playerColors = savedState.playerColors
+      this.playerColors = savedState.playerColors ?? this.colors;
+      this.playableCoins = new Set<number>(savedState.playableCoins ?? []);
       if (this.winner || this.players.length === 0) {
         this.askForPlayers();
       }
@@ -53,6 +62,7 @@ export class LudoComponent extends BaseComponent {
     this.totalDiceRoll = 0;
     this.winner = null;
     this.playerColors = [];
+    this.playableCoins.clear();
     this.askForPlayers();
   }
 
@@ -63,7 +73,8 @@ export class LudoComponent extends BaseComponent {
       lastDiceRoll: this.lastDiceRoll,
       totalDiceRoll: this.totalDiceRoll,
       winner: this.winner,
-      playerColors: this.playerColors
+      playerColors: this.playerColors,
+      playableCoins: [...this.playableCoins.values()]
     };
     this.gameDashboardService.saveGameState(state);
   }
@@ -77,7 +88,6 @@ export class LudoComponent extends BaseComponent {
   }
 
   getPlayerColors(numPlayers: number): string[] {
-    const colors = ['red', 'green', 'yellow', 'blue'];
 
     // For two players
     if (numPlayers === 2) {
@@ -102,7 +112,7 @@ export class LudoComponent extends BaseComponent {
 
     // For four players, use all colors
     if (numPlayers === 4) {
-      return colors;
+      return this.colors;
     }
 
     // Return empty array for invalid number of players
@@ -129,7 +139,7 @@ export class LudoComponent extends BaseComponent {
           this.players = players.map((player, index) => ({
             name: player.name,
             color: this.playerColors[index],
-            ludoCoins: Array(4).fill(null).map(() => ({ position: 0, finished: false }))
+            ludoCoins: Array(4).fill(null).map((v, i) => ({ position: 0, finished: false, id: ((index * 4) + i) + 1 }))
           } as IPlayer));
           this.currentPlayer = 0;
           this.winner = null;
@@ -139,7 +149,7 @@ export class LudoComponent extends BaseComponent {
       })
   }
 
-  getBareAreaPlayer(color: string = 'red'): IPlayer | undefined {
+  getColorPlayer(color: string = 'red'): IPlayer | undefined {
     const colorIndex = this.playerColors.findIndex(pc => pc === color);
     if (colorIndex === -1) return;
 
@@ -147,18 +157,93 @@ export class LudoComponent extends BaseComponent {
   }
 
   rollDice(): void {
-    if (this.rolling) return;
+    if (this.rolling || this.totalDiceRoll) return;
 
     this.rolling = true;
+    this.playableCoins.clear();
     setTimeout(() => {
       this.lastDiceRoll = Math.floor(Math.random() * 6) + 1;
       this.totalDiceRoll += this.lastDiceRoll;
       this.rolling = false;
-
-      if (this.lastDiceRoll < 6) {
-        this.moveToNextPlayer();
-      }
+      this.processDiceRoll(this.totalDiceRoll);
+      this.saveGameState();
     }, 1000);
+  }
+
+  processDiceRoll(diceRoll: number): void {
+    this.identifyPlayableCoins(diceRoll);
+    if (this.playableCoins.size === 0) {
+      // Add code to reverse previous move if it was a six and the coin moved. It now needs to be moved back
+      this.moveToNextPlayer();
+    }
+  }
+
+  identifyPlayableCoins(diceRoll: number): void {
+    const playerColorPath = COLOR_PATHS[this.player.color ?? 'red'];
+
+    this.player.ludoCoins?.forEach((coin) => {
+      if (coin.finished) return;
+
+      if (coin.position === 0 && diceRoll === 6) {
+        this.playableCoins.add(coin.id);
+        return;
+      }
+
+      if (coin.position === 0) return;
+
+
+      const coinIndexOnColorPath = playerColorPath.findIndex(path => coin.position === path.cellNumber);
+      const colorPathLen = playerColorPath.length;
+      const isPathLeftToPlay = (coinIndexOnColorPath + diceRoll) <= colorPathLen;
+
+      if (isPathLeftToPlay)
+        this.playableCoins.add(coin.id);
+    });
+  }
+
+  playCoin(coin: ILudoCoin): void {
+    if (!this.playableCoins.has(coin.id)) return;
+
+    if (this.totalDiceRoll === 6 && coin.position === 0) {
+      this.getCoinOutOfBase(coin);
+      this.playableCoins.clear();
+    }
+    else if (coin.position !== 0) {
+      this.moveCoin(coin, this.totalDiceRoll)
+        .then(() => 6 !== this.totalDiceRoll ? this.moveToNextPlayer() : null);
+    }
+    else this.moveToNextPlayer();
+    this.totalDiceRoll = 0;
+  }
+
+  getCoinOutOfBase(coin: ILudoCoin): void {
+    const curPlayerColor = this.player.color;
+    const starPosition = this.paths.find(path => path.color === curPlayerColor && path.isStart);
+    if (starPosition) coin.position = starPosition.cellNumber;
+  }
+
+  moveCoin(coin: ILudoCoin, movesPending: number): Promise<void> {
+
+    const colorPath = COLOR_PATHS[this.player.color ?? 'red'];
+
+    let pathIndex = colorPath.findIndex(path => path.cellNumber === coin.position);
+    if (pathIndex > -1) {
+      const newPosition = colorPath[pathIndex + 1];
+      coin.position = newPosition.cellNumber;
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      if (movesPending > 1) {
+        setTimeout(() => {
+
+          this.moveCoin(coin, movesPending - 1)
+            .then(() => resolve());
+
+        }, 100);
+      } else {
+        resolve();
+      }
+    });
   }
 
   moveToNextPlayer(): void {
@@ -166,34 +251,15 @@ export class LudoComponent extends BaseComponent {
 
     this.totalDiceRoll = 0;
     this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
+    this.playableCoins.clear();
+    this.saveGameState();
   }
 
   checkWinner(): boolean {
-    const current = this.players[this.currentPlayer];
-    if (current.ludoCoins?.every(coin => coin.finished)) {
-      this.winner = current.name;
+    if (this.player.ludoCoins?.every(coin => coin.finished)) {
+      this.winner = this.player.name;
       return true;
     }
     return false;
-  }
-
-  moveCoin(coinIndex: number): void {
-    const current = this.players[this.currentPlayer];
-    if (!current.ludoCoins) return;
-    const coin = current.ludoCoins[coinIndex];
-
-    if (coin.finished) return;
-
-    const newPosition = coin.position + this.lastDiceRoll;
-    if (newPosition > 56) return;
-
-    coin.position = newPosition;
-    if (newPosition === 56) {
-      coin.finished = true;
-    }
-
-    if (this.lastDiceRoll < 6) {
-      this.moveToNextPlayer();
-    }
   }
 }
