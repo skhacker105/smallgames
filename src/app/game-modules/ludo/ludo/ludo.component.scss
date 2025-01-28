@@ -397,3 +397,49 @@
         transform: rotateX(360deg) rotateY(270deg);
     }
 }
+
+
+.winner {
+  text-align: center;
+  margin: 20px auto;
+  padding: 20px;
+  background: linear-gradient(145deg, #ffd700, #ffcc33);
+  color: #333;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+  animation: winnerPulse 2s infinite alternate;
+}
+
+.winner h2 {
+  font-size: 2em;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #4b4b4b;
+  text-shadow: 1px 1px 5px rgba(255, 255, 255, 0.5);
+}
+
+.winner button {
+  padding: 10px 20px;
+  font-size: 1em;
+  color: white;
+  background-color: #ff6b6b;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.winner button:hover {
+  background-color: #ff4c4c;
+  transform: scale(1.1);
+}
+
+@keyframes winnerPulse {
+  0% {
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+  }
+  100% {
+      box-shadow: 0 6px 20px rgba(255, 215, 0, 0.9), inset 0 3px 5px rgba(255, 255, 255, 1);
+  }
+}

@@ -26,6 +26,7 @@ export class LudoComponent extends BaseComponent {
 
   playableCoins = new Set<number>();
   coinsToReverse: ILudoCoin[] = [];
+  continuousSixes = 0;
 
   paths = LUDO_PATHS;
 
@@ -62,9 +63,13 @@ export class LudoComponent extends BaseComponent {
     this.rolling = false;
     this.totalDiceRoll = 0;
     this.winner = null;
-    this.playerColors = [];
+    this.players.forEach(player => {
+      player.ludoCoins?.forEach(coin => {
+        coin.position = 0;
+        coin.finished = false;
+      })
+    })
     this.playableCoins.clear();
-    this.askForPlayers();
   }
 
   saveGameState(): void {
@@ -163,8 +168,8 @@ export class LudoComponent extends BaseComponent {
     this.playableCoins.clear();
     setTimeout(() => {
       this.rolling = false;
-      // this.processDiceRoll(Math.floor(Math.random() * 6) + 1);
-      this.processDiceRoll(Math.floor(Math.random() * 2) + 5);
+      this.processDiceRoll(Math.floor(Math.random() * 6) + 1);
+      // this.processDiceRoll(Math.floor(Math.random() * 2) + 5);
       this.saveGameState();
     }, 1000);
   }
@@ -173,7 +178,7 @@ export class LudoComponent extends BaseComponent {
     this.lastDiceRoll = diceRoll;
     this.totalDiceRoll += diceRoll;
 
-    if (diceRoll === 6 && this.coinsToReverse.length === 2) {
+    if (diceRoll === 6 && this.continuousSixes === 2) {
       this.rollbackCoinsMove();
       this.moveToNextPlayer();
     }
@@ -226,10 +231,14 @@ export class LudoComponent extends BaseComponent {
   playCoin(coin: ILudoCoin): void {
     if (!this.playableCoins.has(coin.id)) return;
 
-    if (this.lastDiceRoll === 6)
-      this.coinsToReverse.push({ ...coin })
-    else
+    if (this.lastDiceRoll === 6) {
+      this.coinsToReverse.push({ ...coin });
+      this.continuousSixes++;
+    }
+    else {
       this.coinsToReverse = [];
+      this.continuousSixes = 0;
+    }
 
     if (this.lastDiceRoll === 6 && coin.position === 0) {
       this.getCoinOutOfBase(coin);
@@ -239,7 +248,12 @@ export class LudoComponent extends BaseComponent {
     else if (coin.position !== 0) {
       this.moveCoin(coin, this.lastDiceRoll)
         .then(() => {
-          if (6 !== this.lastDiceRoll)
+          const otherCoins = this.otherPlayerCoinsAtDestination(coin);
+          if (otherCoins.length > 0) {
+            otherCoins[0].position = 0;
+            this.coinsToReverse.push({ ...otherCoins[0] });
+          }
+          if (6 !== this.lastDiceRoll && otherCoins.length === 0 && !coin.finished)
             this.moveToNextPlayer();
           else
             this.playableCoins.clear();
@@ -248,6 +262,24 @@ export class LudoComponent extends BaseComponent {
     }
     else this.moveToNextPlayer();
     this.totalDiceRoll = 0;
+  }
+
+  otherPlayerCoinsAtDestination(coin: ILudoCoin): ILudoCoin[] {
+    const coinsFound: ILudoCoin[] = [];
+    this.players.forEach(player => {
+      if (player.name === this.player.name) return;
+
+      if (player.ludoCoins) {
+        player.ludoCoins.forEach(ludoCoin => {
+          if (ludoCoin.finished) return;
+          const isCellSafe = this.paths.find(path => path.cellNumber === coin.position)?.isSafe
+          if (ludoCoin.position === coin.position && !isCellSafe) {
+            coinsFound.push(ludoCoin);
+          }
+        });
+      }
+    });
+    return coinsFound;
   }
 
   getCoinOutOfBase(coin: ILudoCoin): void {
