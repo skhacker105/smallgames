@@ -3,7 +3,15 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
     {
         path: '',
-        loadChildren: () => import('./game-modules/home/home.module').then(module => module.HomeModule)
+        redirectTo: 'home',
+        pathMatch: 'full'
+    },
+    {
+        path: 'home',
+        loadChildren: () => import('./game-modules/home/home.module').then(module => module.HomeModule),
+        data: {
+            title: 'Small Games'
+        }
     },
     {
         path: 'tictactoe',
@@ -24,5 +32,17 @@ export const routes: Routes = [
     {
         path: 'ludo',
         loadChildren: () => import('./game-modules/ludo/ludo.module').then(module => module.LudoModule)
+    },
+    {
+        path: 'winners',
+        loadChildren: () => import('./game-modules/all-winners/all-winners.module').then(module => module.AllWinnersModule),
+        data: {
+            title: 'Winners List'
+        }
+    },
+    {
+        path: '**',
+        redirectTo: '',
+        pathMatch: 'full'
     }
 ];

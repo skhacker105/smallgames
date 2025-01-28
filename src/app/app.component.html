@@ -1,6 +1,6 @@
 <div class="container">
   <div class="header">
-    <div class="spacer home-icon" *ngIf="gameDashboardService.selectedGame.value">
+    <div class="spacer home-icon" *ngIf="gameDashboardService.selectedGame.value || !isHomePage">
       <mat-icon (click)="homeClicked()">home</mat-icon>
     </div>
     <div class="spacer title">
@@ -15,13 +15,12 @@
     <div class="action-setting" *ngIf="gameDashboardService.selectedGame.value?.settingsIconNeeded">
       <mat-icon>settings</mat-icon>
     </div>
-    <div class="action-setting" *ngIf="!gameDashboardService.selectedGame.value">
-      <mat-icon>info</mat-icon>
+    <div class="action-setting" *ngIf="!gameDashboardService.selectedGame.value && isHomePage">
+      <mat-icon (click)="router.navigateByUrl('winners')">emoji_events</mat-icon>
+      <mat-icon (click)="shoAboutInfo()">info</mat-icon>
     </div>
   </div>
   <div class="body spacer">
     <router-outlet />
   </div>
 </div>
-
-

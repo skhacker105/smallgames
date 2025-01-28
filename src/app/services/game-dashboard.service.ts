@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { IGameInfo } from '../interfaces';
+import { IGameInfo, IGameWinner, IPlayer } from '../interfaces';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 
@@ -46,6 +46,8 @@ export class GameDashboardService {
     }
   ];
 
+  allWinnersKey = 'allWinner';
+
   selectedGame = new BehaviorSubject<IGameInfo | undefined>(undefined);
 
   constructor(private router: Router) {
@@ -68,5 +70,23 @@ export class GameDashboardService {
 
     const state = localStorage.getItem(this.selectedGame.value.key);
     return state ? JSON.parse(state) : null;
+  }
+
+  saveGameWinner(winnerPlayer: IPlayer): void {
+    if (!this.selectedGame.value) return;
+
+    const allSavedWinners = this.getAllWinners();
+    allSavedWinners.push({
+      key: this.selectedGame.value?.key,
+      winner: winnerPlayer
+    });
+    localStorage.setItem(this.allWinnersKey, JSON.stringify(allSavedWinners));
+  }
+
+  getAllWinners(): IGameWinner[] {
+    const savedWInners = localStorage.getItem(this.allWinnersKey);
+    if (!savedWInners) return [] as IGameWinner[];
+
+    return JSON.parse(savedWInners);
   }
 }

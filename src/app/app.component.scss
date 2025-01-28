@@ -29,5 +29,10 @@
             font-weight: bold;
             font-family: 'Courier New', Courier, monospace;
         }
+
+        .action-setting {
+            display: flex;
+            gap: 10px;
+        }
     }
 }

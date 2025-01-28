@@ -237,6 +237,8 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
         }
 
         if (this.checkWinner()) {
+
+          this.gameDashboardService.saveGameWinner(this.players[this.currentPlayer]);
           this.saveGameState();
           return;
         }

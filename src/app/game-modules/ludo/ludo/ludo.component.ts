@@ -34,6 +34,10 @@ export class LudoComponent extends BaseComponent {
     return this.players[this.currentPlayer]
   }
 
+  get noCoinsMoved(): boolean {
+    return this.players.every(player => (player.ludoCoins ?? []).every(ludoCoin => ludoCoin.position === 0 && !ludoCoin.finished))
+  }
+
   constructor(private gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router) {
     super();
   }
@@ -49,7 +53,7 @@ export class LudoComponent extends BaseComponent {
       this.winner = savedState.winner;
       this.playerColors = savedState.playerColors ?? this.colors;
       this.playableCoins = new Set<number>(savedState.playableCoins ?? []);
-      if (this.winner || this.players.length === 0) {
+      if (this.winner || this.players.length === 0 || this.noCoinsMoved) {
         this.askForPlayers();
       }
     } else {
@@ -70,6 +74,7 @@ export class LudoComponent extends BaseComponent {
       })
     })
     this.playableCoins.clear();
+    this.saveGameState();
   }
 
   saveGameState(): void {
@@ -244,6 +249,7 @@ export class LudoComponent extends BaseComponent {
       this.getCoinOutOfBase(coin);
       this.playableCoins.clear();
       this.saveGameState();
+      if (this.checkWinner()) return;
     }
     else if (coin.position !== 0) {
       this.moveCoin(coin, this.lastDiceRoll)
@@ -258,6 +264,7 @@ export class LudoComponent extends BaseComponent {
           else
             this.playableCoins.clear();
           this.saveGameState();
+          if (this.checkWinner()) return;
         });
     }
     else this.moveToNextPlayer();
@@ -333,6 +340,7 @@ export class LudoComponent extends BaseComponent {
   checkWinner(): boolean {
     if (this.player.ludoCoins?.every(coin => coin.finished)) {
       this.winner = this.player.name;
+      this.gameDashboardService.saveGameWinner(this.player);
       return true;
     }
     return false;

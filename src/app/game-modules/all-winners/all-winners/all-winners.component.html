@@ -1,0 +1,32 @@
+<div class="winners-container">
+  <div class="header">
+    <button mat-icon-button [matMenuTriggerFor]="filterMenu">
+      <mat-icon>filter_list</mat-icon>
+    </button>
+  </div>
+
+  <mat-menu #filterMenu="matMenu">
+    <div *ngFor="let game of games" class="menu-item">
+      <mat-checkbox
+        [checked]="game ? selectedGames.has(game.key) : false"
+        (change)="game ? toggleGameSelection(game.key) : null"
+      >
+        {{ game?.name }}
+      </mat-checkbox>
+    </div>
+  </mat-menu>
+
+  <div class="winners-list">
+    <ul>
+      <li *ngFor="let gameWinner of filteredWinners" class="winner-item">
+        <span class="game-key">{{ gameWinner.key }}</span>
+        <span class="winner-name">{{ gameWinner.winner.name }}</span>
+        <span
+          *ngIf="gameWinner.winner.color"
+          class="winner-color"
+          [style.backgroundColor]="gameWinner.winner.color"
+        ></span>
+      </li>
+    </ul>
+  </div>
+</div>
