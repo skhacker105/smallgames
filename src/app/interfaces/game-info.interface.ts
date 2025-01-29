@@ -10,5 +10,7 @@ export interface IGameInfo {
 
 export interface IGameWinner {
     key: string;
-    winner: IPlayer;
+    winner?: IPlayer;
+    winners?: IPlayer[];
+    isDraw?: boolean;
 }

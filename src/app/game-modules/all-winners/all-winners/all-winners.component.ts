@@ -17,8 +17,8 @@ export class AllWinnersComponent implements OnInit {
 
   ngOnInit(): void {
     this.winners = this.gameDashboardService.getAllWinners();
-    this.games = this.winners.map((winner) => this.getGame(winner))
     this.selectedGames = new Set(this.winners.map((winner) => winner.key)); 
+    this.games = this.gameDashboardService.games.filter(game => this.selectedGames.has(game.key))
   }
 
   getGameName(winner: IGameWinner): string | undefined {
@@ -39,5 +39,9 @@ export class AllWinnersComponent implements OnInit {
 
   get filteredWinners(): IGameWinner[] {
     return this.winners.filter((winner) => this.selectedGames.has(winner.key));
+  }
+
+  getAllPlayerNames(winner: IGameWinner) {
+    return winner.winners?.map(w => w.name).join(',')
   }
 }

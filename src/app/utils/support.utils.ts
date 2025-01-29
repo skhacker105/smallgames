@@ -1,4 +1,4 @@
-import { LUDO_COLOR, LUDO_COLORS, PLAYER_COLOR } from "../config";
+import { CHESS_COLOR, CHESS_COLORS, LUDO_COLOR, LUDO_COLORS, PLAYER_COLOR } from "../config";
 
 export function shortenName(name: string) {
     // Trim whitespace and split the name into parts
@@ -19,4 +19,8 @@ export function shortenName(name: string) {
 
 export function isLudoColor(color?: PLAYER_COLOR): color is LUDO_COLOR {
     return color != undefined && LUDO_COLORS.indexOf(color as LUDO_COLOR) > -1
-  }
+}
+
+export function isChessColor(color?: PLAYER_COLOR): color is CHESS_COLOR {
+    return color != undefined && CHESS_COLORS.indexOf(color as CHESS_COLOR) > -1
+}

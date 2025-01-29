@@ -29,14 +29,14 @@
 </div>
 
 <div class="game-actions">
-<button mat-icon-button (click)="askForPlayers()">
-  <mat-icon>manage_accounts</mat-icon>
-</button>
-<button (click)="resetGame()">Reset Game</button>
+  <button mat-icon-button (click)="askForPlayers()">
+    <mat-icon>manage_accounts</mat-icon>
+  </button>
+  <button (click)="resetGame()">Reset Game</button>
 </div>
 
 <div *ngIf="gameOver" class="game-over">
-  <p *ngIf="winner === 'Draw'">It's a draw!</p>
-  <p *ngIf="winner !== 'Draw'">Checkmate! {{ winner }} wins!</p>
+  <p *ngIf="!winner && gameOver">It's a draw!</p>
+  <p *ngIf="winner && gameOver">Checkmate! {{ winner.name }} wins!</p>
   <button (click)="resetGame()">Reset Game</button>
 </div>

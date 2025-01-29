@@ -1,13 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { BaseComponent } from '../../../components/base.component';
-import { Chess, DEFAULT_POSITION, Piece, Square } from 'chess.js';
+import { Chess, Color, DEFAULT_POSITION, Piece, Square } from 'chess.js';
 import { IPlayer, IPlayerAskConfig } from '../../../interfaces';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
 import { MatDialog } from '@angular/material/dialog';
-import { CHESS_COLORS } from '../../../config';
+import { CHESS_COLOR, CHESS_COLORS } from '../../../config';
 import { take } from 'rxjs';
 import { Router } from '@angular/router';
+import { isChessColor } from '../../../utils/support.utils';
 
 @Component({
   selector: 'app-chess-board',
@@ -21,11 +22,11 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   isWhiteTurn: boolean = true;
   gameOver: boolean = false;
   players: IPlayer[] = [];
-  winner: string | null = null;
+  winner: IPlayer | null = null;
   selectedSquare: string | null = null;
   possibleMoves: string[] = []; // List of possible moves for the selected square
-  whitePlayer: string = 'White Player'; // Placeholder for white player name
-  blackPlayer: string = 'Black Player'; // Placeholder for black player name
+  // whitePlayer: string = 'White Player'; // Placeholder for white player name
+  // blackPlayer: string = 'Black Player'; // Placeholder for black player name
 
   constructor(private gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router) {
     super();
@@ -40,12 +41,15 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   loadGameState(): void {
     const savedState = this.gameDashboardService.loadGameState();
     if (savedState) {
-      this.chess.load(savedState.chess);
-      this.isWhiteTurn = savedState.isWhiteTurn;
       this.players = savedState.players;
       this.winner = savedState.winner;
-      if (this.winner || this.players.length === 0 || this.chess.fen() === DEFAULT_POSITION) {
-        this.askForPlayers();
+
+      if (!savedState.winner) {
+        this.chess.load(savedState.chess);
+        this.isWhiteTurn = savedState.isWhiteTurn;
+        if (this.winner || this.players.length === 0 || this.chess.fen() === DEFAULT_POSITION) {
+          this.askForPlayers();
+        }
       }
     } else {
       this.askForPlayers();
@@ -104,6 +108,11 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     return player.color === 'black'
   }
 
+  getPlayer(color: Color): IPlayer {
+    const allColors = { 'white': 'w', 'black': 'b' };
+    return this.players.find(p => p.color && isChessColor(p.color) ? allColors[p.color] === color : false) ?? this.players[0]
+  }
+
   updateBoard(): void {
     this.board = [];
     for (let i = 0; i < 8; i++) {
@@ -153,10 +162,12 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   checkGameOver(): void {
     if (this.chess.isCheckmate()) {
       this.gameOver = true;
-      this.winner = this.chess.turn() === 'w' ? 'Black' : 'White'; // Opposite turn indicates the winner
+      this.winner = this.getPlayer(this.chess.turn() === 'w' ? 'b' : 'w'); // Opposite turn indicates the winner
+      this.gameDashboardService.saveGameWinner(this.winner);
     } else if (this.chess.isStalemate() || this.chess.isDraw()) {
       this.gameOver = true;
-      this.winner = 'Draw';
+      this.winner = null;
+      this.gameDashboardService.saveGameWinner(this.players, true);
     }
   }
 

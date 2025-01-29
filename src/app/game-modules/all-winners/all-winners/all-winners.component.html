@@ -18,14 +18,13 @@
 
   <div class="winners-list">
     <ul>
-      <li *ngFor="let gameWinner of filteredWinners" class="winner-item">
-        <span class="game-key">{{ gameWinner.key }}</span>
-        <span class="winner-name">{{ gameWinner.winner.name }}</span>
-        <span
-          *ngIf="gameWinner.winner.color"
-          class="winner-color"
-          [style.backgroundColor]="gameWinner.winner.color"
-        ></span>
+      <li *ngFor="let gameWinner of filteredWinners; let i = index" class="winner-item">
+        <span class="game-key">{{ getGame(gameWinner)?.name }}</span>
+        
+        <span class="winner-name" *ngIf="gameWinner.isDraw">Draw between {{ getAllPlayerNames(gameWinner) ?? ' all players.' }}</span>
+        
+        <span class="winner-name" *ngIf="!gameWinner.isDraw && gameWinner.winner">{{ gameWinner.winner.name }}</span>
+        
       </li>
     </ul>
   </div>

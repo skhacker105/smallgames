@@ -47,7 +47,7 @@ export class GameDashboardService {
     {
       key: 'chess',
       name: 'Chess',
-      image: 'assets/ludo_icon.png',
+      image: 'assets/chess_icon.png',
       route: 'chess',
       settingsIconNeeded: false
     }
@@ -79,13 +79,15 @@ export class GameDashboardService {
     return state ? JSON.parse(state) : null;
   }
 
-  saveGameWinner(winnerPlayer: IPlayer): void {
+  saveGameWinner(winnerPlayer: IPlayer | IPlayer[], isDraw: boolean = false): void {
     if (!this.selectedGame.value) return;
 
     const allSavedWinners = this.getAllWinners();
     allSavedWinners.push({
       key: this.selectedGame.value?.key,
-      winner: winnerPlayer
+      winner: !Array.isArray(winnerPlayer) ? winnerPlayer : undefined,
+      winners: Array.isArray(winnerPlayer) ? winnerPlayer : undefined,
+      isDraw
     });
     localStorage.setItem(this.allWinnersKey, JSON.stringify(allSavedWinners));
   }
