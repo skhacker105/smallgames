@@ -43,6 +43,13 @@ export class GameDashboardService {
       image: 'assets/ludo_icon.png',
       route: 'ludo',
       settingsIconNeeded: false
+    },
+    {
+      key: 'chess',
+      name: 'Chess',
+      image: 'assets/ludo_icon.png',
+      route: 'chess',
+      settingsIconNeeded: false
     }
   ];
 

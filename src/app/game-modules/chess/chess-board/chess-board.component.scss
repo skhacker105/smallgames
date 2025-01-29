@@ -1,0 +1,178 @@
+.chess-board {
+    display: grid;
+    grid-template-rows: repeat(8, 1fr);
+    width: 90vw; /* Board width is 90% of viewport width */
+    max-width: 600px; /* Optional max-width for larger screens */
+    height: 90vw; /* Board height matches width to maintain square */
+    max-height: 600px; /* Optional max-height for larger screens */
+    margin: 10px; /* Side padding */
+    border: 3px solid #64748b;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    overflow: hidden;
+    background: linear-gradient(145deg, #0f172a, #1e293b);
+}
+
+.row {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+}
+
+.square {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    transition: background 0.3s;
+}
+
+.square.dark {
+    background-color: #1e293b;
+}
+
+.square.light {
+    background-color: #e2e8f0;
+}
+
+.square.selected {
+    outline: none; /* Remove solid outline */
+    // box-shadow: 0 0 15px 5px rgba(250, 204, 21, 0.6), 0 0 25px 10px rgba(250, 204, 21, 0.4); /* Glowing effect */
+    border-radius: 4px; /* Optional: Add rounded corners */
+    transition: box-shadow 0.3s ease, background-color 0.3s ease; /* Smooth glow effect */
+}
+
+.square.selected-wtih-moves {
+    background-color: rgba(34, 211, 238); /* Semi-transparent bluish background */
+}
+
+.square.possible {
+    outline: none; /* Remove dashed outline */
+    background-color: rgba(34, 211, 238, 0.6); /* Lighter semi-transparent bluish background */
+    box-shadow: 0 0 5px 2px rgba(34, 211, 238, 0.4), 0 0 10px 4px rgba(34, 211, 238, 0.2); /* Subtle glow effect */
+    border-radius: 4px; /* Optional: Add rounded corners */
+    transition: box-shadow 0.3s ease, background-color 0.3s ease; /* Smooth glow effect */
+}
+
+.piece {
+    font-size: calc(60vw / 8); /* Scale font size based on screen size */
+    max-font-size: 24px; /* Optional max size for larger screens */
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.white-on-white {
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+}
+
+.white-on-black {
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+}
+
+.black-on-black {
+    color: #000000;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+.black-on-white {
+    color: #000000;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    width: 90vw; /* Match board width */
+    max-width: 600px;
+    margin: 20px auto 10px;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-align: center;
+}
+
+.player {
+    padding: 10px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.white-player {
+    background-color: #ffffff;
+    color: #1e293b;
+}
+
+.black-player {
+    background-color: #1e293b;
+    color: #ffffff;
+}
+
+.selected-player {
+    box-shadow: 0 0 10px 5px rgba(255, 255, 0, 0.7); /* Yellow glow */
+}
+
+.current {
+    border: 3px solid #22c55e;
+    box-shadow: 0 0 12px #22c55e;
+}
+
+.game-over {
+    margin-top: 20px;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ff6f61, #ff2e63);
+    box-shadow: 0 4px 15px rgba(255, 47, 99, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    animation: fadeIn 0.5s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px; /* Adds space between the message and the button */
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.game-over p {
+    margin: 0;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.game-over button {
+    padding: 10px 20px;
+    font-size: 1em;
+    border: none;
+    border-radius: 5px;
+    background-color: #1e40af;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.game-over button:hover {
+    background-color: #2563eb;
+    transform: scale(1.05); /* Slightly enlarges the button on hover */
+}
+
+select {
+    padding: 10px;
+    font-size: 1em;
+    border: 1px solid #64748b;
+    border-radius: 5px;
+    background-color: #1e293b;
+    color: #ffffff;
+}

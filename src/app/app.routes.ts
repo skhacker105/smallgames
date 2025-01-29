@@ -34,6 +34,10 @@ export const routes: Routes = [
         loadChildren: () => import('./game-modules/ludo/ludo.module').then(module => module.LudoModule)
     },
     {
+        path: 'chess',
+        loadChildren: () => import('./game-modules/chess/chess.module').then(module => module.ChessModule)
+    },
+    {
         path: 'winners',
         loadChildren: () => import('./game-modules/all-winners/all-winners.module').then(module => module.AllWinnersModule),
         data: {
