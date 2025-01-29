@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { ChessRoutingModule } from './chess-routing.module';
 import { ChessBoardComponent } from './chess-board/chess-board.component';
 import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 
 @NgModule({
@@ -13,7 +15,9 @@ import { FormsModule } from '@angular/forms';
   imports: [
     CommonModule,
     ChessRoutingModule,
-    FormsModule
+    FormsModule,
+    MatIconModule,
+    MatButtonModule
   ]
 })
 export class ChessModule { }

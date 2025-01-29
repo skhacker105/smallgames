@@ -1,10 +1,14 @@
 <div class="game-info" *ngIf="!gameOver">
-  <div class="player white-player" [ngClass]="{
-    'selected-player': isWhiteTurn
-  }">{{ whitePlayer }}</div>
-  <div class="player black-player" [ngClass]="{
-    'selected-player': !isWhiteTurn
-  }">{{ blackPlayer }}</div>
+
+  <ng-container *ngFor="let player of players">
+    <div class="player" [ngClass]="{
+      'white-player': isWhitePlayer(player),
+      'black-player': isBlackPlayer(player),
+      'selected-player': (isWhitePlayer(player) && isWhiteTurn) || isBlackPlayer(player) && !isWhiteTurn
+    }">
+      {{ player.name | uppercase }}
+    </div>
+  </ng-container>
 </div>
 
 <div class="chess-board" *ngIf="!gameOver">
@@ -22,6 +26,13 @@
       </span>
     </div>
   </div>
+</div>
+
+<div class="game-actions">
+<button mat-icon-button (click)="askForPlayers()">
+  <mat-icon>manage_accounts</mat-icon>
+</button>
+<button (click)="resetGame()">Reset Game</button>
 </div>
 
 <div *ngIf="gameOver" class="game-over">

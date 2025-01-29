@@ -1,6 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { BaseComponent } from '../../../components/base.component';
-import { Chess, Piece, Square } from 'chess.js';
+import { Chess, DEFAULT_POSITION, Piece, Square } from 'chess.js';
+import { IPlayer, IPlayerAskConfig } from '../../../interfaces';
+import { GameDashboardService } from '../../../services/game-dashboard.service';
+import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
+import { MatDialog } from '@angular/material/dialog';
+import { CHESS_COLORS } from '../../../config';
+import { take } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-chess-board',
@@ -13,13 +20,14 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   gameMode: 'humanVsHuman' | 'humanVsComputer' | 'computerVsComputer' = 'humanVsHuman';
   isWhiteTurn: boolean = true;
   gameOver: boolean = false;
+  players: IPlayer[] = [];
   winner: string | null = null;
   selectedSquare: string | null = null;
   possibleMoves: string[] = []; // List of possible moves for the selected square
   whitePlayer: string = 'White Player'; // Placeholder for white player name
   blackPlayer: string = 'Black Player'; // Placeholder for black player name
 
-  constructor() {
+  constructor(private gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router) {
     super();
     this.chess = new Chess(); // Initialize the Chess instance
   }
@@ -30,15 +38,28 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   }
 
   loadGameState(): void {
-    const savedState = localStorage.getItem('chessState');
+    const savedState = this.gameDashboardService.loadGameState();
     if (savedState) {
-      this.chess.load(savedState); // Load game state from localStorage
-      this.isWhiteTurn = this.chess.turn() === 'w'
+      this.chess.load(savedState.chess);
+      this.isWhiteTurn = savedState.isWhiteTurn;
+      this.players = savedState.players;
+      this.winner = savedState.winner;
+      if (this.winner || this.players.length === 0 || this.chess.fen() === DEFAULT_POSITION) {
+        this.askForPlayers();
+      }
+    } else {
+      this.askForPlayers();
     }
   }
 
   saveGameState(): void {
-    localStorage.setItem('chessState', this.chess.fen()); // Save game state to localStorage
+    const state = {
+      chess: this.chess.fen(),
+      players: this.players,
+      winner: this.winner,
+      isWhiteTurn: this.isWhiteTurn
+    };
+    this.gameDashboardService.saveGameState(state);
   }
 
   resetGame(): void {
@@ -50,6 +71,37 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     this.isWhiteTurn = true;
     this.updateBoard();
     this.saveGameState();
+  }
+
+  askForPlayers(): void {
+    const ref = this.dialog.open(PlayersConfigComponent, {
+      data: {
+        askForName: true,
+        minPlayerCount: 2,
+        maxPlayerCount: 2,
+        preFillPlayers: this.players.length > 0 ? this.players : undefined,
+        colorOptions: CHESS_COLORS
+      } as IPlayerAskConfig
+    })
+    ref.afterClosed().pipe(take(1))
+      .subscribe((players: IPlayer[] | undefined) => {
+        if (!players) {
+          if (this.players.length === 0)
+            this.router.navigateByUrl('');
+        }
+        else {
+          this.players = players;
+          this.resetGame();
+        }
+      })
+  }
+
+  isWhitePlayer(player: IPlayer): boolean {
+    return player.color === 'white'
+  }
+
+  isBlackPlayer(player: IPlayer): boolean {
+    return player.color === 'black'
   }
 
   updateBoard(): void {
@@ -130,7 +182,6 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
 
   handleSquareClick(i: number, j: number): void {
     const square = this.indicesToSquare(i, j);
-    console.log({ square })
 
     if (!this.selectedSquare) {
       // Select the square if no square is currently selected
@@ -152,11 +203,10 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
           // Handle castling (no target square to highlight)
           // console.log(`${move} is castling.`);
         } else {
-          console.log(`${move} is a standard move.`);
+          // console.log(`${move} is a standard move.`);
         }
       });
       this.possibleMoves = possibleMoves;
-      console.log('possibleMoves = ', this.possibleMoves)
     } else {
       // Move the piece from the selected square to the clicked square
       // if (this.possibleMoves.includes(square)) {

@@ -176,3 +176,36 @@ select {
     background-color: #1e293b;
     color: #ffffff;
 }
+
+.game-actions {
+    display: flex;
+
+    >button {
+        padding: 12px 20px;
+        font-size: 1.1em;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: #ffffff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+        margin-top: 15px;
+        display: block;
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+    
+        &:hover {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(34, 197, 94, 0.5);
+        }
+    
+        &:active {
+            transform: scale(0.98);
+            box-shadow: 0 3px 8px rgba(34, 197, 94, 0.5);
+        }
+    }
+}
