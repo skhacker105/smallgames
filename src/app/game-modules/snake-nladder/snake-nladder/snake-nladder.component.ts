@@ -13,8 +13,6 @@ export interface IGameBoard {
   background: string;
   ladders: Record<number, number>;
   snakes: Record<number, number>;
-  playerColor: string;
-  playerBackgroundColor: string;
 }
 
 @Component({
@@ -30,24 +28,18 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
       background: 'assets/snakenladderboard01.jpg',
       ladders: { 1: 38, 4: 14, 9: 31, 21: 42, 28: 84, 51: 67, 71: 91, 80: 100 },
       snakes: { 17: 7, 54: 34, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 98: 79 },
-      playerColor: 'black',
-      playerBackgroundColor: '#ffeb3b'
     },
     {
       name: 'Board02',
       background: 'assets/snakenladderboard02.jpg',
       ladders: { 5: 35, 9: 51, 23: 42, 48: 86, 62: 83, 69: 91 },
       snakes: { 36: 5, 49: 7, 56: 8, 82: 20, 87: 66, 95: 38 },
-      playerColor: 'white',
-      playerBackgroundColor: '#700022'
     },
     {
       name: 'Board03',
       background: 'assets/snakenladderboard03.jpg',
       ladders: { 4: 25, 13: 46, 33: 49, 42: 63, 50: 69, 62: 81, 74: 92 },
       snakes: { 27: 5, 40: 3, 43: 18, 54: 31, 66: 45, 89: 53, 95: 77, 99: 41 },
-      playerColor: 'black',
-      playerBackgroundColor: '#ffeb3b'
     }
   ];
   selectedBoard?: IGameBoard;

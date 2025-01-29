@@ -15,6 +15,6 @@ export interface IPlayerAskConfig {
     minPlayerCount: number;
     maxPlayerCount: number;
     askForName: true;
-    askForColor?: boolean;
-    preFillPlayers?: IPlayer[]
+    preFillPlayers?: IPlayer[];
+    colorOptions?: PLAYER_COLOR[];
 }

@@ -26,7 +26,6 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
 
   override ngOnInit(): void {
     super.ngOnInit();
-    this.loadGameState(); // Load saved game state if available
     this.updateBoard();
   }
 

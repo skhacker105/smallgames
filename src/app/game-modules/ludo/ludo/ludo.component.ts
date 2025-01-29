@@ -7,7 +7,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
 import { take } from 'rxjs';
 import { Router } from '@angular/router';
-import { ALL_COLORS } from '../../../config';
+import { LUDO_COLORS, LUDO_COLOR } from '../../../config';
+import { isLudoColor } from '../../../utils/support.utils';
 
 @Component({
   selector: 'app-ludo',
@@ -22,7 +23,7 @@ export class LudoComponent extends BaseComponent {
   rolling: boolean = false;
   totalDiceRoll: number = 0;
   winner: string | null = null;
-  colors = ALL_COLORS;
+  colors = LUDO_COLORS;
 
   playableCoins = new Set<number>();
   coinsToReverse: ILudoCoin[] = [];
@@ -98,37 +99,37 @@ export class LudoComponent extends BaseComponent {
       return ((cellIndex - (row * 15)) * 6).toString() + 'vw';
   }
 
-  getPlayerColors(numPlayers: number): string[] {
+  // getPlayerColors(numPlayers: number): string[] {
 
-    // For two players
-    if (numPlayers === 2) {
-      const pair1 = ['red', 'yellow'];
-      const pair2 = ['green', 'blue'];
-      const randomPair = Math.random() < 0.5 ? pair1 : pair2;
-      return randomPair;
-    }
+  //   // For two players
+  //   if (numPlayers === 2) {
+  //     const pair1 = ['red', 'yellow'];
+  //     const pair2 = ['green', 'blue'];
+  //     const randomPair = Math.random() < 0.5 ? pair1 : pair2;
+  //     return randomPair;
+  //   }
 
-    // For three players
-    if (numPlayers === 3) {
-      const pair1 = ['red', 'yellow'];
-      const pair2 = ['green', 'blue'];
-      const randomPair = Math.random() < 0.5 ? pair1 : pair2;
-      const remainingColors = randomPair === pair1 ? pair2 : pair1;
+  //   // For three players
+  //   if (numPlayers === 3) {
+  //     const pair1 = ['red', 'yellow'];
+  //     const pair2 = ['green', 'blue'];
+  //     const randomPair = Math.random() < 0.5 ? pair1 : pair2;
+  //     const remainingColors = randomPair === pair1 ? pair2 : pair1;
 
-      // Select third color from the remaining set
-      const thirdColor = remainingColors[Math.floor(Math.random() * remainingColors.length)];
+  //     // Select third color from the remaining set
+  //     const thirdColor = remainingColors[Math.floor(Math.random() * remainingColors.length)];
 
-      return [...randomPair, thirdColor];
-    }
+  //     return [...randomPair, thirdColor];
+  //   }
 
-    // For four players, use all colors
-    if (numPlayers === 4) {
-      return this.colors;
-    }
+  //   // For four players, use all colors
+  //   if (numPlayers === 4) {
+  //     return this.colors;
+  //   }
 
-    // Return empty array for invalid number of players
-    return [];
-  }
+  //   // Return empty array for invalid number of players
+  //   return [];
+  // }
 
   askForPlayers(): void {
     const ref = this.dialog.open(PlayersConfigComponent, {
@@ -136,7 +137,8 @@ export class LudoComponent extends BaseComponent {
         askForName: true,
         minPlayerCount: 2,
         maxPlayerCount: 4,
-        preFillPlayers: this.players.length > 0 ? this.players : undefined
+        preFillPlayers: this.players.length > 0 ? this.players : undefined,
+        colorOptions: LUDO_COLORS
       } as IPlayerAskConfig
     })
     ref.afterClosed().pipe(take(1))
@@ -146,10 +148,10 @@ export class LudoComponent extends BaseComponent {
             this.router.navigateByUrl('');
         }
         else {
-          this.playerColors = this.getPlayerColors(players.length);
+          this.playerColors = players.map(player => player.color ?? 'red');
           this.players = players.map((player, index) => ({
             name: player.name,
-            color: this.playerColors[index],
+            color: player.color ?? this.playerColors[index],
             ludoCoins: Array(4).fill(null).map((v, i) => ({ position: 0, finished: false, id: ((index * 4) + i) + 1 }))
           } as IPlayer));
           this.currentPlayer = 0;
@@ -211,6 +213,8 @@ export class LudoComponent extends BaseComponent {
   }
 
   identifyPlayableCoins(diceRoll: number): void {
+    if (!isLudoColor(this.player.color)) return;
+    
     const playerColorPath = COLOR_PATHS[this.player.color ?? 'red'];
 
     this.player.ludoCoins?.forEach((coin) => {
@@ -296,6 +300,7 @@ export class LudoComponent extends BaseComponent {
   }
 
   moveCoin(coin: ILudoCoin, movesPending: number): Promise<void> {
+    if (!isLudoColor(this.player.color)) return new Promise(resolve => resolve());
 
     const colorPath = COLOR_PATHS[this.player.color ?? 'red'];
 

@@ -1,3 +1,5 @@
+import { LUDO_COLOR, LUDO_COLORS, PLAYER_COLOR } from "../config";
+
 export function shortenName(name: string) {
     // Trim whitespace and split the name into parts
     const parts = name.trim().split(/\s+/);
@@ -14,3 +16,7 @@ export function shortenName(name: string) {
         );
     }
 }
+
+export function isLudoColor(color?: PLAYER_COLOR): color is LUDO_COLOR {
+    return color != undefined && LUDO_COLORS.indexOf(color as LUDO_COLOR) > -1
+  }

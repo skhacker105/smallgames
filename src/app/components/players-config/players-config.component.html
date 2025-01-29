@@ -1,4 +1,3 @@
-<!-- player-ask.component.html -->
 <div class="player-ask-wrapper">
   <h1 class="title">Configure Players</h1>
 
@@ -8,9 +7,18 @@
       <input type="text" id="playerName{{ i }}" [(ngModel)]="players[i].name" class="player-name"
         placeholder="Enter player name" />
 
-      <div *ngIf="config.askForColor" class="color-picker-container">
-        <input type="color" id="playerColor{{ i }}" [(ngModel)]="players[i].color" class="color-input"
-          [style.backgroundColor]="players[i].color" />
+      <!-- Updated Color Picker -->
+      <div *ngIf="config.colorOptions" class="color-picker-container">
+        <!-- Selected Color Dot -->
+        <div class="selected-color" [style.backgroundColor]="player.color" (click)="toggleColorPicker(i)">
+        </div>
+
+        <!-- Color Options Dropdown -->
+        <div *ngIf="activeColorPickerIndex === i" class="color-options-dropdown">
+          <div *ngFor="let color of config.colorOptions" class="color-option" [style.backgroundColor]="color"
+            [class.selected]="player.color === color" (click)="selectColor(player, color)">
+          </div>
+        </div>
       </div>
 
       <button class="remove-button" (click)="removePlayer(i)" [disabled]="players.length <= config.minPlayerCount">
@@ -26,7 +34,10 @@
     </button>
     <div class="spacer"></div>
 
-    <button class="submit-button" (click)="submit()">Submit</button>
+    <button class="submit-button" (click)="submit()" [disabled]="!isColorValid">
+      Submit
+    </button>
+
     <button class="submit-button" (click)="dialogRef.close()">Cancel</button>
   </div>
 </div>
