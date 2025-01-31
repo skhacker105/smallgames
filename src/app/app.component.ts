@@ -6,11 +6,16 @@ import { MatIconModule } from '@angular/material/icon';
 import { filter } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { AboutGameComponent } from './components/about-game/about-game.component';
+import { StatusBar } from '@capacitor/status-bar';
+import { Capacitor } from '@capacitor/core';
+import { LoggerService } from './services/logger.service';
+import { MatButtonModule } from '@angular/material/button';
+import { UserService } from './services/user.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, MatIconModule, RouterModule],
+  imports: [RouterOutlet, CommonModule, MatIconModule, RouterModule, MatButtonModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -22,12 +27,21 @@ export class AppComponent {
     return this.title === this.baseTitle;
   }
 
-  constructor(public gameDashboardService: GameDashboardService, public router: Router, private dialog: MatDialog) {
+  constructor(
+    public gameDashboardService: GameDashboardService,
+    public router: Router,
+    private dialog: MatDialog,
+    public loggerService: LoggerService,
+    private userService: UserService) {
     this.router.events
-    .pipe(filter(event => event instanceof NavigationEnd)) // Filter only NavigationEnd events
-    .subscribe(() => {
-      this.updateTitleFromRouteData();
-    });
+      .pipe(filter(event => event instanceof NavigationEnd)) // Filter only NavigationEnd events
+      .subscribe(() => {
+        this.updateTitleFromRouteData();
+      });
+
+    if (Capacitor.getPlatform() !== 'web') {
+      StatusBar.hide();
+    }
   }
 
   homeClicked() {
@@ -58,5 +72,13 @@ export class AppComponent {
       width: '80vw',
       disableClose: true, // Prevents closing the dialog by clicking outside or pressing ESC
     });
+  }
+
+  hideLogs() {
+    this.loggerService.resetShowLogs();
+  }
+
+  clearLogs() {
+    this.loggerService.clearLogs();
   }
 }

@@ -45,3 +45,9 @@
     display: flex;
     justify-content: flex-end;
   }
+
+  .no-show {
+    border: 0px;
+    color: transparent;
+    background: transparent;
+  }

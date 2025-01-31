@@ -25,7 +25,10 @@
 
     <!-- Footer -->
     <mat-card-actions class="popup-footer">
-      <button mat-raised-button color="primary" (click)="closePopup()">Close</button>
+      <button mat-raised-button color="primary" (click)="closePopup()" id="close-button">Close</button>
+    </mat-card-actions>
+    <mat-card-actions class="popup-footer">
+      <input type="text" class="no-show" [(ngModel)]="noShowValue">
     </mat-card-actions>
   </mat-card>
 </div>

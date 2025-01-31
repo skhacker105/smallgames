@@ -23,4 +23,18 @@
   <div class="body spacer">
     <router-outlet />
   </div>
+
+  <div class="logs" *ngIf="loggerService.showLogs">
+    <button mat-icon-button class="close-console" (click)="hideLogs()">
+      <mat-icon>close</mat-icon>
+    </button>
+    <button mat-icon-button class="close-clear" (click)="hideLogs()">
+      <mat-icon>delete_forever</mat-icon>
+    </button>
+    <div class="messages">
+      <div class="message" *ngFor="let message of loggerService.logMessages">
+        {{ message }}
+      </div>
+    </div>
+  </div>
 </div>

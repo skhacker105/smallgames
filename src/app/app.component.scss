@@ -35,4 +35,33 @@
             gap: 10px;
         }
     }
+
+    .logs {
+        display: flex;
+        min-height: 30vh;
+        position: relative;
+
+        .messages {
+            width: calc(100% - 2px);
+            height: calc(100% - 2px);
+            border: solid 1px #efefef;
+            background: white;
+
+            .message {
+                padding: 10px;
+            }
+        }
+
+        .close-console {
+            position: absolute;
+            right: 0px;
+            top: 0px;
+        }
+
+        .close-clear {
+            position: absolute;
+            right: 0px;
+            bottom: 0px;
+        }
+    }
 }

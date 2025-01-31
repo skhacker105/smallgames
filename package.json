@@ -1,12 +1,14 @@
 {
   "name": "small-games",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "run-android": "ng build --configuration=production && npx cap sync",
+    "run-android-open": "ng build --configuration=production && npx cap sync && npx cap open android"
   },
   "private": true,
   "dependencies": {
@@ -24,6 +26,8 @@
     "@capacitor/angular": "^2.0.3",
     "@capacitor/core": "latest",
     "@capacitor/ios": "^7.0.1",
+    "@capacitor/network": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
     "chess.js": "^1.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
