@@ -32,7 +32,7 @@ export class AppComponent {
     public router: Router,
     private dialog: MatDialog,
     public loggerService: LoggerService,
-    private userService: UserService) {
+    public userService: UserService) {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd)) // Filter only NavigationEnd events
       .subscribe(() => {
@@ -80,5 +80,9 @@ export class AppComponent {
 
   clearLogs() {
     this.loggerService.clearLogs();
+  }
+
+  startServer() {
+    this.userService.createServer();
   }
 }

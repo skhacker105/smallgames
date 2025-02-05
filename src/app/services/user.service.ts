@@ -1,53 +1,47 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { ConnectionStatus, Network } from '@capacitor/network';
 import { LoggerService } from './logger.service';
+import { MatDialog } from '@angular/material/dialog';
+import { PeerConnetionComponent } from '../components/peer-connetion/peer-connetion.component';
 
 @Injectable({
   providedIn: 'root'
 })
-export class UserService {
+export class UserService implements OnDestroy {
 
   internetConnectionStatus?: ConnectionStatus;
   ipAddress: string = '';
 
-  constructor(private loggerService: LoggerService) {
+  constructor(private loggerService: LoggerService, private dialog: MatDialog) {
     this.refreshNetworkStatus();
   }
 
-  refreshNetworkStatus() {
-    this.connectToNetwork()
-    .then(async (status) => {
-      if (status) {
-        if (status.connected) {
-          this.ipAddress = (await this.getIPAddress()) ?? '';
-          this.loggerService.log(`IP Address = ${this.ipAddress}`)
-        } else {
-          this.loggerService.log(`No internet connection`)
-        }
-      }
+  async refreshNetworkStatus() {
+    this.internetConnectionStatus = await this.connectToNetwork();
+    Network.addListener('networkStatusChange', (status) => {
+      this.internetConnectionStatus = status;
     });
   }
- 
+
   async connectToNetwork(): Promise<ConnectionStatus | undefined> {
     try {
       const status = await Network.getStatus();
-      console.log('Network status:', status);
-
       return status;
+
     } catch (error) {
+
       this.loggerService.log(`Error fetching network status: ${error}`);
       return undefined;
     }
   }
 
-  async getIPAddress(): Promise<string | undefined> {
-    try {
-      const response = await fetch('https://api64.ipify.org?format=json');
-      const data = await response.json();
-      return data.ip;
-    } catch (error) {
-      this.loggerService.log(`Error fetching network status: ${error}`);
-      return undefined;
-    }
+  ngOnDestroy(): void {
+    Network.removeAllListeners();
+  }
+
+  createServer(): void {
+    this.dialog.open(PeerConnetionComponent, {
+      width: '90vw'
+    })
   }
 }

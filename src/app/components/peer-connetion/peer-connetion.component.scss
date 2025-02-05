@@ -1,0 +1,128 @@
+/* Custom Tab Styling */
+  .custom-tab-group {
+    // background: rgba(30, 41, 59, 0.5);
+    background: linear-gradient(145deg, #0f172a, #1e293b);
+    backdrop-filter: blur(10px);
+
+    ::ng-deep {
+      
+      .mat-mdc-tab-labels {
+        width: calc(100% - 50px);
+      }
+
+      .mat-mdc-tab {
+        .mdc-tab__text-label {
+          color: white !important;
+        }
+
+        &.mdc-tab--active {
+          .mdc-tab__text-label {
+            color: #8ecaff !important; /* Light blue text */
+            font-weight: 100;
+            text-shadow: 
+              0 0 30px #66c2ff, 
+              0 0 60px #33adff, 
+              0 0 120px #1a8cff, 
+              0 0 200px #0073e6, 
+              0 0 300px #005bb5; /* Massive outer glow */
+          font-weight: bold !important; /* Stronger outer glow */
+          }
+        }
+      }
+    }
+  }
+
+  ::ng-deep .mat-tab-label {
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 16px;
+    transition: 0.3s;
+  }
+  
+  
+  /* Tab Content */
+  .tab-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    background: linear-gradient(145deg, #0f172a, #1e293b);
+
+    &::ng-deep  {
+      input, mat-label {
+        color: white;
+      }
+    }
+  }
+
+  
+  /* Buttons with Glow Effect */
+  .box-container, .glow-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #14b8a6 !important;
+    color: white !important;
+    border-radius: 8px;
+    padding: 10px 16px;
+    transition: 0.3s ease-in-out;
+    box-shadow: 0px 0px 15px rgba(20, 184, 166, 0.7) !important;
+  }
+  
+  .box-container:hover, glow-button:hover {
+    background: linear-gradient(145deg, #334155, #475569) !important;
+    box-shadow: 0px 0px 10px rgba(52, 211, 153, 0.3) !important;
+    color: black !important;
+  }
+  
+  /* Button Group */
+  .button-group {
+    padding-top: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 20px;
+
+    .box-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
+      .icon, .trigger {
+        display: flex;
+        margin: auto;
+      }
+
+      .trigger {
+        .error {
+          margin: auto;
+        }
+      }
+
+      .mat-icon {
+        color: white !important;
+      }
+    }
+  }
+  
+  /* Icons */
+  mat-icon {
+    font-size: 20px;
+  }
+
+  .close-button {
+    position: absolute;
+    right: 0;
+    z-index: 100;
+    color: white !important;
+    transition: 0.3s ease-in-out;
+
+    &:hover {
+      background-color: white;
+      color: black !important;
+      transition: 0.3s ease-in-out;
+    }
+  }
+  
+

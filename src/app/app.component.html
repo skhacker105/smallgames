@@ -1,9 +1,14 @@
 <div class="container">
+
+  <!-- Header -->
   <div class="header">
+
     <div class="spacer home-icon" *ngIf="gameDashboardService.selectedGame.value || !isHomePage">
       <mat-icon (click)="homeClicked()">home</mat-icon>
     </div>
+
     <div class="spacer title">
+
       <ng-container *ngIf="!gameDashboardService.selectedGame.value">
         {{ title }}
       </ng-container>
@@ -11,19 +16,30 @@
         {{ gameDashboardService.selectedGame.value.name }}
       </ng-container>
     </div>
+
     <div class="spacer"></div>
-    <div class="action-setting" *ngIf="gameDashboardService.selectedGame.value?.settingsIconNeeded">
-      <mat-icon>settings</mat-icon>
-    </div>
-    <div class="action-setting" *ngIf="!gameDashboardService.selectedGame.value && isHomePage">
-      <mat-icon (click)="router.navigateByUrl('winners')">emoji_events</mat-icon>
-      <mat-icon (click)="shoAboutInfo()">info</mat-icon>
+
+    <div class="action-setting">
+
+      <mat-icon *ngIf="gameDashboardService.selectedGame.value?.settingsIconNeeded">settings</mat-icon>
+
+      <ng-container *ngIf="!gameDashboardService.selectedGame.value && isHomePage">
+        <mat-icon (click)="router.navigateByUrl('winners')">emoji_events</mat-icon>
+        <mat-icon (click)="shoAboutInfo()">info</mat-icon>
+      </ng-container>
+
+      <mat-icon *ngIf="userService.internetConnectionStatus?.connected">wifi</mat-icon>
+      <mat-icon *ngIf="!userService.internetConnectionStatus?.connected">wifi_off</mat-icon>
+
     </div>
   </div>
+
+  <!-- Body -->
   <div class="body spacer">
     <router-outlet />
   </div>
 
+  <!-- Logs -->
   <div class="logs" *ngIf="loggerService.showLogs">
     <button mat-icon-button class="close-console" (click)="hideLogs()">
       <mat-icon>close</mat-icon>
@@ -32,6 +48,7 @@
       <mat-icon>delete_forever</mat-icon>
     </button>
     <div class="messages">
+      <button (click)="startServer()">Start Server</button>
       <div class="message" *ngFor="let message of loggerService.logMessages">
         {{ message }}
       </div>
