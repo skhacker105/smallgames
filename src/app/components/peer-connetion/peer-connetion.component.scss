@@ -45,21 +45,6 @@
     transition: 0.3s;
   }
   
-  
-  /* Tab Content */
-  .tab-content {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    background: linear-gradient(145deg, #0f172a, #1e293b);
-
-    &::ng-deep  {
-      input, mat-label {
-        color: white;
-      }
-    }
-  }
 
   
   /* Buttons with Glow Effect */
@@ -79,36 +64,6 @@
     background: linear-gradient(145deg, #334155, #475569) !important;
     box-shadow: 0px 0px 10px rgba(52, 211, 153, 0.3) !important;
     color: black !important;
-  }
-  
-  /* Button Group */
-  .button-group {
-    padding-top: 30px;
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    margin-top: 20px;
-
-    .box-container {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-
-      .icon, .trigger {
-        display: flex;
-        margin: auto;
-      }
-
-      .trigger {
-        .error {
-          margin: auto;
-        }
-      }
-
-      .mat-icon {
-        color: white !important;
-      }
-    }
   }
   
   /* Icons */
