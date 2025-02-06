@@ -41,7 +41,7 @@ export class UserService implements OnDestroy {
 
   createServer(): void {
     this.dialog.open(PeerConnetionComponent, {
-      width: '90vw'
+      width: '99vw'
     })
   }
 }

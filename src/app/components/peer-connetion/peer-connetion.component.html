@@ -11,22 +11,21 @@
         </ngx-spinner>
         <mat-stepper orientation="vertical" [linear]="true" #serverStepper="matStepper">
 
+            <!-- Start Host Configuration -->
             <mat-step label="Start Hosting">
-                <button (click)="startServer(serverStepper)">
-                    Start Host Configuration
+                <button mat-icon-button (click)="startServer(serverStepper)">
+                    <mat-icon>flag_circle</mat-icon>
                 </button>
-                <ng-template [ngTemplateOutlet]="stepperActions"
-                    [ngTemplateOutletContext]="{stepper: serverStepper, stepCounts: 5, isNextDisabled: localDataAsQRCodeText.length <= 8}">
-                </ng-template>
             </mat-step>
 
             <mat-step label="Host QR Code">
                 <div class="info">
                     Scan/Upload below QR Code on Player
                 </div>
-                <button *ngIf="localDataAsQRCodeText.length > 8"
+                <!-- Download QR Code -->
+                <button *ngIf="localDataAsQRCodeText.length > 8" mat-icon-button class="glow-button download-button"
                     (click)="downloadQRCode(qrcodeServerElement, 'qrcodeHost', serverStepper)" type="button">
-                    Download QR Code
+                    <mat-icon>download</mat-icon>
                 </button>
                 <qrcode *ngIf="localDataAsQRCodeText.length > 8" #qrcodeServer [qrdata]="localDataAsQRCodeText"
                     [errorCorrectionLevel]="'H'">
@@ -37,18 +36,12 @@
             </mat-step>
 
             <mat-step label="Scan Player">
-                <div class="box-container" (click)="scanPlayer(serverStepper)">
-                    <div class="icon">
-                        <mat-icon>camera_alt</mat-icon>
-                    </div>
-                    <div class="trigger">
-                        <button mat-raised-button class="glow-button">
-                            Scan
-                        </button>
-                        <div class="error" *ngIf="scanError">
-                            {{ scanError }}
-                        </div>
-                    </div>
+
+                <button mat-icon-button class="glow-button" (click)="scanPlayer(serverStepper)">
+                    <mat-icon>qr_code_scanner</mat-icon>
+                </button>
+                <div class="error" *ngIf="scanError">
+                    {{ scanError }}
                 </div>
                 <ng-template [ngTemplateOutlet]="stepperActions"
                     [ngTemplateOutletContext]="{stepper: serverStepper, stepCounts: 5}">
@@ -77,31 +70,22 @@
         <mat-stepper orientation="vertical" [linear]="true" #clientStepper="matStepper">
 
             <mat-step label="Scan Host">
-                <div class="box-container" (click)="scanServer(clientStepper)">
-                    <div class="icon">
-                        <mat-icon>camera_alt</mat-icon>
-                    </div>
-                    <div class="trigger">
-                        <button mat-raised-button class="glow-button">
-                            Scan
-                        </button>
-                        <div class="error" *ngIf="scanError">
-                            {{ scanError }}
-                        </div>
-                    </div>
+                <button mat-icon-button class="glow-button" (click)="scanServer(serverStepper)">
+                    <mat-icon>qr_code_scanner</mat-icon>
+                </button>
+                <div class="error" *ngIf="scanError">
+                    {{ scanError }}
                 </div>
-                <ng-template [ngTemplateOutlet]="stepperActions"
-                    [ngTemplateOutletContext]="{stepper: clientStepper, stepCounts: 5}">
-                </ng-template>
             </mat-step>
 
             <mat-step label="Player QR">
                 <div class="info">
                     Scan/Upload below QR Code on Host
                 </div>
-                <button *ngIf="localDataAsQRCodeText.length > 8"
+                <!-- Download QR Code -->
+                <button class="glow-button download-button" mat-icon-button *ngIf="localDataAsQRCodeText.length > 8"
                     (click)="downloadQRCode(qrcodePlayerElement, 'qrcodePlayer', clientStepper)" type="button">
-                    Download QR Code
+                    <mat-icon>download</mat-icon>
                 </button>
                 <qrcode *ngIf="localDataAsQRCodeText.length > 8" #qrcodePlayer [qrdata]="localDataAsQRCodeText"
                     [errorCorrectionLevel]="'H'">
@@ -115,7 +99,7 @@
                 <div class="info">
                     After scanning previous QR Code click below.
                 </div>
-                <button (click)="setHostCandidate(clientStepper)">
+                <button (click)="setHostCandidate(clientStepper)" class="glow-button yes-button">
                     Yes
                 </button>
             </mat-step>
@@ -141,11 +125,23 @@
 
 
 <ng-template #stepperActions let-stepper="stepper" let-stepCounts="stepCounts" let-isNextDisabled="isNextDisabled">
-    <button mat-button (click)="resetSteps(stepper)">Reset</button>
-    <button mat-button *ngIf="stepper.selectedIndex > 0" (click)="stepper.previous()">Prev</button>
-    <button mat-button *ngIf="stepper.selectedIndex < +stepCounts - 1" (click)="stepper.next()"
-        [disabled]="!!isNextDisabled">Next</button>
-    <button mat-button *ngIf="stepper.selectedIndex === +stepCounts - 1">Submit</button>
+    <!-- Reset -->
+    <button mat-icon-button (click)="resetSteps(stepper)" class="glow-button reset-button">
+        <mat-icon>restart_alt</mat-icon>
+    </button>
+    <!-- Prev -->
+    <button mat-icon-button *ngIf="stepper.selectedIndex > 0" (click)="stepper.previous()">
+        <mat-icon>chevron_left</mat-icon>
+    </button>
+    <!-- Next -->
+    <button mat-icon-button *ngIf="stepper.selectedIndex < +stepCounts - 1" (click)="stepper.next()"
+        [disabled]="!!isNextDisabled">
+        <mat-icon>chevron_right</mat-icon>
+    </button>
+    <!-- Submit -->
+    <button mat-icon-button *ngIf="stepper.selectedIndex === +stepCounts - 1">
+        <mat-icon>task_alt</mat-icon>
+    </button>
 </ng-template>
 
 <ng-template #messageTest>
@@ -161,5 +157,5 @@
 </ng-template>
 
 <ng-template #name>
-    Name: <input type="text">
+    <div class="name">Name: <input type="text"></div>
 </ng-template>

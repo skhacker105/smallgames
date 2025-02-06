@@ -1,88 +1,161 @@
-/* Custom Tab Styling */
-  .custom-tab-group {
-    // background: rgba(30, 41, 59, 0.5);
-    background: linear-gradient(145deg, #0f172a, #1e293b);
-    backdrop-filter: blur(10px);
-    max-height: 60vh;
+/* Dark Theme Styling */
+.custom-tab-group {
+    background: linear-gradient(145deg, #0a0f1a, #1b2735);
+    backdrop-filter: blur(12px);
+    max-height: 80vh;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
 
-    ::ng-deep {
+    mat-stepper {
+      background: transparent;
+    }
+}
 
-      .mat-mdc-tab-group, .mat-mdc-tab-nav-bar {
-        --mdc-tab-indicator-active-indicator-color: #f0feff !important;
-      }
-      
-      .mat-mdc-tab-labels {
+::ng-deep {
+    .mat-mdc-tab-group,
+    .mat-mdc-tab-nav-bar {
+        --mdc-tab-indicator-active-indicator-color: #00e6e6 !important;
+    }
+
+    .mat-mdc-tab-labels {
         width: calc(100% - 50px);
-      }
+    }
 
-      .mat-mdc-tab {
+    .mat-mdc-tab {
         .mdc-tab__text-label {
-          color: #8ecaff !important; /* Light blue text */
-          text-shadow: 
-            0 0 30px #66c2ff, 
-            0 0 60px #33adff, 
-            0 0 120px #1a8cff, 
-            0 0 200px #0073e6, 
-            0 0 300px #005bb5; /* Massive outer glow */
-          font-weight: bold !important; /* Stronger outer glow */
+            color: #00e6e6 !important;
+            text-shadow: 0 0 20px #00cccc, 0 0 40px #009999, 0 0 60px #006666;
+            font-weight: bold;
         }
 
         &.mdc-tab--active {
-          .mdc-tab__text-label {
-            font-weight: 100;
-            color: white !important;
-          }
+            .mdc-tab__text-label {
+                font-weight: bold;
+                color: #ffffff !important;
+                text-shadow: 0 0 20px #00e6e6;
+            }
         }
-      }
     }
-  }
+}
 
-  ::ng-deep .mat-tab-label {
-    color: rgba(255, 255, 255, 0.8);
+::ng-deep .mat-tab-label {
+    color: rgba(255, 255, 255, 0.9);
     font-weight: bold;
     text-transform: uppercase;
     font-size: 16px;
     transition: 0.3s;
-  }
-  
+}
 
-  
-  /* Buttons with Glow Effect */
-  .box-container, .glow-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #14b8a6 !important;
-    color: white !important;
+/* Buttons with Neon Glow */
+button,
+.glow-button {
+    background: #004d4d !important;
+    color: #00e6e6 !important;
+    font-weight: bold;
+    text-transform: uppercase;
     border-radius: 8px;
     padding: 10px 16px;
     transition: 0.3s ease-in-out;
-    box-shadow: 0px 0px 15px rgba(20, 184, 166, 0.7) !important;
-  }
-  
-  .box-container:hover, glow-button:hover {
-    background: linear-gradient(145deg, #334155, #475569) !important;
-    box-shadow: 0px 0px 10px rgba(52, 211, 153, 0.3) !important;
-    color: black !important;
-  }
-  
-  /* Icons */
-  mat-icon {
-    font-size: 20px;
-  }
+    box-shadow: 0 0 15px rgba(0, 230, 230, 0.8) !important;
+    border: none;
+    cursor: pointer;
+    margin: 10px;
+}
 
-  .close-button {
+button:hover,
+.glow-button:hover {
+    background: linear-gradient(145deg, #003333, #005555) !important;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5) !important;
+    color: white !important;
+}
+
+/* Close Button */
+.close-button {
     position: absolute;
     right: 0;
     z-index: 100;
-    color: white !important;
+    color: #00e6e6 !important;
     transition: 0.3s ease-in-out;
+    background: transparent;
+    margin: 0px;
 
     &:hover {
-      background-color: white;
-      color: black !important;
-      transition: 0.3s ease-in-out;
+        background-color: #00e6e6 !important;
+        color: black !important;
+        transition: 0.3s ease-in-out;
     }
-  }
-  
+}
+
+/* QR Code Section */
+.qrcode-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #0a0f1a;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 230, 230, 0.5);
+}
+
+/* Dark Background for Inputs */
+input[type="text"] {
+    background: #0a0f1a;
+    border: 1px solid #00e6e6;
+    color: #00e6e6;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #00cccc;
+    box-shadow: 0 0 10px #00e6e6;
+}
+
+/* Stepper Button Customizations */
+::ng-deep .mat-step-header {
+    background: #0a0f1a !important;
+    border-radius: 6px;
+
+    &::ng-deep {
+      .mat-step-label {
+        color: #00e6e6 !important;
+      }
+    }
+}
+
+::ng-deep .mat-step-header:hover {
+    background: #003333 !important;
+}
+
+/* Message Box */
+.message-list {
+    background: #0a0f1a;
+    border-left: 4px solid #00e6e6;
+    padding: 10px;
+    margin-bottom: 8px;
+    color: #00e6e6;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+
+/* Info / Notes Styling */
+.info {
+  background: rgba(0, 230, 230, 0.1);
+  border-left: 5px solid #00e6e6;
+  padding: 10px 15px;
+  margin: 10px 0;
+  font-size: 14px;
+  color: #00e6e6;
+  font-weight: bold;
+  border-radius: 6px;
+  box-shadow: 0px 0px 10px rgba(0, 230, 230, 0.3);
+}
+
+.name {
+  padding: 10px;
+  color: white;
+}
+
 
