@@ -1,4 +1,4 @@
-import { Component, OnDestroy, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -9,18 +9,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTabsModule } from '@angular/material/tabs';
 import { CommonModule } from '@angular/common';
 import { P2PClient, P2PServer } from '../../classes';
-import { Subject, combineLatest, skip, takeUntil } from 'rxjs';
+import { Subject, combineLatest, skip, take, takeUntil } from 'rxjs';
 import { QRCodeComponent, QRCodeModule } from 'angularx-qrcode';
 import { BrowserQRCodeReader } from '@zxing/browser';
+import { MatStepper, MatStepperModule } from '@angular/material/stepper';
+import { NgxSpinnerModule, NgxSpinnerService } from 'ngx-spinner';
 
 type TabType = 'server' | 'client';
-
-// interface ITabData {
-//   localOffer: string;
-//   remoteOffer: string;
-//   localICECandidate: string;
-//   remoteICECandidate: string;
-// }
 
 interface ITab {
   type: TabType;
@@ -31,29 +26,30 @@ interface ITab {
 @Component({
   selector: 'app-peer-connetion',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatTabsModule, QRCodeModule],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatTabsModule, QRCodeModule, MatStepperModule, NgxSpinnerModule],
   templateUrl: './peer-connetion.component.html',
   styleUrl: './peer-connetion.component.scss'
 })
 export class PeerConnetionComponent {
 
-  @ViewChild('qrcode', { static: false }) qrCodeElement!: QRCodeComponent;
+  @ViewChild('qrcodeServer', { static: false }) qrcodeServerElement!: QRCodeComponent;
+  @ViewChild('qrcodePlayer', { static: false }) qrcodePlayerElement!: QRCodeComponent;
 
   componentIsActive = new Subject<boolean>();
   divider = '________';
   scanError = '';
+  message: string = '';
   messages: string[] = [];
 
   tabs: ITab[] = [
     {
       type: 'server',
-      header: 'Create Room',
+      header: 'Host',
       fileName: 'qr1.png'
-
     },
     {
       type: 'client',
-      header: 'Join Room',
+      header: 'Player',
       fileName: 'qr2.png'
     }
   ];
@@ -63,14 +59,12 @@ export class PeerConnetionComponent {
   formGroup?: FormGroup;
   selectedTabId = 0;
   localDescription = '';
-  private localCandiate = '';
+  localCandiate = '';
+  private remoteDescription: string = '';
+  private remoteCandidate: string = '';
 
   get selectedTab(): ITab {
     return this.tabs[this.selectedTabId];
-  }
-
-  get isServer(): boolean {
-    return this.selectedTab.type === 'server';
   }
 
   get localDataAsQRCodeText(): string {
@@ -78,45 +72,32 @@ export class PeerConnetionComponent {
   }
 
 
-  constructor(public dialogRef: MatDialogRef<PeerConnetionComponent>) { }
+  constructor(public dialogRef: MatDialogRef<PeerConnetionComponent>, private spinner: NgxSpinnerService, private cdr: ChangeDetectorRef) {
+  }
 
   ngOnDestroy(): void {
     this.componentIsActive.next(true);
     this.componentIsActive.complete();
   }
 
-  startServer(): void {
-    this.objServer = new P2PServer();
-    combineLatest([this.objServer.localDescription, this.objServer.localCandidates])
-      .pipe(takeUntil(this.componentIsActive))
-      .subscribe(response => {
-        console.log('response = ', response, this.objServer?._localCandidates);
-        this.localDescription = response[0];
-        this.localCandiate = response[1];
-      });
-    this.objServer.startServer();
-  }
+  async scanQRCode() {
+    return new Promise<string | null>(async (resolve, reject) => {
+      try {
+        const image = await Camera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.Uri
+        });
 
-  async scanQRCode(tabType: TabType) {
-    this.scanError = ''
-    try {
-      const image = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.Uri
-      });
+        const text = await this.readQRCode(image.webPath!);
+        resolve(text);
 
-      const text = await this.readQRCode(image.webPath!);
-      console.log('text = ', text)
+      } catch (error) {
+        reject(error);
+      }
+    });
+    // this.scanError = ''
 
-      if (text)
-        this.handleScannedText(text, tabType);
-      else
-        this.scanError = 'QR Code Not Found'
-    } catch (error) {
-      this.scanError = 'Error in reading image.'
-      console.error('Error scanning QR code:', error);
-    }
   }
 
   async readQRCode(webPath: string): Promise<string | null> {
@@ -156,58 +137,9 @@ export class PeerConnetionComponent {
     });
   }
 
-  handleScannedText(scannedText: string, tabType: TabType): void {
-    console.log('tabType = ', tabType)
-    const [remoteOffer, remoteCandidate] = scannedText.split(this.divider);
-    if (tabType === 'client') this.startClient(remoteOffer, remoteCandidate);
-    else this.setClientOnServer(remoteOffer, remoteCandidate);
-  }
-
-  startClient(remoteOffer: string, remoteCandidate: string): void {
-    this.objClient = new P2PClient();
-
-    this.objClient.messageReceived$.pipe(takeUntil(this.componentIsActive))
-      .subscribe(message => {
-        console.log('message = ', message)
-        this.messages.push(message);
-        setTimeout(() => {
-          this.objServer?.sendMessage((+message + 1).toString())
-        }, 3000);
-      });
-    combineLatest([this.objClient.localDescription, this.objClient.localCandidates])
-      .pipe(takeUntil(this.componentIsActive), skip(2))
-      .subscribe(response => {
-        console.log('response', response)
-        this.localDescription = response[0];
-        this.localCandiate = response[1];
-      });
-
-    this.objClient.startClient(remoteOffer, remoteCandidate);
-  }
-
-  setClientOnServer(remoteOffer: string, remoteCandidate: string) {
-    console.log('remoteOffer = ', remoteOffer)
-    console.log('remoteCandidate = ', remoteCandidate)
-    console.log('objServer = ', this.objServer)
-    if (!this.objServer) return;
-
-    this.objServer.messageReceived$.pipe(takeUntil(this.componentIsActive))
-      .subscribe(message => {
-        console.log('message = ', message)
-        this.messages.push(message);
-        setTimeout(() => {
-          this.objServer?.sendMessage((+message + 1).toString())
-        }, 3000);
-      });
-    this.objServer.setRemote(remoteOffer, remoteCandidate);
-    setTimeout(() => {
-      this.objServer?.sendMessage('1');
-    }, 3000);
-  }
-
-  downloadQRCode() {
+  downloadQRCode(qrCodeElement: QRCodeComponent, fileName: string, stepper: MatStepper) {
     setTimeout(() => { // Ensure QR code is fully rendered
-      const qrCanvas = this.qrCodeElement.qrcElement.nativeElement.querySelector('canvas');
+      const qrCanvas = qrCodeElement.qrcElement.nativeElement.querySelector('canvas');
 
       if (qrCanvas) {
         const imageUrl = qrCanvas.toDataURL('image/png'); // Convert to PNG format
@@ -215,12 +147,158 @@ export class PeerConnetionComponent {
         // Create a download link
         const link = document.createElement('a');
         link.href = imageUrl;
-        link.download = this.selectedTab.fileName;
+        link.download = fileName + '.png';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        setTimeout(() => {
+          stepper.next();
+          this.cdr.detectChanges();
+        }, 100);
       }
-    }, 500); // Delay to allow QR code rendering
+    }, 100); // Delay to allow QR code rendering
+  }
+
+  sendMessage() {
+    if (!this.message) return;
+
+    this.spinner.show();
+    if (this.objServer)
+      this.objServer.sendMessage(this.message);
+    else if (this.objClient)
+      this.objClient.sendMessage(this.message);
+
+    this.spinner.hide();
+    this.message = ''
+  }
+
+  resetSteps(stepper: MatStepper) {
+    stepper.reset();
+    this.objClient = undefined;
+    this.objServer = undefined;
+  }
+
+
+
+  // SERVER
+  startServer(stepper: MatStepper): void {
+    this.spinner.show();
+    this.objServer = new P2PServer();
+
+    this.objServer.messageReceived$.pipe(takeUntil(this.componentIsActive))
+      .subscribe(message => {
+        this.messages.push(message);
+      });
+
+    combineLatest([this.objServer.localDescription, this.objServer.localCandidates])
+      .pipe(takeUntil(this.componentIsActive), skip(2))
+      .subscribe(response => {
+        this.localDescription = response[0];
+        this.localCandiate = response[1];
+        this.spinner.hide();
+      });
+    stepper.next();
+    this.objServer.startServer();
+  }
+
+  scanPlayer(stepper: MatStepper) {
+    this.remoteDescription = '';
+    this.spinner.show();
+    this.scanQRCode()
+      .then(async (scannedText) => {
+        if (scannedText) {
+          const [remoteDescription, remoteCandidate] = scannedText.split(this.divider);
+          this.remoteDescription = remoteDescription;
+          this.remoteCandidate = remoteCandidate;
+          await this.setPlayerDescription();
+          await this.setPlayerCandidate();
+          this.spinner.hide();
+          stepper.next();
+          this.cdr.detectChanges();
+        }
+      })
+      .catch(error => {
+        this.spinner.hide();
+        console.error('Error scanning QR code:', error);
+      });
+  }
+
+  async setPlayerDescription() {
+    if (!this.remoteDescription || !this.objServer) return;
+
+    await this.objServer.setRemoteDescription(this.remoteDescription);
+  }
+
+  async setPlayerCandidate() {
+    if (!this.remoteCandidate || !this.objServer) return;
+
+    await this.objServer.addRemoteCandidates(this.remoteCandidate);
+  }
+
+
+  // CLIENT
+  scanServer(stepper: MatStepper) {
+    this.remoteDescription = '';
+    this.remoteCandidate = '';
+    this.spinner.show();
+    this.scanQRCode()
+      .then(scannedText => {
+        if (scannedText) {
+          const [remoteDescription, remoteCandidate] = scannedText.split(this.divider);
+          if (!remoteDescription || !remoteCandidate) return;
+
+          this.remoteDescription = remoteDescription;
+          this.remoteCandidate = remoteCandidate;
+          this.startClient();
+          this.setHostDescription(stepper);
+        }
+      })
+      .catch(error => {
+        this.spinner.hide();
+        console.error('Error scanning QR code:', error)
+      })
+  }
+
+  startClient(): void {
+    this.objClient = new P2PClient();
+
+    this.objClient.messageReceived$.pipe(takeUntil(this.componentIsActive))
+      .subscribe(message => {
+        this.messages.push(message);
+      });
+
+    this.objClient.startClient();
+  }
+
+  async setHostDescription(stepper: MatStepper) {
+    if (!this.remoteDescription || !this.objClient) return;
+    this.localDescription = '';
+
+    combineLatest([this.objClient.localDescription, this.objClient.localCandidates])
+      .pipe(takeUntil(this.componentIsActive), skip(2))
+      .subscribe({
+        next: async (response) => {
+          this.localDescription = response[0];
+          this.localCandiate = response[1];
+          stepper.next();
+          this.spinner.hide();
+          this.cdr.detectChanges();
+        },
+        error: err => {
+          this.spinner.hide();
+        }
+      });
+    await this.objClient?.setRemoteDescription(this.remoteDescription);
+  }
+
+  async setHostCandidate(stepper: MatStepper) {
+    if (!this.remoteCandidate || !this.objClient) return;
+
+    this.spinner.show();
+
+    await this.objClient.addRemoteCandidates(this.remoteCandidate);
+    stepper.next();
+    this.spinner.hide();
   }
 
   // private peerConnection?: RTCPeerConnection;

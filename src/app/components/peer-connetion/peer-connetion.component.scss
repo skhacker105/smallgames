@@ -3,8 +3,13 @@
     // background: rgba(30, 41, 59, 0.5);
     background: linear-gradient(145deg, #0f172a, #1e293b);
     backdrop-filter: blur(10px);
+    max-height: 60vh;
 
     ::ng-deep {
+
+      .mat-mdc-tab-group, .mat-mdc-tab-nav-bar {
+        --mdc-tab-indicator-active-indicator-color: #f0feff !important;
+      }
       
       .mat-mdc-tab-labels {
         width: calc(100% - 50px);
@@ -12,20 +17,20 @@
 
       .mat-mdc-tab {
         .mdc-tab__text-label {
-          color: white !important;
+          color: #8ecaff !important; /* Light blue text */
+          text-shadow: 
+            0 0 30px #66c2ff, 
+            0 0 60px #33adff, 
+            0 0 120px #1a8cff, 
+            0 0 200px #0073e6, 
+            0 0 300px #005bb5; /* Massive outer glow */
+          font-weight: bold !important; /* Stronger outer glow */
         }
 
         &.mdc-tab--active {
           .mdc-tab__text-label {
-            color: #8ecaff !important; /* Light blue text */
             font-weight: 100;
-            text-shadow: 
-              0 0 30px #66c2ff, 
-              0 0 60px #33adff, 
-              0 0 120px #1a8cff, 
-              0 0 200px #0073e6, 
-              0 0 300px #005bb5; /* Massive outer glow */
-          font-weight: bold !important; /* Stronger outer glow */
+            color: white !important;
           }
         }
       }
