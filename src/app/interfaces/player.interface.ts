@@ -7,6 +7,7 @@ export interface ILudoCoin {
 }
 export interface IPlayer {
     name: string;
+    connectedUserId?: string;
     color?: PLAYER_COLOR;
     ludoCoins?: ILudoCoin[];
 }

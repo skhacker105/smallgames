@@ -54,6 +54,10 @@
 
             <mat-step label="Player Name">
                 <ng-template [ngTemplateOutlet]="name"></ng-template>
+                <!-- Submit -->
+                <button mat-icon-button (click)="createAndSaveConnection()">
+                    <mat-icon>task_alt</mat-icon>
+                </button>
             </mat-step>
         </mat-stepper>
     </mat-tab>
@@ -96,33 +100,16 @@
 
             <mat-step [editable]="false" label="Host Name">
                 <ng-template [ngTemplateOutlet]="name"></ng-template>
+                <!-- Submit -->
+                <button mat-icon-button (click)="createAndSaveConnection()">
+                    <mat-icon>task_alt</mat-icon>
+                </button>
             </mat-step>
         </mat-stepper>
     </mat-tab>
 
 </mat-tab-group>
 
-
-
-<ng-template #stepperActions let-stepper="stepper" let-stepCounts="stepCounts" let-isNextDisabled="isNextDisabled">
-    <!-- Reset -->
-    <!-- <button mat-icon-button (click)="resetSteps(stepper)" class="glow-button reset-button">
-        <mat-icon>restart_alt</mat-icon>
-    </button> -->
-    <!-- Prev -->
-    <!-- <button mat-icon-button *ngIf="stepper.selectedIndex > 0" (click)="stepper.previous()">
-        <mat-icon>chevron_left</mat-icon>
-    </button> -->
-    <!-- Next -->
-    <!-- <button mat-icon-button *ngIf="stepper.selectedIndex < +stepCounts - 1" (click)="stepper.next()"
-        [disabled]="!!isNextDisabled">
-        <mat-icon>chevron_right</mat-icon>
-    </button> -->
-    <!-- Submit -->
-    <!-- <button mat-icon-button *ngIf="stepper.selectedIndex === +stepCounts - 1">
-        <mat-icon>task_alt</mat-icon>
-    </button> -->
-</ng-template>
 
 <ng-template #messageTest>
     <div class="user-input">
@@ -137,5 +124,5 @@
 </ng-template>
 
 <ng-template #name>
-    <div class="name">Name: <input type="text"></div>
+    <div class="name">Name: <input type="text" [formControl]="connectionName"></div>
 </ng-template>

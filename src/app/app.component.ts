@@ -83,6 +83,6 @@ export class AppComponent {
   }
 
   startServer() {
-    this.userService.createServer();
+    this.userService.startConnectionWizard();
   }
 }

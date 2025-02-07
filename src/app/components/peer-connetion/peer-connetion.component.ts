@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,8 +14,9 @@ import { QRCodeComponent, QRCodeModule } from 'angularx-qrcode';
 import { BrowserQRCodeReader } from '@zxing/browser';
 import { MatStepper, MatStepperModule } from '@angular/material/stepper';
 import { NgxSpinnerModule, NgxSpinnerService } from 'ngx-spinner';
-
-type TabType = 'server' | 'client';
+import { TabType } from '../../types';
+import { UserService } from '../../services/user.service';
+import { ConnectedUser } from '../../classes';
 
 interface ITab {
   type: TabType;
@@ -26,7 +27,7 @@ interface ITab {
 @Component({
   selector: 'app-peer-connetion',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatTabsModule, QRCodeModule, MatStepperModule, NgxSpinnerModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatTabsModule, QRCodeModule, MatStepperModule, NgxSpinnerModule],
   templateUrl: './peer-connetion.component.html',
   styleUrl: './peer-connetion.component.scss'
 })
@@ -67,6 +68,7 @@ export class PeerConnetionComponent {
   localQR = new FormControl<string>('', [Validators.required]);
   isScanDone = new FormControl<boolean>(false, Validators.requiredTrue);
   remoteQR = new FormControl<string>('', [Validators.required]);
+  connectionName = new FormControl<string>('', [Validators.required]);
 
   get selectedTab(): ITab {
     return this.tabs[this.selectedTabId];
@@ -77,7 +79,12 @@ export class PeerConnetionComponent {
   }
 
 
-  constructor(public dialogRef: MatDialogRef<PeerConnetionComponent>, private spinner: NgxSpinnerService, private cdr: ChangeDetectorRef) {
+  constructor(
+    public dialogRef: MatDialogRef<PeerConnetionComponent>,
+    private spinner: NgxSpinnerService,
+    private cdr: ChangeDetectorRef,
+    private userService: UserService
+    ) {
   }
 
   ngOnDestroy(): void {
@@ -185,6 +192,7 @@ export class PeerConnetionComponent {
     this.remoteQR.reset();
     this.objClient = undefined;
     this.objServer = undefined;
+    this.connectionName.reset();
   }
 
 
@@ -213,7 +221,7 @@ export class PeerConnetionComponent {
     this.objServer.startServer();
   }
 
-  scanPlayer(stepper: MatStepper) {
+  scanPlayer(stepper: MatStepper): void {
     this.remoteDescription = '';
     this.spinner.show();
     this.remoteQR.reset();
@@ -238,13 +246,13 @@ export class PeerConnetionComponent {
       });
   }
 
-  async setPlayerDescription() {
+  async setPlayerDescription(): Promise<void> {
     if (!this.remoteDescription || !this.objServer) return;
 
     await this.objServer.setRemoteDescription(this.remoteDescription);
   }
 
-  async setPlayerCandidate() {
+  async setPlayerCandidate(): Promise<void> {
     if (!this.remoteCandidate || !this.objServer) return;
 
     await this.objServer.addRemoteCandidates(this.remoteCandidate);
@@ -252,7 +260,7 @@ export class PeerConnetionComponent {
 
 
   // CLIENT
-  scanServer(stepper: MatStepper) {
+  scanServer(stepper: MatStepper): void {
     this.remoteDescription = '';
     this.remoteCandidate = '';
     this.spinner.show();
@@ -288,7 +296,7 @@ export class PeerConnetionComponent {
     this.objClient.startClient();
   }
 
-  async setHostDescription(stepper: MatStepper) {
+  async setHostDescription(stepper: MatStepper): Promise<void> {
     if (!this.remoteDescription || !this.objClient) return;
     this.localDescription = '';
 
@@ -309,7 +317,7 @@ export class PeerConnetionComponent {
     await this.objClient?.setRemoteDescription(this.remoteDescription);
   }
 
-  async setHostCandidate(stepper: MatStepper) {
+  async setHostCandidate(stepper: MatStepper): Promise<void> {
     if (!this.remoteCandidate || !this.objClient) return;
 
     this.spinner.show();
@@ -319,4 +327,13 @@ export class PeerConnetionComponent {
     this.spinner.hide();
   }
 
+
+  // SUBMIT
+  createAndSaveConnection(): void {
+    const objConenction = this.objServer ?? this.objClient;
+    if (!objConenction || !this.connectionName.value) return;
+
+    const newUsr = new ConnectedUser(this.connectionName.value, this.selectedTab.type, objConenction);
+    this.dialogRef.close(newUsr);
+  }
 }

@@ -31,8 +31,18 @@
     font-size: 0.9rem;
 }
 
-.player-name {
-    width: calc(100% - 50px);
+.input-container {
+    position: relative;
+    display: flex;
+
+    mat-icon {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: gray;
+        font-size: 20px;
+    }
 }
 
 .player-row input[type='text'],
@@ -43,6 +53,15 @@
     border-radius: 8px;
     background: #334155;
     color: #e2e8f0;
+}
+
+.player-name {
+    width: 100%;
+
+    &:disabled {
+        background: #1f2835 !important;
+        color: #7c7c7c !important;
+    }
 }
 
 .color-input {
@@ -135,4 +154,67 @@
 
 .color-option.selected {
     border-color: white;
+}
+
+.online-player-list {
+    background: #334155;
+    border-radius: 8px;
+    padding: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+    .online-player {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        border-bottom: 1px solid #4b5563;
+        cursor: pointer;
+        transition: background 0.3s ease;
+
+        &:hover {
+            background: #475569;
+        }
+
+        .online-player-name {
+            font-size: 0.9rem;
+            color: #e2e8f0;
+        }
+
+        .online-player-status {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+    }
+
+    .add-new-online-player {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        border-radius: 8px;
+
+        &:hover {
+            background: #475569;
+        }
+
+        .add-icon {
+            color: #38bdf8;
+            font-size: 20px;
+            margin-right: 8px;
+        }
+
+        .add-text {
+            color: #e2e8f0;
+            font-size: 0.9rem;
+        }
+    }
+}
+
+::ng-deep {
+    .mat-mdc-menu-panel {
+        background: transparent !important;
+    }
 }

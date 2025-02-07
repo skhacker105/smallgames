@@ -4,8 +4,29 @@
   <div class="player-list">
     <div *ngFor="let player of players; let i = index" class="player-row">
       <label for="playerName{{ i }}">{{ (i + 1) }}:</label>
-      <input type="text" id="playerName{{ i }}" [(ngModel)]="players[i].name" class="player-name"
-        placeholder="Enter player name" />
+
+      <div class="input-container">
+        <input matInput type="text" id="playerName{{ i }}" [(ngModel)]="players[i].name" class="player-name"
+          [disabled]="!!player.connectedUserId" placeholder="Enter player name" />
+        <mat-icon [matMenuTriggerFor]="onlinePLayers">online_prediction</mat-icon>
+
+        <mat-menu #onlinePLayers="matMenu">
+          <div class="online-player-list">
+            <div class="online-player" *ngFor="let user of userService.connectedUsers">
+              <div class="online-player-name">
+                {{ user.connectionName }}
+              </div>
+              <div class="online-player-status">
+                {{ user.isConnected() }}
+              </div>
+            </div>
+            <div class="add-new-online-player" (click)="startConnectionWizard(player)">
+              <mat-icon class="add-icon">add</mat-icon>
+              <div class="add-text">New Player</div>
+            </div>
+          </div>
+        </mat-menu>
+      </div>
 
       <!-- Updated Color Picker -->
       <div *ngIf="config.colorOptions" class="color-picker-container">
@@ -34,7 +55,7 @@
     </button>
     <div class="spacer"></div>
 
-    <button class="submit-button" (click)="submit()" [disabled]="!isColorValid">
+    <button class="submit-button" (click)="submit()" [disabled]="!isFormValid">
       Submit
     </button>
 

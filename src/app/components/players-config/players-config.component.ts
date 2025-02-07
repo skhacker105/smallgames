@@ -5,11 +5,15 @@ import { IPlayer, IPlayerAskConfig } from '../../interfaces';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { PLAYER_COLOR } from '../../config';
+import { MatMenuModule } from '@angular/material/menu';
+import { UserService } from '../../services/user.service';
+import { take } from 'rxjs';
+import { ConnectedUser } from '../../classes';
 
 @Component({
   selector: 'app-players-config',
   standalone: true,
-  imports: [MatDialogModule, CommonModule, FormsModule, MatIconModule],
+  imports: [MatDialogModule, CommonModule, FormsModule, MatIconModule, MatMenuModule],
   templateUrl: './players-config.component.html',
   styleUrl: './players-config.component.scss'
 })
@@ -17,19 +21,35 @@ export class PlayersConfigComponent {
   players: IPlayer[] = [];
   errorMessage: string = '';
   activeColorPickerIndex: number | null = null;
-  isColorValid: boolean = true; // New state to track color uniqueness
 
-  constructor(@Inject(MAT_DIALOG_DATA) public config: IPlayerAskConfig, public dialogRef: MatDialogRef<PlayersConfigComponent>) {
+  get isNamesValid(): boolean {
+    return !this.players.some(p => !p.name)
+  }
+
+  get isColorValid(): boolean {
+    if (!this.config.colorOptions) return true;
+
+    const selectedColors = this.players.map(player => player.color);
+    const uniqueColors = new Set(selectedColors);
+    return selectedColors.length === uniqueColors.size;
+  }
+
+  get isFormValid(): boolean {
+    return this.isNamesValid && this.isColorValid
+  }
+
+  constructor(@Inject(MAT_DIALOG_DATA) public config: IPlayerAskConfig, public dialogRef: MatDialogRef<PlayersConfigComponent>,
+    public userService: UserService) {
     config.preFillPlayers
       ? this.initializeExistingPlayersForm(config.preFillPlayers)
       : this.initializeDefaultPlayersForm();
-    this.isColorValid = this.isColorUnique(); // Validate color uniqueness
+
   }
 
   initializeExistingPlayersForm(players: IPlayer[]): void {
     players.forEach(player => {
       const color = this.config.colorOptions ? (player.color ?? this.config.colorOptions[0]) : undefined;
-      this.players.push({ name: player.name, color });
+      this.players.push({ name: player.name, color, connectedUserId: player.connectedUserId });
     });
   }
 
@@ -42,7 +62,7 @@ export class PlayersConfigComponent {
   addPlayer(): void {
     if (this.players.length < this.config.maxPlayerCount) {
       this.players.push({ name: '', color: this.config.colorOptions ? this.config.colorOptions[0] : undefined });
-      this.isColorValid = this.isColorUnique(); // Validate colors
+
     } else {
       this.errorMessage = `Cannot exceed maximum of ${this.config.maxPlayerCount} players.`;
     }
@@ -52,7 +72,7 @@ export class PlayersConfigComponent {
     if (this.players.length > this.config.minPlayerCount) {
       this.players.splice(index, 1);
       this.errorMessage = '';
-      this.isColorValid = this.isColorUnique(); // Validate after removal
+
     } else {
       this.errorMessage = `Cannot have fewer than ${this.config.minPlayerCount} players.`;
     }
@@ -61,17 +81,24 @@ export class PlayersConfigComponent {
   selectColor(player: IPlayer, color: PLAYER_COLOR): void {
     player.color = color;
     this.activeColorPickerIndex = null;
-    this.isColorValid = this.isColorUnique(); // Validate color uniqueness
+
   }
 
   toggleColorPicker(index: number): void {
     this.activeColorPickerIndex = this.activeColorPickerIndex === index ? null : index;
   }
 
-  isColorUnique(): boolean {
-    const selectedColors = this.players.map(player => player.color);
-    const uniqueColors = new Set(selectedColors);
-    return selectedColors.length === uniqueColors.size;
+  startConnectionWizard(player: IPlayer): void {
+    const ref = this.userService.startConnectionWizard();
+    ref.afterClosed().pipe(take(1))
+      .subscribe((usr?: ConnectedUser) => {
+        console.log({ usr })
+        if (usr) {
+          this.userService.addNewUserConnection(usr);
+          player.connectedUserId = usr.connectionId;
+          player.name = usr.connectionName;
+        }
+      })
   }
 
   submit(): void {

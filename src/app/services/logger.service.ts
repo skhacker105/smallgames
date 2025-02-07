@@ -6,7 +6,7 @@ import { DefaultPasswordHashing } from '../classes';
 })
 export class LoggerService {
 
-  private _showLogs = true;
+  private _showLogs = false;
   private messages: string[] = [];
 
   get showLogs(): boolean {

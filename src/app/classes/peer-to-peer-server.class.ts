@@ -15,13 +15,8 @@ export class P2PServer {
     public localCandidates = this.localCandidates$.pipe(map(candidates => candidates.map(o => JSON.stringify(o)).join('\n')));
     public localDescription = this.localDescription$.pipe(map(offer => JSON.stringify(offer)));
 
-
-    get _localCandidates(): string[] {
-        return !this.localCandidates$.value ? [] :
-            this.localCandidates$.value.reduce((strArr: string[], candidate: RTCIceCandidate) => {
-                strArr.push(JSON.stringify(candidate));
-                return strArr;
-            }, [] as string[]);
+    get connection(): RTCPeerConnection | undefined {
+        return this.peerConnection
     }
 
     // START Server
@@ -113,6 +108,10 @@ export class P2PClient {
 
     public localCandidates = this.localCandidates$.pipe(map(candidates => candidates.map(o => JSON.stringify(o)).join('\n')));
     public localDescription = this.localDescription$.pipe(map(offer => JSON.stringify(offer)));
+
+    get connection(): RTCPeerConnection | undefined {
+        return this.peerConnection
+    }
 
     startClient() {
         this.peerConnection = new RTCPeerConnection();
