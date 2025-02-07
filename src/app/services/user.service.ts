@@ -10,7 +10,6 @@ import { PeerConnetionComponent } from '../components/peer-connetion/peer-connet
 export class UserService implements OnDestroy {
 
   internetConnectionStatus?: ConnectionStatus;
-  ipAddress: string = '';
 
   constructor(private loggerService: LoggerService, private dialog: MatDialog) {
     this.refreshNetworkStatus();
