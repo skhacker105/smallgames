@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
-import { FormGroup, FormsModule } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -62,6 +62,11 @@ export class PeerConnetionComponent {
   localCandiate = '';
   private remoteDescription: string = '';
   private remoteCandidate: string = '';
+
+  // Form Controls
+  localQR = new FormControl<string>('', [Validators.required]);
+  isScanDone = new FormControl<boolean>(false, Validators.requiredTrue);
+  remoteQR = new FormControl<string>('', [Validators.required]);
 
   get selectedTab(): ITab {
     return this.tabs[this.selectedTabId];
@@ -137,7 +142,7 @@ export class PeerConnetionComponent {
     });
   }
 
-  downloadQRCode(qrCodeElement: QRCodeComponent, fileName: string, stepper: MatStepper) {
+  downloadQRCode(qrCodeElement: QRCodeComponent, fileName: string) {
     setTimeout(() => { // Ensure QR code is fully rendered
       const qrCanvas = qrCodeElement.qrcElement.nativeElement.querySelector('canvas');
 
@@ -151,10 +156,6 @@ export class PeerConnetionComponent {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        setTimeout(() => {
-          stepper.next();
-          this.cdr.detectChanges();
-        }, 100);
       }
     }, 100); // Delay to allow QR code rendering
   }
@@ -172,8 +173,16 @@ export class PeerConnetionComponent {
     this.message = ''
   }
 
+  setScanComplete(stepper: MatStepper) {
+    this.isScanDone.setValue(true);
+    stepper.next();
+  }
+
   resetSteps(stepper: MatStepper) {
     stepper.reset();
+    this.localQR.reset();
+    this.isScanDone.setValue(false);
+    this.remoteQR.reset();
     this.objClient = undefined;
     this.objServer = undefined;
   }
@@ -184,6 +193,7 @@ export class PeerConnetionComponent {
   startServer(stepper: MatStepper): void {
     this.spinner.show();
     this.objServer = new P2PServer();
+    this.localQR.reset();
 
     this.objServer.messageReceived$.pipe(takeUntil(this.componentIsActive))
       .subscribe(message => {
@@ -196,20 +206,25 @@ export class PeerConnetionComponent {
         this.localDescription = response[0];
         this.localCandiate = response[1];
         this.spinner.hide();
+        this.localQR.setValue(this.localDataAsQRCodeText);
+        stepper.next();
+        this.cdr.detectChanges();
       });
-    stepper.next();
     this.objServer.startServer();
   }
 
   scanPlayer(stepper: MatStepper) {
     this.remoteDescription = '';
     this.spinner.show();
+    this.remoteQR.reset();
+
     this.scanQRCode()
       .then(async (scannedText) => {
         if (scannedText) {
           const [remoteDescription, remoteCandidate] = scannedText.split(this.divider);
           this.remoteDescription = remoteDescription;
           this.remoteCandidate = remoteCandidate;
+          this.remoteQR.setValue(scannedText);
           await this.setPlayerDescription();
           await this.setPlayerCandidate();
           this.spinner.hide();
@@ -241,12 +256,15 @@ export class PeerConnetionComponent {
     this.remoteDescription = '';
     this.remoteCandidate = '';
     this.spinner.show();
+    this.localQR.reset();
+
     this.scanQRCode()
       .then(scannedText => {
         if (scannedText) {
           const [remoteDescription, remoteCandidate] = scannedText.split(this.divider);
           if (!remoteDescription || !remoteCandidate) return;
 
+          this.localQR.setValue(scannedText);
           this.remoteDescription = remoteDescription;
           this.remoteCandidate = remoteCandidate;
           this.startClient();
