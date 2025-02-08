@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Inject } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { IPlayer, IPlayerAskConfig } from '../../interfaces';
 import { FormsModule } from '@angular/forms';
@@ -23,7 +23,12 @@ export class PlayersConfigComponent {
   activeColorPickerIndex: number | null = null;
 
   get isNamesValid(): boolean {
-    return !this.players.some(p => !p.name)
+    const nameCounts: { [key: string]: number } = {};
+    this.players.forEach(p => {
+      if (!nameCounts[p.name]) nameCounts[p.name] = 0;
+      nameCounts[p.name] = nameCounts[p.name] + 1;
+    });
+    return !this.players.some(p => !p.name) && !Object.values(nameCounts).some(count => count > 1);
   }
 
   get isColorValid(): boolean {
@@ -38,8 +43,12 @@ export class PlayersConfigComponent {
     return this.isNamesValid && this.isColorValid
   }
 
-  constructor(@Inject(MAT_DIALOG_DATA) public config: IPlayerAskConfig, public dialogRef: MatDialogRef<PlayersConfigComponent>,
-    public userService: UserService) {
+  constructor(
+    @Inject(MAT_DIALOG_DATA) public config: IPlayerAskConfig,
+    public dialogRef: MatDialogRef<PlayersConfigComponent>,
+    public userService: UserService,
+    private cdr: ChangeDetectorRef
+  ) {
     config.preFillPlayers
       ? this.initializeExistingPlayersForm(config.preFillPlayers)
       : this.initializeDefaultPlayersForm();
@@ -95,10 +104,23 @@ export class PlayersConfigComponent {
         console.log({ usr })
         if (usr) {
           this.userService.addNewUserConnection(usr);
-          player.connectedUserId = usr.connectionId;
-          player.name = usr.connectionName;
+          this.setPlayerConnection(player, usr);
         }
       })
+  }
+
+  setPlayerConnection(player: IPlayer, usrCon: ConnectedUser) {
+    if (!usrCon.isConnected()) return;
+    
+    player.connectedUserId = usrCon.connectionId;
+    player.name = usrCon.connectionName;
+    this.cdr.detectChanges();
+  }
+
+  resetPlayer(player: IPlayer) {
+    player.name = '';
+    player.connectedUserId = undefined;
+    this.cdr.detectChanges();
   }
 
   submit(): void {

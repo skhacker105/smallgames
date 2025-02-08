@@ -7,17 +7,31 @@
 
       <div class="input-container">
         <input matInput type="text" id="playerName{{ i }}" [(ngModel)]="players[i].name" class="player-name"
-          [disabled]="!!player.connectedUserId" placeholder="Enter player name" />
-        <mat-icon [matMenuTriggerFor]="onlinePLayers">online_prediction</mat-icon>
+          [disabled]="!!player.connectedUserId && userService.isUserConnectionLive(player.connectedUserId)"
+          placeholder="Enter player name" />
+
+        <mat-icon class="clear-player" *ngIf="!!players[i].name" (click)="resetPlayer(player)">
+          close
+        </mat-icon>
+
+        <mat-icon [matMenuTriggerFor]="onlinePLayers" *ngIf="!players[i].name" class="online" [ngClass]="{
+          'is-online': userService.isUserConnectionLive(player.connectedUserId)
+        }">
+          online_prediction
+        </mat-icon>
 
         <mat-menu #onlinePLayers="matMenu">
           <div class="online-player-list">
-            <div class="online-player" *ngFor="let user of userService.connectedUsers">
+            <div class="online-player" *ngFor="let user of userService.connectedUsers" [ngClass]="{
+              'current-selected': user.connectionId === player.connectedUserId
+            }" (click)="setPlayerConnection(player, user)">
               <div class="online-player-name">
                 {{ user.connectionName }}
               </div>
-              <div class="online-player-status">
-                {{ user.isConnected() }}
+              <div class="online-player-status" [ngClass]="{
+                'connected': user.isConnected()
+              }">
+                <!-- {{ user.isConnected() }} -->
               </div>
             </div>
             <div class="add-new-online-player" (click)="startConnectionWizard(player)">

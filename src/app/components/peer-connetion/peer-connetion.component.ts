@@ -15,7 +15,6 @@ import { BrowserQRCodeReader } from '@zxing/browser';
 import { MatStepper, MatStepperModule } from '@angular/material/stepper';
 import { NgxSpinnerModule, NgxSpinnerService } from 'ngx-spinner';
 import { TabType } from '../../types';
-import { UserService } from '../../services/user.service';
 import { ConnectedUser } from '../../classes';
 
 interface ITab {
@@ -82,8 +81,7 @@ export class PeerConnetionComponent {
   constructor(
     public dialogRef: MatDialogRef<PeerConnetionComponent>,
     private spinner: NgxSpinnerService,
-    private cdr: ChangeDetectorRef,
-    private userService: UserService
+    private cdr: ChangeDetectorRef
     ) {
   }
 
