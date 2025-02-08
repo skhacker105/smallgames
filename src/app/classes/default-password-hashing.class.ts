@@ -12,7 +12,6 @@ export class DefaultPasswordHashing {
 
   // Function to check user input
   public static async verifyInput(userInput: string): Promise<boolean> {
-    console.log({userInput, storedHash: DefaultPasswordHashing.storedHashPromise})
     const hashedInput = await DefaultPasswordHashing.hashPassword(userInput);
     const storedHash = await DefaultPasswordHashing.storedHashPromise;
     return hashedInput === storedHash;

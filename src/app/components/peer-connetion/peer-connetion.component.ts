@@ -249,7 +249,6 @@ export class PeerConnetionComponent implements OnDestroy {
           this.remoteDescription = remoteDescription;
           this.remoteCandidate = remoteCandidate;
           this.setRemoteUser(remoteUserId, remoteUserName);
-          console.log({remoteDescription, remoteCandidate, remoteUserId, remoteUserName})
           this.remoteQR.setValue(scannedText);
           await this.setPlayerDescription();
           await this.setPlayerCandidate();
@@ -294,7 +293,6 @@ export class PeerConnetionComponent implements OnDestroy {
           this.remoteDescription = remoteDescription;
           this.remoteCandidate = remoteCandidate;
           this.setRemoteUser(remoteUserId, remoteUserName);
-          console.log({remoteDescription, remoteCandidate, remoteUserId, remoteUserName})
           this.startClient();
           this.setHostDescription(stepper);
         }

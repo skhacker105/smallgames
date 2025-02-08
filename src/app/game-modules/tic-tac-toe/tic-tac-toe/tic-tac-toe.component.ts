@@ -39,7 +39,6 @@ export class TicTacToeComponent extends BaseComponent {
     if (!this.board[row][col] && !this.winnerResult) {
       this.board[row][col] = this.currentPlayer;
       const winnerResult = this.checkWinner();
-      console.log({ winnerResult })
       if (winnerResult) {
         this.winnerResult = { ...winnerResult, winner: this.currentPlayer };
       } else {

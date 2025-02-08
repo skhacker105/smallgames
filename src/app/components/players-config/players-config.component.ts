@@ -101,7 +101,6 @@ export class PlayersConfigComponent {
     const ref = this.userService.startConnectionWizard();
     ref.afterClosed().pipe(take(1))
       .subscribe((usr?: ConnectedUser) => {
-        console.log({ usr })
         if (usr) {
           this.userService.addNewUserConnection(usr);
           this.setPlayerConnection(player, usr);
