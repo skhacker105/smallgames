@@ -1,4 +1,4 @@
-import { IConnectedUser } from "../interfaces";
+import { IConnectedUser, IUser } from "../interfaces";
 import { ConnectionTypes, TabType } from "../types";
 
 export class ConnectedUser implements IConnectedUser {
@@ -6,12 +6,14 @@ export class ConnectedUser implements IConnectedUser {
     connectionName: string;
     connectionType: TabType;
     connection: ConnectionTypes;
+    connectedUser: IUser;
 
-    constructor(connectionName: string, connectionType: TabType, connection: ConnectionTypes) {
+    constructor(connectionType: TabType, connection: ConnectionTypes, connectedUser: IUser) {
         this.connectionId = crypto.randomUUID();
-        this.connectionName = connectionName;
+        this.connectionName = connectedUser.userName;
         this.connectionType = connectionType;
         this.connection = connection;
+        this.connectedUser = connectedUser;
     }
     
     isConnected(): boolean {

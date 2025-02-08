@@ -48,17 +48,17 @@
                 </div>
             </mat-step>
 
-            <mat-step label="Test Connection">
+            <mat-step label="Test / Submit Connection">
                 <ng-template [ngTemplateOutlet]="messageTest"></ng-template>
-            </mat-step>
-
-            <mat-step label="Player Name">
-                <ng-template [ngTemplateOutlet]="name"></ng-template>
                 <!-- Submit -->
                 <button mat-icon-button (click)="createAndSaveConnection()">
                     <mat-icon>task_alt</mat-icon>
                 </button>
             </mat-step>
+
+            <!-- <mat-step label="Player Name">
+                <ng-template [ngTemplateOutlet]="name"></ng-template>
+            </mat-step> -->
         </mat-stepper>
     </mat-tab>
 
@@ -94,12 +94,8 @@
                 </qrcode>
             </mat-step>
 
-            <mat-step [editable]="false" label="Test Connection">
+            <mat-step [editable]="false" label="Test / Submit Connection">
                 <ng-template [ngTemplateOutlet]="messageTest"></ng-template>
-            </mat-step>
-
-            <mat-step [editable]="false" label="Host Name">
-                <ng-template [ngTemplateOutlet]="name"></ng-template>
                 <!-- Submit -->
                 <button mat-icon-button (click)="createAndSaveConnection()">
                     <mat-icon>task_alt</mat-icon>
@@ -121,8 +117,4 @@
             {{ m }}
         </div>
     </div>
-</ng-template>
-
-<ng-template #name>
-    <div class="name">Name: <input type="text" [formControl]="connectionName"></div>
 </ng-template>

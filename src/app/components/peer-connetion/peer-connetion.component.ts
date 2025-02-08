@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -16,6 +16,8 @@ import { MatStepper, MatStepperModule } from '@angular/material/stepper';
 import { NgxSpinnerModule, NgxSpinnerService } from 'ngx-spinner';
 import { TabType } from '../../types';
 import { ConnectedUser } from '../../classes';
+import { UserService } from '../../services/user.service';
+import { IUser } from '../../interfaces';
 
 interface ITab {
   type: TabType;
@@ -30,7 +32,7 @@ interface ITab {
   templateUrl: './peer-connetion.component.html',
   styleUrl: './peer-connetion.component.scss'
 })
-export class PeerConnetionComponent {
+export class PeerConnetionComponent implements OnDestroy {
 
   @ViewChild('qrcodeServer', { static: false }) qrcodeServerElement!: QRCodeComponent;
   @ViewChild('qrcodePlayer', { static: false }) qrcodePlayerElement!: QRCodeComponent;
@@ -55,6 +57,7 @@ export class PeerConnetionComponent {
   ];
   objServer?: P2PServer;
   objClient?: P2PClient;
+  connectedUser?: IUser;
 
   formGroup?: FormGroup;
   selectedTabId = 0;
@@ -67,21 +70,27 @@ export class PeerConnetionComponent {
   localQR = new FormControl<string>('', [Validators.required]);
   isScanDone = new FormControl<boolean>(false, Validators.requiredTrue);
   remoteQR = new FormControl<string>('', [Validators.required]);
-  connectionName = new FormControl<string>('', [Validators.required]);
+
+  get me(): IUser | undefined {
+    return this.userService.me;
+  }
 
   get selectedTab(): ITab {
     return this.tabs[this.selectedTabId];
   }
 
   get localDataAsQRCodeText(): string {
-    return this.localDescription + this.divider + this.localCandiate;
+    const meId: string = this.me?.userId ?? '';
+    const meName: string = this.me?.userName ?? '';
+    return this.localDescription + this.divider + this.localCandiate + this.divider + meId +  this.divider + meName;
   }
 
 
   constructor(
     public dialogRef: MatDialogRef<PeerConnetionComponent>,
     private spinner: NgxSpinnerService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private userService: UserService
     ) {
   }
 
@@ -190,7 +199,16 @@ export class PeerConnetionComponent {
     this.remoteQR.reset();
     this.objClient = undefined;
     this.objServer = undefined;
-    this.connectionName.reset();
+  }
+
+  setRemoteUser(remoteUserId: string, remoteUserName: string): void {
+    this.connectedUser = undefined;
+    if (!remoteUserId || !remoteUserName) return;
+
+    this.connectedUser = {
+      userId: remoteUserId,
+      userName: remoteUserName
+    };
   }
 
 
@@ -227,9 +245,11 @@ export class PeerConnetionComponent {
     this.scanQRCode()
       .then(async (scannedText) => {
         if (scannedText) {
-          const [remoteDescription, remoteCandidate] = scannedText.split(this.divider);
+          const [remoteDescription, remoteCandidate, remoteUserId, remoteUserName] = scannedText.split(this.divider);
           this.remoteDescription = remoteDescription;
           this.remoteCandidate = remoteCandidate;
+          this.setRemoteUser(remoteUserId, remoteUserName);
+          console.log({remoteDescription, remoteCandidate, remoteUserId, remoteUserName})
           this.remoteQR.setValue(scannedText);
           await this.setPlayerDescription();
           await this.setPlayerCandidate();
@@ -267,12 +287,14 @@ export class PeerConnetionComponent {
     this.scanQRCode()
       .then(scannedText => {
         if (scannedText) {
-          const [remoteDescription, remoteCandidate] = scannedText.split(this.divider);
+          const [remoteDescription, remoteCandidate, remoteUserId, remoteUserName] = scannedText.split(this.divider);
           if (!remoteDescription || !remoteCandidate) return;
 
           this.localQR.setValue(scannedText);
           this.remoteDescription = remoteDescription;
           this.remoteCandidate = remoteCandidate;
+          this.setRemoteUser(remoteUserId, remoteUserName);
+          console.log({remoteDescription, remoteCandidate, remoteUserId, remoteUserName})
           this.startClient();
           this.setHostDescription(stepper);
         }
@@ -329,9 +351,9 @@ export class PeerConnetionComponent {
   // SUBMIT
   createAndSaveConnection(): void {
     const objConenction = this.objServer ?? this.objClient;
-    if (!objConenction || !this.connectionName.value) return;
+    if (!objConenction || !this.connectedUser) return;
 
-    const newUsr = new ConnectedUser(this.connectionName.value, this.selectedTab.type, objConenction);
+    const newUsr = new ConnectedUser(this.selectedTab.type, objConenction, this.connectedUser);
     this.dialogRef.close(newUsr);
   }
 }
