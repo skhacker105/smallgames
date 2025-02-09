@@ -59,7 +59,6 @@ export class UserService implements OnDestroy {
 
     this.me = JSON.parse(saved);
     this.connectSocket();
-
   }
 
   askForMeUser(): MatDialogRef<UserInputComponent, any> {

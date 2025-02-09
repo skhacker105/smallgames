@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -9,7 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTabsModule } from '@angular/material/tabs';
 import { CommonModule } from '@angular/common';
 import { P2PClient, P2PServer } from '../../classes';
-import { Subject, combineLatest, skip, take, takeUntil } from 'rxjs';
+import { Subject, combineLatest, skip, takeUntil } from 'rxjs';
 import { QRCodeComponent, QRCodeModule } from 'angularx-qrcode';
 import { BrowserQRCodeReader } from '@zxing/browser';
 import { MatStepper, MatStepperModule } from '@angular/material/stepper';
@@ -18,6 +18,7 @@ import { TabType } from '../../types';
 import { ConnectedUser } from '../../classes';
 import { UserService } from '../../services/user.service';
 import { IUser } from '../../interfaces';
+import { SocketService } from '../../services/socket.service';
 
 interface ITab {
   type: TabType;
@@ -82,7 +83,7 @@ export class PeerConnetionComponent implements OnDestroy {
   get localDataAsQRCodeText(): string {
     const meId: string = this.me?.userId ?? '';
     const meName: string = this.me?.userName ?? '';
-    return this.localDescription + this.divider + this.localCandiate + this.divider + meId +  this.divider + meName;
+    return this.localDescription + this.divider + this.localCandiate + this.divider + meId + this.divider + meName;
   }
 
 
@@ -90,8 +91,9 @@ export class PeerConnetionComponent implements OnDestroy {
     public dialogRef: MatDialogRef<PeerConnetionComponent>,
     private spinner: NgxSpinnerService,
     private cdr: ChangeDetectorRef,
-    private userService: UserService
-    ) {
+    private userService: UserService,
+    private socketService: SocketService
+  ) {
   }
 
   ngOnDestroy(): void {
@@ -351,7 +353,10 @@ export class PeerConnetionComponent implements OnDestroy {
     const objConenction = this.objServer ?? this.objClient;
     if (!objConenction || !this.connectedUser) return;
 
-    const newUsr = new ConnectedUser(this.selectedTab.type, objConenction, this.connectedUser);
+
+    const newUsr = this.userService.connectedUsers.find(u => u.connectedUser.userId === this.connectedUser?.userId)
+      ?? new ConnectedUser(this.selectedTab.type, this.connectedUser, this.socketService);
+    newUsr.setConnection(objConenction);
     this.dialogRef.close(newUsr);
   }
 }

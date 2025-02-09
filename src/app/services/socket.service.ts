@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { Socket, io } from 'socket.io-client';
 import { IUser } from '../interfaces';
 import { ConnectionState } from '../types';
@@ -10,7 +10,6 @@ import { ConnectionState } from '../types';
 })
 export class SocketService {
   
-  private reconnectAttempts = 0;
   private socket?: Socket;
   private SERVER_URL = 'http://localhost:3000'; // Adjust based on your backend
   private messageSubject = new BehaviorSubject<string | null>(null);
@@ -23,9 +22,7 @@ export class SocketService {
     this.SERVER_URL = environment.socketServer
   }
 
-  connect(user: IUser, isFreshAttempt = true): void {
-    if (isFreshAttempt) this.reconnectAttempts = 0;
-    else this.reconnectAttempts++;
+  connect(user: IUser): void {
 
     if (!user.userId || !user.userName) {
       console.error('User ID and name are required for connection');
@@ -51,11 +48,6 @@ export class SocketService {
     this.socket.on('disconnect', () => {
       this.connectionStatusSubject.next('disconnected');
       console.log('Disconnected from server');
-      if (this.reconnectAttempts > 3) return;
-
-      setTimeout(() => {
-        this.connect(user, false);
-      }, (this.reconnectAttempts * 1000));
     });
   }
 

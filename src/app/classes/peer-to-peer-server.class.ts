@@ -1,4 +1,4 @@
-import { BehaviorSubject, Subject, map } from "rxjs";
+import { BehaviorSubject, Observable, Subject, combineLatest, map, of, skip, take, takeUntil } from "rxjs";
 
 export abstract class P2P {
 
@@ -33,7 +33,7 @@ export abstract class P2P {
             }
         };
     }
-    
+
     async setRemoteDescription(remoteDescription: string) {
         const remoteDesc = JSON.parse(remoteDescription);
         await this.peerConnection?.setRemoteDescription(new RTCSessionDescription(remoteDesc));
@@ -53,11 +53,11 @@ export abstract class P2P {
             }
         });
     }
-    
+
     closeConnection(): void {
         this.peerConnection?.close();
     }
-    
+
     sendMessage(inputMessage: string) {
         if (this.dataChannel && this.dataChannel.readyState === 'open') {
             this.dataChannel.send(inputMessage);
