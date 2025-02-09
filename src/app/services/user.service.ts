@@ -7,6 +7,7 @@ import { ConnectedUser } from '../classes/connected-user.class';
 import { IUser } from '../interfaces';
 import { UserInputComponent } from '../components/user-input/user-input.component';
 import { take } from 'rxjs';
+import { SocketService } from './socket.service';
 
 @Injectable({
   providedIn: 'root'
@@ -19,7 +20,7 @@ export class UserService implements OnDestroy {
 
   meLocalStorageKey = 'meUser';
 
-  constructor(private loggerService: LoggerService, private dialog: MatDialog) {
+  constructor(private loggerService: LoggerService, private dialog: MatDialog, private socketService: SocketService) {
     this.refreshNetworkStatus();
     this.initialMeUserLoad();
   }
@@ -57,6 +58,8 @@ export class UserService implements OnDestroy {
     }
 
     this.me = JSON.parse(saved);
+    this.connectSocket();
+
   }
 
   askForMeUser(): MatDialogRef<UserInputComponent, any> {
@@ -75,7 +78,8 @@ export class UserService implements OnDestroy {
       this.me = {
         userId: crypto.randomUUID(),
         userName
-      }
+      };
+      this.connectSocket();
     } else {
       this.me.userName = userName;
     }
@@ -103,5 +107,11 @@ export class UserService implements OnDestroy {
     if (!connectedUser) return false;
 
     return connectedUser.isConnected();
+  }
+
+  connectSocket() {
+    if (!this.me) return;
+
+    this.socketService.connect(this.me);
   }
 }

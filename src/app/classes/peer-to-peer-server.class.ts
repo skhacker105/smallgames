@@ -1,16 +1,16 @@
-import { BehaviorSubject, Subject, async, map, skip, take } from "rxjs";
+import { BehaviorSubject, Subject, map } from "rxjs";
 
-export class P2PServer {
+export abstract class P2P {
 
-    private peerConnection?: RTCPeerConnection;
-    private dataChannel?: RTCDataChannel;
-    private _messages: string[] = [];
+    protected peerConnection?: RTCPeerConnection;
+    protected dataChannel?: RTCDataChannel;
+    protected _messages: string[] = [];
 
     public channelOpened$ = new BehaviorSubject<boolean>(false);
     public messageReceived$ = new Subject<string>();
 
-    private localDescription$ = new BehaviorSubject<RTCSessionDescription | null | undefined>(undefined);
-    private localCandidates$ = new BehaviorSubject<RTCIceCandidate[]>([]);
+    protected localDescription$ = new BehaviorSubject<RTCSessionDescription | null | undefined>(undefined);
+    protected localCandidates$ = new BehaviorSubject<RTCIceCandidate[]>([]);
 
     public localCandidates = this.localCandidates$.pipe(map(candidates => candidates.map(o => JSON.stringify(o)).join('\n')));
     public localDescription = this.localDescription$.pipe(map(offer => JSON.stringify(offer)));
@@ -19,13 +19,8 @@ export class P2PServer {
         return this.peerConnection
     }
 
-    // START Server
-    startServer() {
-        this.peerConnection = new RTCPeerConnection();
-        this.handleCandidateCreation();
-        this.handleDataChannel();
-        this.createlocalDescription();
-    }
+    abstract start(): void;
+    abstract handleDataChannel(): void;
 
     handleCandidateCreation() {
         if (!this.peerConnection) return;
@@ -35,12 +30,51 @@ export class P2PServer {
                 const localCandidates = this.localCandidates$.value;
                 localCandidates.push(event.candidate);
                 this.localCandidates$.next(localCandidates);
-                // this.localCandidates$ += JSON.stringify(event.candidate) + '\n';
             }
         };
     }
+    
+    async setRemoteDescription(remoteDescription: string) {
+        const remoteDesc = JSON.parse(remoteDescription);
+        await this.peerConnection?.setRemoteDescription(new RTCSessionDescription(remoteDesc));
 
-    handleDataChannel() {
+        if (remoteDesc.type === 'offer') {
+            const answer = await this.peerConnection?.createAnswer();
+            await this.peerConnection?.setLocalDescription(answer);
+            this.localDescription$.next(this.peerConnection?.localDescription);
+        }
+    }
+
+    async addRemoteCandidates(remoteCandidates: string) {
+        const candidates = remoteCandidates.trim().split('\n');
+        candidates.forEach(async (candidate) => {
+            if (candidate) {
+                await this.peerConnection?.addIceCandidate(new RTCIceCandidate(JSON.parse(candidate)));
+            }
+        });
+    }
+    
+    closeConnection(): void {
+        this.peerConnection?.close();
+    }
+    
+    sendMessage(inputMessage: string) {
+        if (this.dataChannel && this.dataChannel.readyState === 'open') {
+            this.dataChannel.send(inputMessage);
+        }
+    }
+}
+
+export class P2PServer extends P2P {
+
+    start(): void {
+        this.peerConnection = new RTCPeerConnection();
+        this.handleCandidateCreation();
+        this.handleDataChannel();
+        this.createlocalDescription();
+    }
+
+    handleDataChannel(): void {
         if (!this.peerConnection) return;
 
         this.dataChannel = this.peerConnection.createDataChannel('chat');
@@ -64,56 +98,12 @@ export class P2PServer {
             this.localDescription$.next(this.peerConnection.localDescription)
         });
     }
-    // END - Start Offer
-
-    // Set Remote
-    async setRemoteDescription(remoteDescription: string) {
-        const remoteDesc = JSON.parse(remoteDescription);
-        await this.peerConnection?.setRemoteDescription(new RTCSessionDescription(remoteDesc));
-    }
-
-    async addRemoteCandidates(remoteCandidates: string) {
-        const candidates = remoteCandidates.trim().split('\n');
-        candidates.forEach(async (candidate) => {
-            if (candidate) {
-                await this.peerConnection?.addIceCandidate(new RTCIceCandidate(JSON.parse(candidate)));
-            }
-        });
-    }
-    // END - Set Remote
-
-    closeConnection(): void {
-        this.peerConnection?.close();
-    }
-
-    sendMessage(inputMessage: string) {
-        if (this.dataChannel && this.dataChannel.readyState === 'open') {
-            this.dataChannel.send(inputMessage);
-        }
-    }
 }
 
 
-export class P2PClient {
+export class P2PClient extends P2P {
 
-    private peerConnection?: RTCPeerConnection;
-    private dataChannel?: RTCDataChannel;
-    private _messages: string[] = [];
-
-    public channelOpened$ = new BehaviorSubject<boolean>(false);
-    public messageReceived$ = new Subject<string>();
-
-    private localDescription$ = new BehaviorSubject<RTCSessionDescription | null | undefined>(undefined);
-    private localCandidates$ = new BehaviorSubject<RTCIceCandidate[]>([]);
-
-    public localCandidates = this.localCandidates$.pipe(map(candidates => candidates.map(o => JSON.stringify(o)).join('\n')));
-    public localDescription = this.localDescription$.pipe(map(offer => JSON.stringify(offer)));
-
-    get connection(): RTCPeerConnection | undefined {
-        return this.peerConnection
-    }
-
-    startClient() {
+    start(): void {
         this.peerConnection = new RTCPeerConnection();
 
         this.handleCandidateCreation();
@@ -121,19 +111,7 @@ export class P2PClient {
         this.handleDataChannel();
     }
 
-    handleCandidateCreation() {
-        if (!this.peerConnection) return;
-
-        this.peerConnection.onicecandidate = (event) => {
-            if (event.candidate) {
-                const localCandidates = this.localCandidates$.value;
-                localCandidates.push(event.candidate);
-                this.localCandidates$.next(localCandidates);
-            }
-        };
-    }
-
-    handleDataChannel() {
+    handleDataChannel(): void {
         if (!this.peerConnection) return;
 
         this.peerConnection.ondatachannel = (event) => {
@@ -148,32 +126,5 @@ export class P2PClient {
             };
         }
 
-    }
-
-    async setRemoteDescription(remoteDescription: string) {
-        const remoteDesc = JSON.parse(remoteDescription);
-        await this.peerConnection?.setRemoteDescription(new RTCSessionDescription(remoteDesc));
-
-        if (remoteDesc.type === 'offer') {
-            const answer = await this.peerConnection?.createAnswer();
-            await this.peerConnection?.setLocalDescription(answer);
-            this.localDescription$.next(this.peerConnection?.localDescription);
-        }
-    }
-
-    async addRemoteCandidates(remoteCandidates: string) {
-        const candidates = remoteCandidates.trim().split('\n');
-        candidates.forEach(async (candidate) => {
-            if (candidate) {
-                await this.peerConnection?.addIceCandidate(new RTCIceCandidate(JSON.parse(candidate)));
-            }
-        });
-    }
-    // END - Set Remote
-
-    sendMessage(inputMessage: string) {
-        if (this.dataChannel && this.dataChannel.readyState === 'open') {
-            this.dataChannel.send(inputMessage);
-        }
     }
 }

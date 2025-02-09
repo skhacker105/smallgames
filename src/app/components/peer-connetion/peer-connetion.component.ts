@@ -234,7 +234,7 @@ export class PeerConnetionComponent implements OnDestroy {
         stepper.next();
         this.cdr.detectChanges();
       });
-    this.objServer.startServer();
+    this.objServer.start();
   }
 
   scanPlayer(stepper: MatStepper): void {
@@ -311,7 +311,7 @@ export class PeerConnetionComponent implements OnDestroy {
         this.messages.push(message);
       });
 
-    this.objClient.startClient();
+    this.objClient.start();
   }
 
   async setHostDescription(stepper: MatStepper): Promise<void> {
