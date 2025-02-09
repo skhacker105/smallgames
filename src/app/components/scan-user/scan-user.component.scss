@@ -1,0 +1,142 @@
+/* Dialog Container */
+.dialog-container {
+    background: linear-gradient(145deg, #0a0f1a, #1b2735);
+    backdrop-filter: blur(12px);
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    width: calc(100% - 40px); /* Updated width */
+    max-width: 400px; /* Ensures it doesn't get too wide on larger screens */
+    margin: auto;
+}
+
+/* Header */
+.header {
+    color: #00e6e6;
+    text-align: center;
+    text-shadow: 0 0 20px #00cccc, 0 0 40px #009999, 0 0 60px #006666;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Body */
+.body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Scan Section */
+.scan-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 20px;
+
+    button {
+        margin: auto;
+    }
+}
+
+/* QR Code Section */
+.qr-section {
+    background: #0a0f1a;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 230, 230, 0.5);
+}
+
+/* Footer */
+.footer {
+    display: flex;
+    justify-content: right;
+    margin-top: 20px;
+    gap: 20px;
+}
+
+/* Buttons with Neon Glow */
+.glow-button {
+    background: #004d4d !important;
+    color: #00e6e6 !important;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 8px;
+    padding: 10px 16px;
+    transition: 0.3s ease-in-out;
+    box-shadow: 0 0 15px rgba(0, 230, 230, 0.8) !important;
+    border: none;
+    cursor: pointer;
+}
+
+.glow-button:hover {
+    background: linear-gradient(145deg, #003333, #005555) !important;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5) !important;
+    color: white !important;
+}
+
+/* Cancel Button (Gray Theme) */
+.cancel-button {
+    background: #666666 !important; /* Gray background */
+    color: #ffffff !important; /* White text */
+    box-shadow: 0 0 15px rgba(102, 102, 102, 0.8) !important; /* Gray shadow */
+}
+
+.cancel-button:hover {
+    background: linear-gradient(145deg, #555555, #777777) !important; /* Gray gradient */
+    box-shadow: 0 0 15px rgba(102, 102, 102, 0.5) !important; /* Gray shadow */
+    color: white !important;
+}
+
+/* Submit Button */
+.submit-button {
+    background: #004d00 !important;
+    color: #00ff00 !important;
+}
+
+.submit-button:hover {
+    background: linear-gradient(145deg, #003300, #005500) !important;
+    color: white !important;
+}
+
+/* Close Button */
+.close-button {
+    position: absolute;
+    right: 0;
+    z-index: 100;
+    color: #00e6e6 !important;
+    transition: 0.3s ease-in-out;
+    background: transparent;
+    margin: -20px 0 0;
+}
+
+.close-button:hover {
+    background-color: #00e6e6 !important;
+    color: black !important;
+    transition: 0.3s ease-in-out;
+}
+
+::ng-deep {
+    .mat-mdc-dialog-surface {
+        background: transparent !important;
+    }
+}
+
+.error {
+    color: #ff6262;
+    font-size: smaller;
+    padding: 10px;
+    background: #483434;
+    border-radius: 10px;
+    display: flex;
+
+    .scan-error {
+        padding-left: 5px;
+        line-height: 24px;
+    }
+}

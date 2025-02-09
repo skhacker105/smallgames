@@ -2,12 +2,11 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { ConnectionStatus, Network } from '@capacitor/network';
 import { LoggerService } from './logger.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { PeerConnetionComponent } from '../components/peer-connetion/peer-connetion.component';
-import { ConnectedUser } from '../classes/connected-user.class';
 import { IUser } from '../interfaces';
 import { UserInputComponent } from '../components/user-input/user-input.component';
 import { take } from 'rxjs';
 import { SocketService } from './socket.service';
+import { ScanUserComponent } from '../components/scan-user/scan-user.component';
 
 @Injectable({
   providedIn: 'root'
@@ -15,14 +14,16 @@ import { SocketService } from './socket.service';
 export class UserService implements OnDestroy {
 
   me?: IUser;
+  connectedUsers: IUser[] = [];
   internetConnectionStatus?: ConnectionStatus;
-  connectedUsers: ConnectedUser[] = [];
 
   meLocalStorageKey = 'meUser';
+  connectedUsersLocalStorageKey = 'connectedUsers';
 
   constructor(private loggerService: LoggerService, private dialog: MatDialog, private socketService: SocketService) {
     this.refreshNetworkStatus();
     this.initialMeUserLoad();
+    this.connectedUsersInitialLoad();
   }
 
   ngOnDestroy(): void {
@@ -46,6 +47,18 @@ export class UserService implements OnDestroy {
       this.loggerService.log(`Error fetching network status: ${error}`);
       return undefined;
     }
+  }
+
+  connectedUsersInitialLoad(): void {
+    const connectedUsers = localStorage.getItem(this.connectedUsersLocalStorageKey);
+    if (connectedUsers) this.connectedUsers = JSON.parse(connectedUsers);
+  }
+
+  saveConnectedUsers(): void {
+    if (this.connectedUsers.length > 0)
+      localStorage.setItem(this.connectedUsersLocalStorageKey, JSON.stringify(this.connectedUsers));
+    else
+      localStorage.removeItem(this.connectedUsersLocalStorageKey);
   }
 
   initialMeUserLoad(): void {
@@ -72,7 +85,7 @@ export class UserService implements OnDestroy {
 
   setMeUser(userName: string): void {
     if (!userName) return;
-    
+
     if (!this.me) {
       this.me = {
         userId: crypto.randomUUID(),
@@ -85,27 +98,20 @@ export class UserService implements OnDestroy {
     localStorage.setItem(this.meLocalStorageKey, JSON.stringify(this.me))
   }
 
-  startConnectionWizard(): MatDialogRef<PeerConnetionComponent, any> {
-    return this.dialog.open(PeerConnetionComponent, {
+  startConnectionWizard(): MatDialogRef<ScanUserComponent, any> {
+    return this.dialog.open(ScanUserComponent, {
       width: '99vw'
     });
   }
 
-  addNewUserConnection(usr: ConnectedUser): void {
+  addNewUserConnection(usr: IUser): void {
     this.connectedUsers.push(usr);
+    this.saveConnectedUsers();
   }
 
   removeUserConnection(id: string): void {
-    this.connectedUsers = this.connectedUsers.filter(usr => usr.connectionId != id);
-  }
-
-  isUserConnectionLive(connectionId?: string): boolean {
-    if (!connectionId) return false;
-
-    const connectedUser = this.connectedUsers.find(usr => usr.connectionId === connectionId);
-    if (!connectedUser) return false;
-
-    return connectedUser.isConnected();
+    this.connectedUsers = this.connectedUsers.filter(usr => usr.userId != id);
+    this.saveConnectedUsers();
   }
 
   connectSocket() {

@@ -1,0 +1,52 @@
+<div class="dialog-container">
+
+    <!-- Header -->
+    <div class="flex">
+        <h2 class="header">Connect Player</h2>
+
+        <div class="spacer"></div>
+        <button mat-icon-button class="close-button" (click)="dialogRef.close()">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+
+    <!-- Body -->
+    <div class="body">
+        <!-- Scan Button -->
+        <div class="scan-section">
+
+            <div class="action-buttons">
+                <button mat-icon-button class="glow-button" (click)="startScan()">
+                    <mat-icon>qr_code_scanner</mat-icon>
+                </button>
+                <button class="glow-button" mat-icon-button type="button" (click)="downloadQRCode(qrCodeElement)">
+                    <mat-icon>download</mat-icon>
+                </button>
+            </div>
+
+            <div class="error" *ngIf="scanError">
+                <mat-icon>error</mat-icon>
+                <div class="scan-error">
+                    {{ scanError }}
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Code Section -->
+        <div class="qr-section" *ngIf="localDataAsQRCodeText">
+            <qrcode [qrdata]="localDataAsQRCodeText" #qrCode [errorCorrectionLevel]="'H'"></qrcode>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <button mat-icon-button class="glow-button cancel-button" (click)="dialogRef.close()">
+            Cancel
+        </button>
+        <button mat-icon-button class="glow-button submit-button" (click)="createAndSaveConnection()"
+            [disabled]="!scannedUser">
+            Submit
+        </button>
+    </div>
+</div>

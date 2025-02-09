@@ -7,7 +7,7 @@
 
       <div class="input-container">
         <input matInput type="text" id="playerName{{ i }}" [(ngModel)]="players[i].name" class="player-name"
-          [disabled]="!!player.connectedUserId && userService.isUserConnectionLive(player.connectedUserId)"
+          [disabled]="!!player.userId"
           placeholder="Enter player name" />
 
         <mat-icon class="clear-player" *ngIf="!!players[i].name" (click)="resetPlayer(player)">
@@ -15,7 +15,7 @@
         </mat-icon>
 
         <mat-icon [matMenuTriggerFor]="onlinePLayers" *ngIf="!players[i].name" class="online" [ngClass]="{
-          'is-online': userService.isUserConnectionLive(player.connectedUserId)
+          'is-online': true
         }">
           online_prediction
         </mat-icon>
@@ -23,13 +23,13 @@
         <mat-menu #onlinePLayers="matMenu">
           <div class="online-player-list">
             <div class="online-player" *ngFor="let user of userService.connectedUsers" [ngClass]="{
-              'current-selected': user.connectionId === player.connectedUserId
+              'current-selected': user.userId === player.userId
             }" (click)="setPlayerConnection(player, user)">
               <div class="online-player-name">
-                {{ user.connectionName }}
+                {{ user.userName }}
               </div>
               <div class="online-player-status" [ngClass]="{
-                'connected': user.isConnected()
+                'connected': true
               }">
                 <!-- {{ user.isConnected() }} -->
               </div>

@@ -1,14 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { IPlayer, IPlayerAskConfig } from '../../interfaces';
+import { IPlayer, IPlayerAskConfig, IUser } from '../../interfaces';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { PLAYER_COLOR } from '../../config';
 import { MatMenuModule } from '@angular/material/menu';
 import { UserService } from '../../services/user.service';
 import { take } from 'rxjs';
-import { ConnectedUser } from '../../classes';
 
 @Component({
   selector: 'app-players-config',
@@ -58,7 +57,7 @@ export class PlayersConfigComponent {
   initializeExistingPlayersForm(players: IPlayer[]): void {
     players.forEach(player => {
       const color = this.config.colorOptions ? (player.color ?? this.config.colorOptions[0]) : undefined;
-      this.players.push({ name: player.name, color, connectedUserId: player.connectedUserId });
+      this.players.push({ name: player.name, color, userId: player.userId });
     });
   }
 
@@ -100,7 +99,7 @@ export class PlayersConfigComponent {
   startConnectionWizard(player: IPlayer): void {
     const ref = this.userService.startConnectionWizard();
     ref.afterClosed().pipe(take(1))
-      .subscribe((usr?: ConnectedUser) => {
+      .subscribe((usr?: IUser) => {
         if (usr) {
           this.userService.addNewUserConnection(usr);
           this.setPlayerConnection(player, usr);
@@ -108,17 +107,16 @@ export class PlayersConfigComponent {
       })
   }
 
-  setPlayerConnection(player: IPlayer, usrCon: ConnectedUser) {
-    if (!usrCon.isConnected()) return;
+  setPlayerConnection(player: IPlayer, usrCon: IUser) {
     
-    player.connectedUserId = usrCon.connectionId;
-    player.name = usrCon.connectionName;
+    player.userId = usrCon.userId;
+    player.name = usrCon.userName;
     this.cdr.detectChanges();
   }
 
   resetPlayer(player: IPlayer) {
     player.name = '';
-    player.connectedUserId = undefined;
+    player.userId = undefined;
     this.cdr.detectChanges();
   }
 
