@@ -28,8 +28,12 @@
         <mat-icon (click)="shoAboutInfo()">info</mat-icon>
       </ng-container>
 
-      <mat-icon *ngIf="userService.internetConnectionStatus?.connected">wifi</mat-icon>
-      <mat-icon *ngIf="!userService.internetConnectionStatus?.connected">wifi_off</mat-icon>
+      <ng-container *ngIf="!isSocketConnected">
+        <mat-icon *ngIf="isWifiConnected">wifi</mat-icon>
+        <mat-icon *ngIf="!isWifiConnected">wifi_off</mat-icon>
+      </ng-container>
+
+      <mat-icon *ngIf="isSocketConnected" class="is-online">online_prediction</mat-icon>
 
     </div>
   </div>

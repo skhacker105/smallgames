@@ -1,11 +1,11 @@
 <div class="dialog-container">
-    <h2>{{ config.title || 'User Input' }}</h2>
-    <mat-form-field appearance="fill" class="input-field">
-      <mat-label>{{ config.placeholder || 'Enter your input' }}</mat-label>
-      <input matInput [(ngModel)]="userInput" class="custom-input" />
-    </mat-form-field>
-    <div class="dialog-actions">
-      <button mat-button class="cancel-button" (click)="onCancel()">Cancel</button>
-      <button mat-raised-button class="submit-button" (click)="onSubmit()">Submit</button>
-    </div>
+  <h2>{{ config.title || 'User Input' }}</h2>
+  <mat-form-field appearance="fill" class="input-field">
+    <mat-label>{{ config.placeholder || 'Enter your input' }}</mat-label>
+    <input matInput [(ngModel)]="userInput" class="custom-input" />
+  </mat-form-field>
+  <div class="dialog-actions">
+    <button mat-button class="cancel-button" (click)="onCancel()">Cancel</button>
+    <button mat-raised-button class="submit-button" (click)="onSubmit()">Submit</button>
   </div>
+</div>

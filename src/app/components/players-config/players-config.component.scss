@@ -50,10 +50,6 @@
         transform: translateY(-50%);
         color: gray;
         font-size: 20px;
-
-        &.is-online {
-            color: #3aff00;
-        }
     }
 }
 
@@ -73,6 +69,26 @@
     &:disabled {
         background: #1f2835 !important;
         color: #7c7c7c !important;
+    }
+
+    &.request-pending {
+        background: #7a5c0a !important; /* Dark Yellow */
+        color: #facc15 !important; /* Bright Yellow Text */
+    }
+    
+    &.request-accepted {
+        background: #14532d !important; /* Dark Green */
+        color: #86efac !important; /* Light Green Text */
+    }
+    
+    &.request-rejected {
+        background: #7f1d1d !important; /* Dark Red */
+        color: #fca5a5 !important; /* Light Red Text */
+    }
+    
+    &.request-time-out {
+        background: #374151 !important; /* Dark Gray */
+        color: #d1d5db !important; /* Light Gray Text */
     }
 }
 

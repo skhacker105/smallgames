@@ -1,0 +1,1 @@
+export type GameRequestStatus = 'pending' | 'accepted' | 'rejected' | 'requestCancel';

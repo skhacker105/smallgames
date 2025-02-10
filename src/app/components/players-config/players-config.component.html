@@ -7,8 +7,13 @@
 
       <div class="input-container">
         <input matInput type="text" id="playerName{{ i }}" [(ngModel)]="players[i].name" class="player-name"
-          [disabled]="!!player.userId"
-          placeholder="Enter player name" />
+          [ngClass]="{
+            'request-pending': getPlayerRequestState(player) === 'pending',
+            'request-accepted': getPlayerRequestState(player) === 'accepted',
+            'request-rejected': getPlayerRequestState(player) === 'rejected',
+            'request-time-out': getPlayerRequestState(player) === 'time-out'
+          }"
+          [disabled]="!!player.userId" placeholder="Enter player name" />
 
         <mat-icon class="clear-player" *ngIf="!!players[i].name" (click)="resetPlayer(player)">
           close

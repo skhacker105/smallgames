@@ -132,8 +132,12 @@ export class LudoComponent extends BaseComponent {
   // }
 
   askForPlayers(): void {
+    const curGame = this.gameDashboardService.selectedGame.value;
+    if (!curGame) return;
+
     const ref = this.dialog.open(PlayersConfigComponent, {
       data: {
+        game: curGame,
         askForName: true,
         minPlayerCount: 2,
         maxPlayerCount: 4,

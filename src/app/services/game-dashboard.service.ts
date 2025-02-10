@@ -1,7 +1,12 @@
 import { Injectable } from '@angular/core';
-import { IGameInfo, IGameWinner, IPlayer } from '../interfaces';
-import { BehaviorSubject } from 'rxjs';
+import { IGameInfo, IGameWinner, IPlayer, ISocketMessage, IUser, IYesNoConfig } from '../interfaces';
+import { BehaviorSubject, Observable, filter, take } from 'rxjs';
 import { Router } from '@angular/router';
+import { YesNoDialogComponent } from '../components/yes-no-dialog/yes-no-dialog.component';
+import { SocketService } from './socket.service';
+import { MatDialog } from '@angular/material/dialog';
+import { LoggerService } from './logger.service';
+import { UserService } from './user.service';
 
 @Injectable({
   providedIn: 'root'
@@ -52,18 +57,35 @@ export class GameDashboardService {
       settingsIconNeeded: false
     }
   ];
-
+  gameRequestWaitTime = 30; // in seconds
   allWinnersKey = 'allWinner';
 
   selectedGame = new BehaviorSubject<IGameInfo | undefined>(undefined);
 
-  constructor(private router: Router) {
+  // Incoming Requests bifercated by type
+  public incomingGameRequest$: Observable<ISocketMessage | null>;
+  public incomingGameRequestResponse$: Observable<ISocketMessage | null>;
+  public incomingGameRequestCancel$: Observable<ISocketMessage | null>;
+
+  constructor(
+    private router: Router,
+    private socketService: SocketService,
+    private dialog: MatDialog,
+    private loggerService: LoggerService,
+    private userService: UserService) {
+
+    this.incomingGameRequest$ = this.socketService.message$.pipe(filter(message => message?.type === 'gameRequest' && message.gameRequestStatus === 'pending'));
+    this.incomingGameRequestResponse$ = this.socketService.message$.pipe(filter(message => message?.type === 'gameRequest' && (message.gameRequestStatus === 'accepted' || message.gameRequestStatus === 'rejected')));
+    this.incomingGameRequestCancel$ = this.socketService.message$.pipe(filter(message => message?.type === 'gameRequest' && message.gameRequestStatus === 'requestCancel'));
+
     this.selectedGame.subscribe({
       next: gameInfo => {
         if (gameInfo) this.router.navigateByUrl(gameInfo.route);
         else this.router.navigateByUrl('');
       }
-    })
+    });
+    this.hanldeIncomingGameRequest();
+    this.handleIncomingCancelGameRequest();
   }
 
   saveGameState(state: any): void {
@@ -97,5 +119,108 @@ export class GameDashboardService {
     if (!savedWInners) return [] as IGameWinner[];
 
     return JSON.parse(savedWInners);
+  }
+
+  hanldeIncomingGameRequest(): void {
+    this.incomingGameRequest$
+      .subscribe(gameRequest => {
+        if (!gameRequest) return;
+
+        const gameInfo = this.games.find(g => g.key === gameRequest.gameKey);
+        if (!gameInfo) {
+          this.loggerService.log('No game found for the game request');
+          return;
+        }
+
+        const yesNoConfig: IYesNoConfig = {
+          title: 'New Game Request',
+          message: `${gameRequest.sourceUserName} requested you to join ${gameInfo.name}.`,
+          countDown: this.gameRequestWaitTime,
+          noButtonText: 'Cancel',
+          yesButtonText: 'Join'
+        };
+        gameInfo.incomingRequest = this.dialog.open(YesNoDialogComponent, {
+          data: yesNoConfig
+        });
+        gameInfo.incomingRequest.afterClosed().pipe(take(1))
+          .subscribe(confirm => {
+            this.sendGameRequestResponse(gameInfo, { userId: gameRequest.sourceUserId, userName: gameRequest.sourceUserName }, confirm)
+            gameInfo.incomingRequest = undefined;
+          });
+      });
+  }
+
+  handleIncomingCancelGameRequest(): void {
+    this.incomingGameRequestCancel$
+      .subscribe(cancelRequest => {
+        if (!cancelRequest) return;
+
+        const gameInfo = this.games.find(g => g.key === cancelRequest.gameKey);
+        if (!gameInfo) {
+          this.loggerService.log('No game found for the game cancel request');
+          return;
+        }
+        gameInfo.incomingRequest?.close();
+      });
+  }
+
+  sendGameRequest(gameInfo: IGameInfo, player: IPlayer) {
+    if (!this.userService.me) {
+      this.loggerService.log('Me user is not set');
+      return;
+    }
+    if (!player.userId) {
+      this.loggerService.log('Player is a local user');
+      return;
+    }
+
+    const message: ISocketMessage = {
+      sentOn: new Date,
+      sourceUserId: this.userService.me.userId,
+      sourceUserName: this.userService.me.userName,
+      type: 'gameRequest',
+      gameKey: gameInfo.key,
+      gameRequestStatus: 'pending'
+    };
+
+    this.socketService.sendMessage(player.userId, message);
+  }
+
+  sendGameCancelRequest(gameInfo: IGameInfo, player: IPlayer) {
+    if (!this.userService.me) {
+      this.loggerService.log('Me user is not set');
+      return;
+    }
+    if (!player.userId) {
+      this.loggerService.log('Player is a local user');
+      return;
+    }
+
+    const message: ISocketMessage = {
+      sentOn: new Date,
+      sourceUserId: this.userService.me.userId,
+      sourceUserName: this.userService.me.userName,
+      type: 'gameRequest',
+      gameKey: gameInfo.key,
+      gameRequestStatus: 'requestCancel'
+    };
+    this.socketService.sendMessage(player.userId, message);
+  }
+
+  sendGameRequestResponse(gameInfo: IGameInfo, source: IUser, response: boolean) {
+    if (!this.userService.me) {
+      this.loggerService.log('Me user is not set');
+      return;
+    }
+
+    const message: ISocketMessage = {
+      sentOn: new Date,
+      sourceUserId: this.userService.me.userId,
+      sourceUserName: this.userService.me.userName,
+      type: 'gameRequest',
+      gameKey: gameInfo.key,
+      gameRequestStatus: response ? 'accepted' : 'rejected'
+    };
+    this.socketService.sendMessage(source.userId, message);
   }
 }

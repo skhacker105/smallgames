@@ -3,7 +3,7 @@ import { NavigationEnd, Router, RouterModule, RouterOutlet } from '@angular/rout
 import { GameDashboardService } from './services/game-dashboard.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { filter } from 'rxjs';
+import { filter, map } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { AboutGameComponent } from './components/about-game/about-game.component';
 import { StatusBar } from '@capacitor/status-bar';
@@ -11,6 +11,7 @@ import { Capacitor } from '@capacitor/core';
 import { LoggerService } from './services/logger.service';
 import { MatButtonModule } from '@angular/material/button';
 import { UserService } from './services/user.service';
+import { SocketService } from './services/socket.service';
 
 @Component({
   selector: 'app-root',
@@ -27,12 +28,21 @@ export class AppComponent {
     return this.title === this.baseTitle;
   }
 
+  get isWifiConnected(): boolean {
+    return this.userService.internetConnectionStatus?.connected ?? false;
+  }
+
+  get isSocketConnected() {
+    return this.socketService.isConnected
+  }
+
   constructor(
     public gameDashboardService: GameDashboardService,
     public router: Router,
     private dialog: MatDialog,
     public loggerService: LoggerService,
-    public userService: UserService) {
+    public userService: UserService,
+    public socketService: SocketService) {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd)) // Filter only NavigationEnd events
       .subscribe(() => {

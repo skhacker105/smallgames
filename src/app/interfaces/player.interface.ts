@@ -1,4 +1,6 @@
 import { PLAYER_COLOR } from "../config";
+import { GameRequestStatus } from "../types";
+import { IGameInfo } from "./game-info.interface";
 
 export interface ILudoCoin {
     id: number;
@@ -13,6 +15,7 @@ export interface IPlayer {
 }
 
 export interface IPlayerAskConfig {
+    game: IGameInfo;
     minPlayerCount: number;
     maxPlayerCount: number;
     askForName: true;

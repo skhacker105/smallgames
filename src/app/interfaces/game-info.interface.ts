@@ -1,3 +1,4 @@
+import { MatDialogRef } from "@angular/material/dialog";
 import { IPlayer } from "./player.interface";
 
 export interface IGameInfo {
@@ -6,6 +7,7 @@ export interface IGameInfo {
     image: string;
     route: string;
     settingsIconNeeded: boolean;
+    incomingRequest?: MatDialogRef<any>
 }
 
 export interface IGameWinner {

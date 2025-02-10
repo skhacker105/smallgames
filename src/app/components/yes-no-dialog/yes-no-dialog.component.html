@@ -1,0 +1,16 @@
+<div class="dialog-container">
+    <h2>{{ config.title || 'Confirmation' }}</h2>
+    <p>{{ config.message || 'Are you sure you want to proceed?' }}</p>
+    <div class="dialog-actions">
+      <button mat-icon-button *ngIf="config.countDown">
+        {{ config.countDown - countDown }}
+      </button>
+      <div class="spacer"></div>
+      <button mat-button class="cancel-button" (click)="onNoClick()">
+        {{ config.noButtonText || 'No' }}
+      </button>
+      <button mat-raised-button class="submit-button" (click)="onYesClick()">
+        {{ config.yesButtonText || 'Yes' }}
+      </button>
+    </div>
+  </div>

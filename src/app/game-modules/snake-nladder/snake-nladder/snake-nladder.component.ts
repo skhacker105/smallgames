@@ -129,8 +129,12 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
   }
 
   askForPlayers(): void {
+    const curGame = this.gameDashboardService.selectedGame.value;
+    if (!curGame) return;
+
     const ref = this.dialog.open(PlayersConfigComponent, {
       data: {
+        game: curGame,
         askForName: true,
         minPlayerCount: 2,
         maxPlayerCount: 6,

@@ -7,7 +7,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { PLAYER_COLOR } from '../../config';
 import { MatMenuModule } from '@angular/material/menu';
 import { UserService } from '../../services/user.service';
-import { take } from 'rxjs';
+import { filter, take, timeout } from 'rxjs';
+import { GameRequestStatus } from '../../types';
+import { GameDashboardService } from '../../services/game-dashboard.service';
 
 @Component({
   selector: 'app-players-config',
@@ -17,7 +19,9 @@ import { take } from 'rxjs';
   styleUrl: './players-config.component.scss'
 })
 export class PlayersConfigComponent {
+
   players: IPlayer[] = [];
+  playerConenctionRequests = new Map<string, GameRequestStatus | undefined>();
   errorMessage: string = '';
   activeColorPickerIndex: number | null = null;
 
@@ -46,7 +50,7 @@ export class PlayersConfigComponent {
     @Inject(MAT_DIALOG_DATA) public config: IPlayerAskConfig,
     public dialogRef: MatDialogRef<PlayersConfigComponent>,
     public userService: UserService,
-    private cdr: ChangeDetectorRef
+    private gameDashboardService: GameDashboardService
   ) {
     config.preFillPlayers
       ? this.initializeExistingPlayersForm(config.preFillPlayers)
@@ -108,16 +112,54 @@ export class PlayersConfigComponent {
   }
 
   setPlayerConnection(player: IPlayer, usrCon: IUser) {
-    
     player.userId = usrCon.userId;
     player.name = usrCon.userName;
-    this.cdr.detectChanges();
+    const connectionStatus = this.playerConenctionRequests.get(player.name);
+
+    if (!connectionStatus || connectionStatus === 'rejected') {
+      this.gameDashboardService.incomingGameRequestResponse$
+        .pipe(
+          filter(response => response?.gameKey === this.gameDashboardService.selectedGame.value?.key && response?.sourceUserId === player.userId),
+          take(1),
+          timeout(this.gameDashboardService.gameRequestWaitTime * 1000)
+        )
+        .subscribe({
+          next: response => {
+            this.playerConenctionRequests.set(player.name, response?.gameRequestStatus);
+            if (response?.gameRequestStatus === 'rejected') this.fadeoutSelectedPlayer(player);
+          },
+          error: error => {
+            this.playerConenctionRequests.set(player.name, undefined);
+            this.gameDashboardService.sendGameCancelRequest(this.config.game, player);
+            this.fadeoutSelectedPlayer(player);
+          }
+        });
+      this.gameDashboardService.sendGameRequest(this.config.game, player);
+      this.playerConenctionRequests.set(player.name, 'pending');
+    }
+  }
+
+  fadeoutSelectedPlayer(player: IPlayer) {
+    setTimeout(() => {
+      this.playerConenctionRequests.delete(player.name);
+      player.name = '';
+      player.userId = undefined;
+    }, 1500);
   }
 
   resetPlayer(player: IPlayer) {
     player.name = '';
     player.userId = undefined;
-    this.cdr.detectChanges();
+  }
+
+  getPlayerRequestState(player: IPlayer): string {
+    if (!player.userId) return 'no-connection';
+
+    if (!this.playerConenctionRequests.has(player.name)) return 'no-connection';
+
+    const stat = this.playerConenctionRequests.get(player.name);
+    if (stat === undefined) return 'time-out';
+    else return stat
   }
 
   submit(): void {

@@ -25,8 +25,6 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   winner: IPlayer | null = null;
   selectedSquare: string | null = null;
   possibleMoves: string[] = []; // List of possible moves for the selected square
-  // whitePlayer: string = 'White Player'; // Placeholder for white player name
-  // blackPlayer: string = 'Black Player'; // Placeholder for black player name
 
   constructor(private gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router) {
     super();
@@ -78,8 +76,12 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   }
 
   askForPlayers(): void {
+    const curGame = this.gameDashboardService.selectedGame.value;
+    if (!curGame) return;
+
     const ref = this.dialog.open(PlayersConfigComponent, {
       data: {
+        game: curGame,
         askForName: true,
         minPlayerCount: 2,
         maxPlayerCount: 2,
