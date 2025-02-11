@@ -100,7 +100,9 @@
                 </div>
             </div>
             <div class="spacer"></div>
-            <div class="dice-container">
+            <div class="dice-container" [ngClass]="{
+                'is-not-my-turn': !isMyTurn
+            }">
                 <div class="dice" (click)="rollDice()" *ngIf="!rolling">
                     <div class="dice-face" [ngClass]="'face-static-' + lastDiceRoll">
                     </div>
@@ -119,10 +121,11 @@
     <ng-container *ngFor="let coin of (player?.ludoCoins ?? []); let i = index">
         <ng-container *ngIf="coin.position === position && (finished === undefined || coin.finished === finished)">
             <div class="coin-container" (click)="playCoin(coin)" [ngClass]="{
-                'in-path': !!inPath
+                'in-path': !!inPath,
+                        'is-not-my-turn': !isMyTurn
             }">
                 <div class="coin" [style.background]="player.color" [style.borderColor]="player.color" [ngClass]="{
-                        'selectable': playableCoins.has(coin.id)
+                        'selectable': playableCoins.has(coin.id) && isMyTurn
                     }">
                 </div>
             </div>

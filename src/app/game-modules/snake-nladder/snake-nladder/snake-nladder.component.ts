@@ -54,7 +54,6 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
   lastDiceRoll = 1;
   rolling: boolean = false;
 
-  gameStarted = new Subject<boolean>();
   arrNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   get isMyTurn(): boolean {
@@ -73,10 +72,6 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
 
   constructor(gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router, private userService: UserService) {
     super(gameDashboardService);
-    this.gameDashboardService.selectedGame.asObservable().pipe(takeUntil(this.isComponentActive))
-      .subscribe(game => {
-        if (!game) return;
-      });
   }
 
   override ngOnInit(): void {
@@ -85,7 +80,6 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this.gameStarted.complete();  
   }
 
   isRowLeftToRight(row: number): boolean {

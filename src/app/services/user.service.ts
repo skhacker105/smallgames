@@ -105,7 +105,11 @@ export class UserService implements OnDestroy {
   }
 
   addNewUserConnection(usr: IUser): void {
-    this.connectedUsers.push(usr);
+    const existingUserIndex = this.connectedUsers.findIndex(cu => cu.userId === usr.userId);
+    if (existingUserIndex === -1)
+      this.connectedUsers.push(usr);
+    else
+      this.connectedUsers[existingUserIndex] = usr;
     this.saveConnectedUsers();
   }
 

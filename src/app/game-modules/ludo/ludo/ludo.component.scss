@@ -101,6 +101,10 @@
     position: absolute;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth interaction effect */
+
+    .is-not-my-turn {
+        pointer-events: none;
+    }
 }
 
 .coin::before {
@@ -299,6 +303,11 @@
     justify-content: center;
     align-items: center;
     perspective: 1000px; /* Add perspective for 3D effect */
+
+    &.is-not-my-turn {
+        opacity: 0.5;
+        pointer-events: none;
+    }
 }
 
 .dice {

@@ -3,12 +3,13 @@ import { ILudoCoin, IPlayer, IPlayerAskConfig } from '../../../interfaces';
 import { BaseComponent } from '../../../components/base.component';
 import { COLOR_PATHS, LUDO_PATHS } from '../ludo-path';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
 import { take } from 'rxjs';
 import { Router } from '@angular/router';
 import { LUDO_COLORS, LUDO_COLOR } from '../../../config';
 import { isLudoColor } from '../../../utils/support.utils';
+import { UserService } from '../../../services/user.service';
 
 @Component({
   selector: 'app-ludo',
@@ -38,7 +39,25 @@ export class LudoComponent extends BaseComponent {
     return this.players.every(player => (player.ludoCoins ?? []).every(ludoCoin => ludoCoin.position === 0 && !ludoCoin.finished))
   }
 
-  constructor(gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router) {
+  get isMyTurn(): boolean {
+    const me = this.userService.me;
+    const hasOtherPlayers = this.players.some(p => p.userId != undefined && p.userId != me?.userId);
+
+    if (hasOtherPlayers) {
+      const myPlayerIndex = this.players.findIndex(p => p.userId === me?.userId);
+      return myPlayerIndex === this.currentPlayer;
+    } else return true;
+  }
+
+  override get selectedPlayer(): IPlayer | undefined {
+    return this.players[this.currentPlayer]
+  }
+
+  constructor(
+    gameDashboardService: GameDashboardService,
+    private dialog: MatDialog, private router: Router,
+    public userService: UserService
+  ) {
     super(gameDashboardService);
   }
 
@@ -50,27 +69,33 @@ export class LudoComponent extends BaseComponent {
       totalDiceRoll: this.totalDiceRoll,
       winner: this.winner,
       playerColors: this.playerColors,
-      playableCoins: [...this.playableCoins.values()]
+      playableCoins: [...this.playableCoins.values()],
+      rolling: this.rolling
     };
   }
 
   setGameState(savedState: any): void {
     this.players = savedState.players;
-      this.currentPlayer = savedState.currentPlayer;
-      this.lastDiceRoll = savedState.lastDiceRoll;
-      this.totalDiceRoll = savedState.totalDiceRoll;
-      this.winner = savedState.winner;
-      this.playerColors = savedState.playerColors ?? this.colors;
-      this.playableCoins = new Set<number>(savedState.playableCoins ?? []);
+    this.currentPlayer = savedState.currentPlayer;
+    this.lastDiceRoll = savedState.lastDiceRoll;
+    this.totalDiceRoll = savedState.totalDiceRoll;
+    this.winner = savedState.winner;
+    this.playerColors = savedState.playerColors ?? this.colors;
+    this.playableCoins = new Set<number>(savedState.playableCoins ?? []);
+    this.rolling = savedState.rolling;
   }
 
   loadGameState(): void {
+    if (this.isGameStart) return;
+
     // Load game state logic
     const savedState = this.gameDashboardService.loadGameState();
     if (savedState) {
       this.setGameState(savedState);
       if (this.winner || this.players.length === 0 || this.noCoinsMoved) {
         this.askForPlayers();
+      } else if (this.isMultiPlayerGame) {
+        this.listenForGameStateChange();
       }
     } else {
       this.askForPlayers();
@@ -106,43 +131,11 @@ export class LudoComponent extends BaseComponent {
       return ((cellIndex - (row * 15)) * 6).toString() + 'vw';
   }
 
-  // getPlayerColors(numPlayers: number): string[] {
-
-  //   // For two players
-  //   if (numPlayers === 2) {
-  //     const pair1 = ['red', 'yellow'];
-  //     const pair2 = ['green', 'blue'];
-  //     const randomPair = Math.random() < 0.5 ? pair1 : pair2;
-  //     return randomPair;
-  //   }
-
-  //   // For three players
-  //   if (numPlayers === 3) {
-  //     const pair1 = ['red', 'yellow'];
-  //     const pair2 = ['green', 'blue'];
-  //     const randomPair = Math.random() < 0.5 ? pair1 : pair2;
-  //     const remainingColors = randomPair === pair1 ? pair2 : pair1;
-
-  //     // Select third color from the remaining set
-  //     const thirdColor = remainingColors[Math.floor(Math.random() * remainingColors.length)];
-
-  //     return [...randomPair, thirdColor];
-  //   }
-
-  //   // For four players, use all colors
-  //   if (numPlayers === 4) {
-  //     return this.colors;
-  //   }
-
-  //   // Return empty array for invalid number of players
-  //   return [];
-  // }
-
-  askForPlayers(): void {
+  override getPlayerConfigPopup(): MatDialogRef<PlayersConfigComponent, any> | undefined {
     const curGame = this.gameDashboardService.selectedGame.value;
     if (!curGame) return;
 
-    const ref = this.dialog.open(PlayersConfigComponent, {
+    return this.dialog.open(PlayersConfigComponent, {
       data: {
         game: curGame,
         askForName: true,
@@ -152,7 +145,15 @@ export class LudoComponent extends BaseComponent {
         colorOptions: LUDO_COLORS
       } as IPlayerAskConfig
     })
-    ref.afterClosed().pipe(take(1))
+  }
+
+  askForPlayers(): void {
+    const curGame = this.gameDashboardService.selectedGame.value;
+    if (!curGame) return;
+
+    const ref = this.getPlayerConfigPopup();
+
+    ref?.afterClosed().pipe(take(1))
       .subscribe((players: IPlayer[] | undefined) => {
         if (!players) {
           if (this.players.length === 0)
@@ -163,11 +164,19 @@ export class LudoComponent extends BaseComponent {
           this.players = players.map((player, index) => ({
             name: player.name,
             color: player.color ?? this.playerColors[index],
-            ludoCoins: Array(4).fill(null).map((v, i) => ({ position: 0, finished: false, id: ((index * 4) + i) + 1 }))
+            ludoCoins: Array(4).fill(null).map((v, i) => ({ position: 0, finished: false, id: ((index * 4) + i) + 1 })),
+            userId: player.userId
           } as IPlayer));
           this.currentPlayer = 0;
           this.winner = null;
           this.saveGameState();
+          const otherPlayers = this.players.find(p => p.userId !== undefined && p.userId === this.userService.me?.userId) !== undefined;
+          if (otherPlayers) {
+            this.listenForGameStateChange();
+          }
+
+          if (this.gameDashboardService.selectedGame.value)
+            this.gameDashboardService.sendGameStartRequest(this.gameDashboardService.selectedGame.value, this.players, this.getGameState());
         }
       })
   }
@@ -184,10 +193,11 @@ export class LudoComponent extends BaseComponent {
 
     this.rolling = true;
     this.playableCoins.clear();
+    this.sendGameStateUpdate();
+
     setTimeout(() => {
       this.rolling = false;
       this.processDiceRoll(Math.floor(Math.random() * 6) + 1);
-      // this.processDiceRoll(Math.floor(Math.random() * 2) + 5);
       this.saveGameState();
     }, 1000);
   }
@@ -206,6 +216,7 @@ export class LudoComponent extends BaseComponent {
       this.rollbackCoinsMove();
       this.moveToNextPlayer();
     }
+    this.sendGameStateUpdate();
   }
 
   rollbackCoinsMove(): void {
@@ -225,7 +236,7 @@ export class LudoComponent extends BaseComponent {
 
   identifyPlayableCoins(diceRoll: number): void {
     if (!isLudoColor(this.player.color)) return;
-    
+
     const playerColorPath = COLOR_PATHS[this.player.color ?? 'red'];
 
     this.player.ludoCoins?.forEach((coin) => {
@@ -249,7 +260,7 @@ export class LudoComponent extends BaseComponent {
   }
 
   playCoin(coin: ILudoCoin): void {
-    if (!this.playableCoins.has(coin.id)) return;
+    if (!this.playableCoins.has(coin.id) || !this.isMyTurn) return;
 
     if (this.lastDiceRoll === 6) {
       this.coinsToReverse.push({ ...coin });
@@ -280,6 +291,7 @@ export class LudoComponent extends BaseComponent {
             this.playableCoins.clear();
           this.saveGameState();
           if (this.checkWinner()) return;
+          this.sendGameStateUpdate();
         });
     }
     else this.moveToNextPlayer();

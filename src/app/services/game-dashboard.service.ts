@@ -163,6 +163,7 @@ export class GameDashboardService {
             };
             gameInfo.isGameStart = true;
             this.selectedGame.next(gameInfo);
+            this.userService.addNewUserConnection({ userId: gameRequest.sourceUserId, userName: gameRequest.sourceUserName });
           });
       });
   }
@@ -256,7 +257,7 @@ export class GameDashboardService {
       gamePlayerUpdate: players
     };
     // players.forEach(p => p.userId ? this.socketService.sendMessage(p.userId, message) : null);
-    this.semdMessagesToPlayer(players, message);
+    this.sendMessagesToPlayer(players, message);
   }
 
   sendGameStartRequest(gameInfo: IGameInfo, players: IPlayer[], gameState: any): void {
@@ -275,7 +276,7 @@ export class GameDashboardService {
       gameState
     };
     // players.forEach(p => p.userId ? this.socketService.sendMessage(p.userId, message) : null);
-    this.semdMessagesToPlayer(players, message);
+    this.sendMessagesToPlayer(players, message);
   }
 
   sendGameStateUpdate(gameInfo: IGameInfo, players: IPlayer[], gameState: any): void {
@@ -293,28 +294,10 @@ export class GameDashboardService {
       gameState
     };
     // players.forEach(p => p.userId ? this.socketService.sendMessage(p.userId, message) : null);
-    this.semdMessagesToPlayer(players, message);
+    this.sendMessagesToPlayer(players, message);
   }
 
-  sendGameWinner(gameInfo: IGameInfo, players: IPlayer[], gameState: any): void {
-    if (!this.userService.me) {
-      this.loggerService.log('Me user is not set');
-      return;
-    }
-
-    const message: ISocketMessage = {
-      sentOn: new Date(),
-      sourceUserId: this.userService.me.userId,
-      sourceUserName: this.userService.me.userName,
-      type: 'gameWinner',
-      gameKey: gameInfo.key,
-      gameState
-    };
-    // players.forEach(p => p.userId ? this.socketService.sendMessage(p.userId, message) : null);
-    this.semdMessagesToPlayer(players, message);
-  }
-
-  semdMessagesToPlayer(players: IPlayer[], message: ISocketMessage) {
+  sendMessagesToPlayer(players: IPlayer[], message: ISocketMessage) {
     players.forEach(p => p.userId && p.userId !== this.userService.me?.userId ? this.socketService.sendMessage(p.userId, message) : null);
   }
 }

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { DefaultPasswordHashing } from '../classes';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -31,8 +32,9 @@ export class LoggerService {
     this.messages = [];
   }
 
-  log(message: any): void {
-    // console.log(message)
+  log(message: any, mandatory = false): void {
+    if (!environment.production || mandatory)
+      console.log(message)
     this.messages.push(message);
   }
 }
