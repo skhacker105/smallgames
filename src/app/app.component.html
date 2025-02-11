@@ -7,6 +7,10 @@
       <mat-icon (click)="homeClicked()">home</mat-icon>
     </div>
 
+    <div class="spacer home-icon" *ngIf="!gameDashboardService.selectedGame.value && isHomePage">
+      <mat-icon (click)="showMyQRCode()">person</mat-icon>
+    </div>
+
     <div class="spacer title">
 
       <ng-container *ngIf="!gameDashboardService.selectedGame.value">
@@ -52,7 +56,7 @@
       <mat-icon>delete_forever</mat-icon>
     </button>
     <div class="messages">
-      <button (click)="startServer()">Start Server</button>
+      <button (click)="clearLocalStorage()">Clear Storage</button>
       <div class="message" *ngFor="let message of loggerService.logMessages">
         {{ message }}
       </div>

@@ -3,7 +3,6 @@ import { QRCodeComponent, QRCodeModule } from 'angularx-qrcode';
 import { IUser } from '../../interfaces';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { UserService } from '../../services/user.service';
-import { SocketService } from '../../services/socket.service';
 import { Camera, CameraResultType } from '@capacitor/camera';
 import { BrowserQRCodeReader } from '@zxing/browser';
 import { MatIconModule } from '@angular/material/icon';
@@ -27,7 +26,6 @@ export class ScanUserComponent {
   constructor(
     public dialogRef: MatDialogRef<ScanUserComponent>,
     private userService: UserService,
-    private socketService: SocketService,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.localDataAsQRCodeText = JSON.stringify(this.userService.me);

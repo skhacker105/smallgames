@@ -12,6 +12,7 @@ import { LoggerService } from './services/logger.service';
 import { MatButtonModule } from '@angular/material/button';
 import { UserService } from './services/user.service';
 import { SocketService } from './services/socket.service';
+import { MyQRCodeComponent } from './components/my-qrcode/my-qrcode.component';
 
 @Component({
   selector: 'app-root',
@@ -92,7 +93,14 @@ export class AppComponent {
     this.loggerService.clearLogs();
   }
 
-  startServer() {
-    this.userService.startConnectionWizard();
+  clearLocalStorage() {
+    const meUser = this.userService.me;
+    localStorage.clear();
+    if (meUser)
+      localStorage.setItem(this.userService.meLocalStorageKey, JSON.stringify(meUser));
+  }
+
+  showMyQRCode() {
+    this.dialog.open(MyQRCodeComponent)
   }
 }

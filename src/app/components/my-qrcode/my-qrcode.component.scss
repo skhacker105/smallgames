@@ -1,0 +1,28 @@
+/* Dialog Container */
+.dialog-container {
+    background: linear-gradient(145deg, #0a0f1a, #1b2735);
+    backdrop-filter: blur(12px);
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    width: calc(100% - 40px); /* Updated width */
+    max-width: 400px; /* Ensures it doesn't get too wide on larger screens */
+    margin: auto;
+}
+
+/* Header */
+.header {
+    color: #00e6e6;
+    text-align: center;
+    text-shadow: 0 0 20px #00cccc, 0 0 40px #009999, 0 0 60px #006666;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Body */
+.body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}

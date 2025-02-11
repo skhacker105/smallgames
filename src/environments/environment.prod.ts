@@ -1,4 +1,4 @@
 export const environment = {
     production: true,
-    socketServer: 'https://api.yourdomain.com',
+    socketServer: 'https://smallgamesserver.onrender.com',
   };

@@ -29,10 +29,6 @@ export class PlayersConfigComponent implements OnDestroy {
   gameStarted = new Subject<boolean>();
   componentIsActive = new Subject<boolean>();
 
-  // get isGamePlayer(): boolean {
-  //   return this.config.game.incomingGameRequest ? true : false;
-  // }
-
   get isNamesValid(): boolean {
     const nameCounts: { [key: string]: number } = {};
     this.players.forEach(p => {
