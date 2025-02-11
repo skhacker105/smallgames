@@ -35,10 +35,10 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
   maxInterval = 1000;
 
   constructor(
-    private gameDashboardService: GameDashboardService,
+    gameDashboardService: GameDashboardService,
     private dialog: MatDialog
   ) {
-    super();
+    super(gameDashboardService);
   }
 
   override ngOnInit(): void {
@@ -51,23 +51,31 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
     this.stopGame();
   }
 
-  loadGameState(): void {
-    const state: SnakeGameState = this.gameDashboardService.loadGameState();
-    if (state) {
-      this.snake = state.snake;
-      this.direction = state.direction;
-      this.food = state.food;
-      this.score = state.score;
-    }
-  }
-
-  saveGameState(): void {
-    const state: SnakeGameState = {
+  getGameState() {
+    return {
       snake: this.snake,
       direction: this.direction,
       food: this.food,
       score: this.score,
     };
+  }
+
+  setGameState(savedState: any): void {
+    this.snake = savedState.snake;
+    this.direction = savedState.direction;
+    this.food = savedState.food;
+    this.score = savedState.score;
+  }
+
+  loadGameState(): void {
+    const state: SnakeGameState = this.gameDashboardService.loadGameState();
+    if (state) {
+      this.setGameState(state);
+    }
+  }
+
+  saveGameState(): void {
+    const state: SnakeGameState = this.getGameState();
     this.gameDashboardService.saveGameState(state);
   }
 

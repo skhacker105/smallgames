@@ -16,7 +16,6 @@ import { isLudoColor } from '../../../utils/support.utils';
   styleUrl: './ludo.component.scss'
 })
 export class LudoComponent extends BaseComponent {
-  players: IPlayer[] = [];
   playerColors: string[] = [];
   currentPlayer: number = 0;
   lastDiceRoll: number = 1;
@@ -39,21 +38,37 @@ export class LudoComponent extends BaseComponent {
     return this.players.every(player => (player.ludoCoins ?? []).every(ludoCoin => ludoCoin.position === 0 && !ludoCoin.finished))
   }
 
-  constructor(private gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router) {
-    super();
+  constructor(gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router) {
+    super(gameDashboardService);
   }
 
-  loadGameState(): void {
-    // Load game state logic
-    const savedState = this.gameDashboardService.loadGameState();
-    if (savedState) {
-      this.players = savedState.players;
+  getGameState() {
+    return {
+      players: this.players,
+      currentPlayer: this.currentPlayer,
+      lastDiceRoll: this.lastDiceRoll,
+      totalDiceRoll: this.totalDiceRoll,
+      winner: this.winner,
+      playerColors: this.playerColors,
+      playableCoins: [...this.playableCoins.values()]
+    };
+  }
+
+  setGameState(savedState: any): void {
+    this.players = savedState.players;
       this.currentPlayer = savedState.currentPlayer;
       this.lastDiceRoll = savedState.lastDiceRoll;
       this.totalDiceRoll = savedState.totalDiceRoll;
       this.winner = savedState.winner;
       this.playerColors = savedState.playerColors ?? this.colors;
       this.playableCoins = new Set<number>(savedState.playableCoins ?? []);
+  }
+
+  loadGameState(): void {
+    // Load game state logic
+    const savedState = this.gameDashboardService.loadGameState();
+    if (savedState) {
+      this.setGameState(savedState);
       if (this.winner || this.players.length === 0 || this.noCoinsMoved) {
         this.askForPlayers();
       }
@@ -79,15 +94,7 @@ export class LudoComponent extends BaseComponent {
   }
 
   saveGameState(): void {
-    const state = {
-      players: this.players,
-      currentPlayer: this.currentPlayer,
-      lastDiceRoll: this.lastDiceRoll,
-      totalDiceRoll: this.totalDiceRoll,
-      winner: this.winner,
-      playerColors: this.playerColors,
-      playableCoins: [...this.playableCoins.values()]
-    };
+    const state = this.getGameState();
     this.gameDashboardService.saveGameState(state);
   }
 

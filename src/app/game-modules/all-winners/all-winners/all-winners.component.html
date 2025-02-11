@@ -25,6 +25,8 @@
         
         <span class="winner-name" *ngIf="!gameWinner.isDraw && gameWinner.winner">{{ gameWinner.winner.name }}</span>
         
+        <span class="winner-name" *ngIf="!gameWinner.isDraw && gameWinner.winner">{{ gameWinner.winDate | date: 'dd MMM yy' }}</span>
+        
       </li>
     </ul>
   </div>

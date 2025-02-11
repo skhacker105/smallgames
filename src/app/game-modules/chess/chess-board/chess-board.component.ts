@@ -21,13 +21,12 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   gameMode: 'humanVsHuman' | 'humanVsComputer' | 'computerVsComputer' = 'humanVsHuman';
   isWhiteTurn: boolean = true;
   gameOver: boolean = false;
-  players: IPlayer[] = [];
   winner: IPlayer | null = null;
   selectedSquare: string | null = null;
   possibleMoves: string[] = []; // List of possible moves for the selected square
 
-  constructor(private gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router) {
-    super();
+  constructor(gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router) {
+    super(gameDashboardService);
     this.chess = new Chess(); // Initialize the Chess instance
   }
 
@@ -36,12 +35,25 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     this.updateBoard();
   }
 
+  getGameState() {
+    return {
+      chess: this.chess.fen(),
+      players: this.players,
+      winner: this.winner,
+      isWhiteTurn: this.isWhiteTurn
+    };
+  }
+
+  setGameState(savedState: any): void {
+    this.players = savedState.players;
+    this.winner = savedState.winner;
+  }
+
   loadGameState(): void {
     const savedState = this.gameDashboardService.loadGameState();
     if (savedState) {
-      this.players = savedState.players;
-      this.winner = savedState.winner;
-
+      this.setGameState(savedState);
+      
       if (!savedState.winner) {
         this.chess.load(savedState.chess);
         this.isWhiteTurn = savedState.isWhiteTurn;
@@ -55,12 +67,7 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   }
 
   saveGameState(): void {
-    const state = {
-      chess: this.chess.fen(),
-      players: this.players,
-      winner: this.winner,
-      isWhiteTurn: this.isWhiteTurn
-    };
+    const state = this.getGameState();
     this.gameDashboardService.saveGameState(state);
   }
 

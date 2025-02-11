@@ -22,30 +22,16 @@ export class SudokuComponent extends BaseComponent {
   prefilledCells: ICell[] = [];
   winner = false;
 
-  constructor(private gameDashboardService: GameDashboardService) {
-    super();
+  constructor(gameDashboardService: GameDashboardService) {
+    super(gameDashboardService);
   }
 
   override ngOnInit(): void {
     super.ngOnInit();
   }
 
-  loadGameState(): void {
-    const savedState = this.gameDashboardService.loadGameState();
-    if (savedState) {
-      const { board, solution, level, size, prefilledCells, winner } = savedState;
-      this.board = board;
-      this.solution = solution;
-      this.level = level;
-      this.size = size;
-      this.prefilledCells = prefilledCells;
-      this.winner = winner;
-    } else
-      this.generateNewGame();
-  }
-
-  saveGameState(): void {
-    const state = {
+  getGameState() {
+    return {
       board: this.board,
       solution: this.solution,
       level: this.level,
@@ -53,6 +39,28 @@ export class SudokuComponent extends BaseComponent {
       prefilledCells: this.prefilledCells,
       winner: this.winner
     };
+  }
+
+  setGameState(savedState: any): void {
+    const { board, solution, level, size, prefilledCells, winner } = savedState;
+      this.board = board;
+      this.solution = solution;
+      this.level = level;
+      this.size = size;
+      this.prefilledCells = prefilledCells;
+      this.winner = winner;
+  }
+
+  loadGameState(): void {
+    const savedState = this.gameDashboardService.loadGameState();
+    if (savedState) {
+      this.setGameState(savedState);
+    } else
+      this.generateNewGame();
+  }
+
+  saveGameState(): void {
+    const state = this.getGameState();
     this.gameDashboardService.saveGameState(state);
   }
 

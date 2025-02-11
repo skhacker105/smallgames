@@ -45,7 +45,7 @@ export class SocketService {
 
       // Listen for incoming messages
       this.socket?.on('receive_message', (data: { message: ISocketMessage }) => {
-        this.loggerService.log(`New message received: ${data.message}`);
+        this.loggerService.log(`New message received: ${JSON.stringify(data.message)}`);
 
         if (!data.message) {
           this.loggerService.log('Message is blank.')

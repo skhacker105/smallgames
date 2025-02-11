@@ -31,8 +31,8 @@ export class LoggerService {
     this.messages = [];
   }
 
-  log(message: string): void {
-    console.log(message)
+  log(message: any): void {
+    // console.log(message)
     this.messages.push(message);
   }
 }

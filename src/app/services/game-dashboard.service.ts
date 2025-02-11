@@ -66,6 +66,9 @@ export class GameDashboardService {
   public incomingGameRequest$: Observable<ISocketMessage | null>;
   public incomingGameRequestResponse$: Observable<ISocketMessage | null>;
   public incomingGameRequestCancel$: Observable<ISocketMessage | null>;
+  public incomingGamePlayerUpdate$: Observable<ISocketMessage | null>;
+  public incomingGameStart$: Observable<ISocketMessage | null>;
+  public incomingGameStateChanged$: Observable<ISocketMessage | null>;
 
   constructor(
     private router: Router,
@@ -77,6 +80,9 @@ export class GameDashboardService {
     this.incomingGameRequest$ = this.socketService.message$.pipe(filter(message => message?.type === 'gameRequest' && message.gameRequestStatus === 'pending'));
     this.incomingGameRequestResponse$ = this.socketService.message$.pipe(filter(message => message?.type === 'gameRequest' && (message.gameRequestStatus === 'accepted' || message.gameRequestStatus === 'rejected')));
     this.incomingGameRequestCancel$ = this.socketService.message$.pipe(filter(message => message?.type === 'gameRequest' && message.gameRequestStatus === 'requestCancel'));
+    this.incomingGamePlayerUpdate$ = this.socketService.message$.pipe(filter(message => message?.type === 'gamePlayerUpdate'));
+    this.incomingGameStart$ = this.socketService.message$.pipe(filter(message => message?.type === 'gameRequest' && message.gameRequestStatus === 'gameStart'));
+    this.incomingGameStateChanged$ = this.socketService.message$.pipe(filter(message => message?.type === 'gameState'));
 
     this.selectedGame.subscribe({
       next: gameInfo => {
@@ -109,7 +115,8 @@ export class GameDashboardService {
       key: this.selectedGame.value?.key,
       winner: !Array.isArray(winnerPlayer) ? winnerPlayer : undefined,
       winners: Array.isArray(winnerPlayer) ? winnerPlayer : undefined,
-      isDraw
+      isDraw,
+      winDate: new Date()
     });
     localStorage.setItem(this.allWinnersKey, JSON.stringify(allSavedWinners));
   }
@@ -139,13 +146,23 @@ export class GameDashboardService {
           noButtonText: 'Cancel',
           yesButtonText: 'Join'
         };
-        gameInfo.incomingRequest = this.dialog.open(YesNoDialogComponent, {
+        gameInfo.incomingRequestConfirmationDialogRef = this.dialog.open(YesNoDialogComponent, {
           data: yesNoConfig
         });
-        gameInfo.incomingRequest.afterClosed().pipe(take(1))
+        gameInfo.incomingRequestConfirmationDialogRef.afterClosed().pipe(take(1))
           .subscribe(confirm => {
-            this.sendGameRequestResponse(gameInfo, { userId: gameRequest.sourceUserId, userName: gameRequest.sourceUserName }, confirm)
-            gameInfo.incomingRequest = undefined;
+            gameInfo.incomingRequestConfirmationDialogRef = undefined;
+            if (confirm === undefined) return;
+
+            this.sendGameRequestResponse(gameInfo, { userId: gameRequest.sourceUserId, userName: gameRequest.sourceUserName }, confirm);
+            if (confirm === false) return;
+
+            gameInfo.gameOwner = {
+              userId: gameRequest.sourceUserId,
+              userName: gameRequest.sourceUserName
+            };
+            gameInfo.isGameStart = true;
+            this.selectedGame.next(gameInfo);
           });
       });
   }
@@ -160,11 +177,11 @@ export class GameDashboardService {
           this.loggerService.log('No game found for the game cancel request');
           return;
         }
-        gameInfo.incomingRequest?.close();
+        gameInfo.incomingRequestConfirmationDialogRef?.close();
       });
   }
 
-  sendGameRequest(gameInfo: IGameInfo, player: IPlayer) {
+  sendGameRequest(gameInfo: IGameInfo, player: IPlayer): void {
     if (!this.userService.me) {
       this.loggerService.log('Me user is not set');
       return;
@@ -175,7 +192,7 @@ export class GameDashboardService {
     }
 
     const message: ISocketMessage = {
-      sentOn: new Date,
+      sentOn: new Date(),
       sourceUserId: this.userService.me.userId,
       sourceUserName: this.userService.me.userName,
       type: 'gameRequest',
@@ -186,7 +203,7 @@ export class GameDashboardService {
     this.socketService.sendMessage(player.userId, message);
   }
 
-  sendGameCancelRequest(gameInfo: IGameInfo, player: IPlayer) {
+  sendGameCancelRequest(gameInfo: IGameInfo, player: IPlayer): void {
     if (!this.userService.me) {
       this.loggerService.log('Me user is not set');
       return;
@@ -197,7 +214,7 @@ export class GameDashboardService {
     }
 
     const message: ISocketMessage = {
-      sentOn: new Date,
+      sentOn: new Date(),
       sourceUserId: this.userService.me.userId,
       sourceUserName: this.userService.me.userName,
       type: 'gameRequest',
@@ -207,14 +224,14 @@ export class GameDashboardService {
     this.socketService.sendMessage(player.userId, message);
   }
 
-  sendGameRequestResponse(gameInfo: IGameInfo, source: IUser, response: boolean) {
+  sendGameRequestResponse(gameInfo: IGameInfo, source: IUser, response: boolean): void {
     if (!this.userService.me) {
       this.loggerService.log('Me user is not set');
       return;
     }
 
     const message: ISocketMessage = {
-      sentOn: new Date,
+      sentOn: new Date(),
       sourceUserId: this.userService.me.userId,
       sourceUserName: this.userService.me.userName,
       type: 'gameRequest',
@@ -222,5 +239,82 @@ export class GameDashboardService {
       gameRequestStatus: response ? 'accepted' : 'rejected'
     };
     this.socketService.sendMessage(source.userId, message);
+  }
+
+  sendGamePlayerUpdate(gameInfo: IGameInfo, players: IPlayer[]): void {
+    if (!this.userService.me) {
+      this.loggerService.log('Me user is not set');
+      return;
+    }
+
+    const message: ISocketMessage = {
+      sentOn: new Date(),
+      sourceUserId: this.userService.me.userId,
+      sourceUserName: this.userService.me.userName,
+      type: 'gamePlayerUpdate',
+      gameKey: gameInfo.key,
+      gamePlayerUpdate: players
+    };
+    // players.forEach(p => p.userId ? this.socketService.sendMessage(p.userId, message) : null);
+    this.semdMessagesToPlayer(players, message);
+  }
+
+  sendGameStartRequest(gameInfo: IGameInfo, players: IPlayer[], gameState: any): void {
+    if (!this.userService.me) {
+      this.loggerService.log('Me user is not set');
+      return;
+    }
+
+    const message: ISocketMessage = {
+      sentOn: new Date(),
+      sourceUserId: this.userService.me.userId,
+      sourceUserName: this.userService.me.userName,
+      type: 'gameRequest',
+      gameKey: gameInfo.key,
+      gameRequestStatus: 'gameStart',
+      gameState
+    };
+    // players.forEach(p => p.userId ? this.socketService.sendMessage(p.userId, message) : null);
+    this.semdMessagesToPlayer(players, message);
+  }
+
+  sendGameStateUpdate(gameInfo: IGameInfo, players: IPlayer[], gameState: any): void {
+    if (!this.userService.me) {
+      this.loggerService.log('Me user is not set');
+      return;
+    }
+
+    const message: ISocketMessage = {
+      sentOn: new Date(),
+      sourceUserId: this.userService.me.userId,
+      sourceUserName: this.userService.me.userName,
+      type: 'gameState',
+      gameKey: gameInfo.key,
+      gameState
+    };
+    // players.forEach(p => p.userId ? this.socketService.sendMessage(p.userId, message) : null);
+    this.semdMessagesToPlayer(players, message);
+  }
+
+  sendGameWinner(gameInfo: IGameInfo, players: IPlayer[], gameState: any): void {
+    if (!this.userService.me) {
+      this.loggerService.log('Me user is not set');
+      return;
+    }
+
+    const message: ISocketMessage = {
+      sentOn: new Date(),
+      sourceUserId: this.userService.me.userId,
+      sourceUserName: this.userService.me.userName,
+      type: 'gameWinner',
+      gameKey: gameInfo.key,
+      gameState
+    };
+    // players.forEach(p => p.userId ? this.socketService.sendMessage(p.userId, message) : null);
+    this.semdMessagesToPlayer(players, message);
+  }
+
+  semdMessagesToPlayer(players: IPlayer[], message: ISocketMessage) {
+    players.forEach(p => p.userId && p.userId !== this.userService.me?.userId ? this.socketService.sendMessage(p.userId, message) : null);
   }
 }

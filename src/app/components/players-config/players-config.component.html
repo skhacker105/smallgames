@@ -6,14 +6,17 @@
       <label for="playerName{{ i }}">{{ (i + 1) }}:</label>
 
       <div class="input-container">
-        <input matInput type="text" id="playerName{{ i }}" [(ngModel)]="players[i].name" class="player-name"
-          [ngClass]="{
+        <input matInput type="text" id="playerName{{ i }}" *ngIf="player.userId" [ngModel]="players[i] | playerName"
+          class="player-name" [ngClass]="{
             'request-pending': getPlayerRequestState(player) === 'pending',
             'request-accepted': getPlayerRequestState(player) === 'accepted',
             'request-rejected': getPlayerRequestState(player) === 'rejected',
             'request-time-out': getPlayerRequestState(player) === 'time-out'
-          }"
-          [disabled]="!!player.userId" placeholder="Enter player name" />
+          }" [disabled]="true" placeholder="Enter player name" />
+
+        <input matInput type="text" id="playerName{{ i }}" *ngIf="!player.userId" [(ngModel)]="players[i].name"
+          [disabled]="isGameStart" class="player-name"
+          placeholder="Enter player name" />
 
         <mat-icon class="clear-player" *ngIf="!!players[i].name" (click)="resetPlayer(player)">
           close
@@ -61,7 +64,8 @@
         </div>
       </div>
 
-      <button class="remove-button" (click)="removePlayer(i)" [disabled]="players.length <= config.minPlayerCount">
+      <button class="remove-button" (click)="removePlayer(i)" [disabled]="players.length <= config.minPlayerCount"
+        [disabled]="isGameStart">
         <mat-icon>delete</mat-icon>
       </button>
     </div>
@@ -69,15 +73,15 @@
   <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
   <div class="controls">
     <button mat-icon-button class="add-button" (click)="addPlayer()"
-      [disabled]="players.length >= config.maxPlayerCount">
+      [disabled]="players.length >= config.maxPlayerCount || isGameStart">
       <mat-icon>add</mat-icon>
     </button>
     <div class="spacer"></div>
 
-    <button class="submit-button" (click)="submit()" [disabled]="!isFormValid">
+    <button class="submit-button" (click)="submit()" [disabled]="!isFormValid || isGameStart">
       Submit
     </button>
 
-    <button class="submit-button" (click)="dialogRef.close()">Cancel</button>
+    <button class="submit-button" (click)="cancelGame()">Cancel</button>
   </div>
 </div>

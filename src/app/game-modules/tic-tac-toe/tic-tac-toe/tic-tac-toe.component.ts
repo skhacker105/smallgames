@@ -20,18 +20,30 @@ export class TicTacToeComponent extends BaseComponent {
   currentPlayer: PlayerType;
   winnerResult: { winner: PlayerType, positions: IPosition[], cut: Cuts } | undefined;
 
-  constructor(private gameDashboardService: GameDashboardService) {
-    super();
+  constructor(gameDashboardService: GameDashboardService) {
+    super(gameDashboardService);
     this.board = Array(3).fill(null).map(() => Array(3).fill(''));
     this.currentPlayer = 'X';
+  }
+
+  getGameState() {
+    return {
+      board: this.board,
+      currentPlayer: this.currentPlayer,
+      winnerResult: this.winnerResult
+    };
+  }
+
+  setGameState(savedState: any): void {
+    this.board = savedState.board;
+      this.currentPlayer = savedState.currentPlayer;
+      this.winnerResult = savedState.winnerResult
   }
 
   loadGameState(): void {
     const savedState = this.gameDashboardService.loadGameState();
     if (savedState) {
-      this.board = savedState.board;
-      this.currentPlayer = savedState.currentPlayer;
-      this.winnerResult = savedState.winnerResult
+      this.setGameState(savedState);
     }
   }
 
@@ -104,11 +116,7 @@ export class TicTacToeComponent extends BaseComponent {
   }
 
   saveGameState(): void {
-    this.gameDashboardService.saveGameState({
-      board: this.board,
-      currentPlayer: this.currentPlayer,
-      winnerResult: this.winnerResult
-    });
+    this.gameDashboardService.saveGameState(this.getGameState());
   }
 
   isWinnerCell(row: number, col: number, cell: PlayerType): boolean {

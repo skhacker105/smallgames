@@ -1,5 +1,5 @@
 import { MatDialogRef } from "@angular/material/dialog";
-import { IPlayer } from "./player.interface";
+import { IPlayer, IUser } from "./";
 
 export interface IGameInfo {
     key: string;
@@ -7,7 +7,9 @@ export interface IGameInfo {
     image: string;
     route: string;
     settingsIconNeeded: boolean;
-    incomingRequest?: MatDialogRef<any>
+    incomingRequestConfirmationDialogRef?: MatDialogRef<any>;
+    gameOwner?: IUser;
+    isGameStart?: boolean;
 }
 
 export interface IGameWinner {
@@ -15,4 +17,5 @@ export interface IGameWinner {
     winner?: IPlayer;
     winners?: IPlayer[];
     isDraw?: boolean;
+    winDate: Date;
 }
