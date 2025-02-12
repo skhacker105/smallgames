@@ -5,7 +5,7 @@ import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { IPlayer, IPlayerAskConfig } from '../../../interfaces';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
-import { Subject, take, takeUntil } from 'rxjs';
+import { take } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserService } from '../../../services/user.service';
 
@@ -68,7 +68,7 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
 
   override get selectedPlayer(): IPlayer | undefined {
     return this.players[this.currentPlayer]
-}
+  }
 
   constructor(gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router, private userService: UserService) {
     super(gameDashboardService);
@@ -155,6 +155,7 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
   restartGame(): void {
     this.resetGame();
     this.generateNewGame();
+    this.sendGameStateUpdate();
   }
 
   resetGame(): void {

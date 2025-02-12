@@ -7,7 +7,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
 import { take } from 'rxjs';
 import { Router } from '@angular/router';
-import { LUDO_COLORS, LUDO_COLOR } from '../../../config';
+import { LUDO_COLORS } from '../../../config';
 import { isLudoColor } from '../../../utils/support.utils';
 import { UserService } from '../../../services/user.service';
 

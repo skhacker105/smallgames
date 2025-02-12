@@ -4,11 +4,12 @@ import { Chess, Color, DEFAULT_POSITION, Piece, Square } from 'chess.js';
 import { IPlayer, IPlayerAskConfig } from '../../../interfaces';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
-import { MatDialog } from '@angular/material/dialog';
-import { CHESS_COLOR, CHESS_COLORS } from '../../../config';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { CHESS_COLORS } from '../../../config';
 import { take } from 'rxjs';
 import { Router } from '@angular/router';
 import { isChessColor } from '../../../utils/support.utils';
+import { UserService } from '../../../services/user.service';
 
 @Component({
   selector: 'app-chess-board',
@@ -25,7 +26,30 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   selectedSquare: string | null = null;
   possibleMoves: string[] = []; // List of possible moves for the selected square
 
-  constructor(gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router) {
+  get currentPlayer(): number {
+    return this.players.findIndex(p => (p.color === 'white' && this.isWhiteTurn) || (p.color === 'black' && !this.isWhiteTurn))
+  }
+
+  get isMyTurn(): boolean {
+    const me = this.userService.me;
+    const hasOtherPlayers = this.players.some(p => p.userId != undefined && p.userId != me?.userId);
+
+    if (hasOtherPlayers) {
+      const myPlayerIndex = this.players.findIndex(p => p.userId === me?.userId);
+      return myPlayerIndex === this.currentPlayer;
+    } else return true;
+  }
+
+  override get selectedPlayer(): IPlayer | undefined {
+    return this.players[this.currentPlayer]
+  }
+
+  constructor(
+    gameDashboardService: GameDashboardService,
+    private dialog: MatDialog,
+    private router: Router,
+    private userService: UserService
+    ) {
     super(gameDashboardService);
     this.chess = new Chess(); // Initialize the Chess instance
   }
@@ -33,6 +57,7 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   override ngOnInit(): void {
     super.ngOnInit();
     this.updateBoard();
+    this.sendGameStateUpdate();
   }
 
   getGameState() {
@@ -40,25 +65,36 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
       chess: this.chess.fen(),
       players: this.players,
       winner: this.winner,
-      isWhiteTurn: this.isWhiteTurn
+      isWhiteTurn: this.isWhiteTurn,
+      gameOver: this.gameOver,
+      selectedSquare: this.selectedSquare,
+      possibleMoves: this.possibleMoves
     };
   }
 
   setGameState(savedState: any): void {
     this.players = savedState.players;
     this.winner = savedState.winner;
+    this.chess.load(savedState.chess);
+    this.isWhiteTurn = savedState.isWhiteTurn;
+    this.gameOver = savedState.gameOver;
+    this.selectedSquare = savedState.selectedSquare;
+    this.possibleMoves = savedState.possibleMoves;
+    this.updateBoard();
   }
 
   loadGameState(): void {
+    if (this.isGameStart) return;
+
     const savedState = this.gameDashboardService.loadGameState();
     if (savedState) {
       this.setGameState(savedState);
       
       if (!savedState.winner) {
-        this.chess.load(savedState.chess);
-        this.isWhiteTurn = savedState.isWhiteTurn;
         if (this.winner || this.players.length === 0 || this.chess.fen() === DEFAULT_POSITION) {
           this.askForPlayers();
+        } else if (this.isMultiPlayerGame) {
+          this.listenForGameStateChange();
         }
       }
     } else {
@@ -80,13 +116,14 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     this.isWhiteTurn = true;
     this.updateBoard();
     this.saveGameState();
+    this.sendGameStateUpdate();
   }
 
-  askForPlayers(): void {
+  override getPlayerConfigPopup(): MatDialogRef<PlayersConfigComponent, any> | undefined {
     const curGame = this.gameDashboardService.selectedGame.value;
     if (!curGame) return;
 
-    const ref = this.dialog.open(PlayersConfigComponent, {
+    return this.dialog.open(PlayersConfigComponent, {
       data: {
         game: curGame,
         askForName: true,
@@ -96,7 +133,14 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
         colorOptions: CHESS_COLORS
       } as IPlayerAskConfig
     })
-    ref.afterClosed().pipe(take(1))
+  }
+
+  askForPlayers(): void {
+    const curGame = this.gameDashboardService.selectedGame.value;
+    if (!curGame) return;
+
+    const ref = this.getPlayerConfigPopup();
+    ref?.afterClosed().pipe(take(1))
       .subscribe((players: IPlayer[] | undefined) => {
         if (!players) {
           if (this.players.length === 0)
@@ -105,6 +149,13 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
         else {
           this.players = players;
           this.resetGame();
+          const otherPlayers = this.players.find(p => p.userId !== undefined && p.userId === this.userService.me?.userId) !== undefined;
+          if (otherPlayers) {
+            this.listenForGameStateChange();
+          }
+
+          if (this.gameDashboardService.selectedGame.value)
+            this.gameDashboardService.sendGameStartRequest(this.gameDashboardService.selectedGame.value, this.players, this.getGameState());
         }
       })
   }
@@ -149,6 +200,7 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
         this.updateBoard();
         this.isWhiteTurn = !this.isWhiteTurn;
         this.saveGameState(); // Save the updated game state
+        this.sendGameStateUpdate();
 
         if (this.gameMode === 'humanVsComputer' && !this.isWhiteTurn) {
           this.computerMove();
@@ -201,6 +253,8 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   }
 
   handleSquareClick(i: number, j: number): void {
+    if (!this.isMyTurn) return;
+
     const square = this.indicesToSquare(i, j);
 
     if (!this.selectedSquare) {
@@ -237,6 +291,8 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
       this.selectedSquare = null;
       this.possibleMoves = [];
     }
+    this.saveGameState();
+    this.sendGameStateUpdate();
   }
 
   isDarkCell(i: number, j: number): boolean {

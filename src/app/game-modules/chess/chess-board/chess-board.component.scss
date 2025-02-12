@@ -1,11 +1,15 @@
+.chess-board-container {
+    display: flex;
+}
+
 .chess-board {
+    margin: auto;
     display: grid;
     grid-template-rows: repeat(8, 1fr);
     width: 90vw; /* Board width is 90% of viewport width */
     max-width: 600px; /* Optional max-width for larger screens */
     height: 90vw; /* Board height matches width to maintain square */
     max-height: 600px; /* Optional max-height for larger screens */
-    margin: 10px; /* Side padding */
     border: 3px solid #64748b;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     border-radius: 10px;
