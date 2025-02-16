@@ -31,13 +31,14 @@
         <mat-menu #onlinePLayers="matMenu">
           <div class="online-player-list">
             <div class="online-player" *ngFor="let user of userService.connectedUsers" [ngClass]="{
-              'current-selected': user.userId === player.userId
+              'current-selected': user.userId === player.userId,
+                'non-clickable': !user.isOnline
             }" (click)="setPlayerConnection(player, user)">
               <div class="online-player-name">
                 {{ user.userName }}
               </div>
               <div class="online-player-status" [ngClass]="{
-                'connected': true
+                'connected': user.isOnline
               }">
                 <!-- {{ user.isConnected() }} -->
               </div>

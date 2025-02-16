@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { NavigationEnd, Router, RouterModule, RouterOutlet } from '@angular/router';
 import { GameDashboardService } from './services/game-dashboard.service';
 import { CommonModule } from '@angular/common';
@@ -53,6 +53,12 @@ export class AppComponent {
     if (Capacitor.getPlatform() !== 'web') {
       StatusBar.hide();
     }
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    // localStorage.setItem('lastTime', new Date().toISOString())
+    this.userService.disconnectMe();
   }
 
   homeClicked() {

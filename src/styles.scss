@@ -18,3 +18,8 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .is-online {
     color: #3aff00;
 }
+
+
+.non-clickable {
+    pointer-events: none;
+}

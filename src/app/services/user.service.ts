@@ -1,33 +1,45 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { ConnectionStatus, Network } from '@capacitor/network';
 import { LoggerService } from './logger.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { IUser } from '../interfaces';
+import { ISocketMessage, IUser } from '../interfaces';
 import { UserInputComponent } from '../components/user-input/user-input.component';
-import { take } from 'rxjs';
+import { filter, take } from 'rxjs';
 import { SocketService } from './socket.service';
 import { ScanUserComponent } from '../components/scan-user/scan-user.component';
+import { environment } from '../../environments/environment';
+import { HttpClient } from '@angular/common/http';
+import { ConnectionState } from '../types';
 
 @Injectable({
   providedIn: 'root'
 })
-export class UserService implements OnDestroy {
+export class UserService {
 
   me?: IUser;
   connectedUsers: IUser[] = [];
+  disconnectedUsers: IUser[] = [];
   internetConnectionStatus?: ConnectionStatus;
 
+  SERVER_URL: string;
   meLocalStorageKey = 'meUser';
   connectedUsersLocalStorageKey = 'connectedUsers';
+  disConnectedUsersLocalStorageKey = 'disConnectedUsers';
 
-  constructor(private loggerService: LoggerService, private dialog: MatDialog, private socketService: SocketService) {
+  constructor(
+    private loggerService: LoggerService,
+    private dialog: MatDialog,
+    private socketService: SocketService,
+    private http: HttpClient
+  ) {
+    this.SERVER_URL = environment.socketServer;
     this.refreshNetworkStatus();
-    this.initialMeUserLoad();
     this.connectedUsersInitialLoad();
-  }
-
-  ngOnDestroy(): void {
-    Network.removeAllListeners();
+    this.initialMeUserLoad();
+    this.socketService.message$.pipe(filter(message => message?.type === 'status'))
+      .subscribe(message => {
+        if (message) this.handleUserConnectionStateChange(message);
+      });
   }
 
   async refreshNetworkStatus() {
@@ -50,8 +62,15 @@ export class UserService implements OnDestroy {
   }
 
   connectedUsersInitialLoad(): void {
+    const disconnectedUsers = localStorage.getItem(this.disConnectedUsersLocalStorageKey);
+    if (disconnectedUsers) {
+      this.disconnectedUsers = JSON.parse(disconnectedUsers);
+    }
     const connectedUsers = localStorage.getItem(this.connectedUsersLocalStorageKey);
-    if (connectedUsers) this.connectedUsers = JSON.parse(connectedUsers);
+    if (connectedUsers) {
+      this.connectedUsers = JSON.parse(connectedUsers);
+      this.updateConnectedUsersOnlineStatus();
+    }
   }
 
   saveConnectedUsers(): void {
@@ -61,8 +80,25 @@ export class UserService implements OnDestroy {
       localStorage.removeItem(this.connectedUsersLocalStorageKey);
   }
 
+  updateConnectedUsersOnlineStatus() {
+    if (this.connectedUsers.length === 0) return;
+
+    const url = this.SERVER_URL + '/online-users';
+    const connectedUserIds = this.connectedUsers.map(cu => cu.userId);
+    this.http.post(url, { userIds: connectedUserIds }).pipe(take(1))
+      .subscribe({
+        next: (res: any) => {
+          const onlineUsers = new Set<string>(res.onlineUsers);
+          this.connectedUsers.forEach(cu => cu.isOnline = onlineUsers.has(cu.userId));
+        },
+        error: err => {
+          this.loggerService.log('Error while fetching online users.');
+        }
+      })
+  }
+
   initialMeUserLoad(): void {
-    const saved = localStorage.getItem(this.meLocalStorageKey)
+    const saved = localStorage.getItem(this.meLocalStorageKey);
     if (!saved) {
       const ref = this.askForMeUser();
       ref.afterClosed().pipe(take(1))
@@ -71,7 +107,7 @@ export class UserService implements OnDestroy {
     }
 
     this.me = JSON.parse(saved);
-    this.connectSocket();
+    this.connectMEToSocket();
   }
 
   askForMeUser(): MatDialogRef<UserInputComponent, any> {
@@ -91,7 +127,7 @@ export class UserService implements OnDestroy {
         userId: crypto.randomUUID(),
         userName
       };
-      this.connectSocket();
+      this.connectMEToSocket();
     } else {
       this.me.userName = userName;
     }
@@ -111,6 +147,7 @@ export class UserService implements OnDestroy {
     else
       this.connectedUsers[existingUserIndex] = usr;
     this.saveConnectedUsers();
+    this.updateConnectedUsersOnlineStatus();
   }
 
   removeUserConnection(id: string): void {
@@ -118,9 +155,49 @@ export class UserService implements OnDestroy {
     this.saveConnectedUsers();
   }
 
-  connectSocket() {
+  connectMEToSocket() {
     if (!this.me) return;
 
     this.socketService.connect(this.me);
+    this.sendMyConnectionStateUpdates('connected');
+  }
+
+  sendMyConnectionStateUpdates(state: ConnectionState): void {
+    if (this.connectedUsers.length === 0 || !this.me) return;
+
+    const message: ISocketMessage = {
+      sentOn: new Date(),
+      sourceUserId: this.me.userId,
+      sourceUserName: this.me.userName,
+      type: 'status',
+      connectionStatus: state
+    };
+    this.connectedUsers.forEach(cu => {
+      this.socketService.sendMessage(cu.userId, message);
+    });
+  }
+
+  handleUserConnectionStateChange(message: ISocketMessage) {
+    const existingConnectedUser = this.connectedUsers.find(cu => cu.userId === message.sourceUserId);
+    const existingDisconnectedUser = this.disconnectedUsers.find(dcu => dcu.userId === message.sourceUserId);
+    if (!existingConnectedUser && !existingDisconnectedUser) {
+      this.connectedUsers.push({
+        userId: message.sourceUserId,
+        userName: message.sourceUserName,
+        isOnline: !message.connectionStatus || message.connectionStatus === 'disconnected' ? false : true
+      });
+
+      return;
+    }
+    if (existingConnectedUser) {
+      existingConnectedUser.isOnline = !message.connectionStatus || message.connectionStatus === 'disconnected' ? false : true
+    }
+    this.saveConnectedUsers();
+  }
+
+  disconnectMe(): void {
+    Network.removeAllListeners();
+    this.sendMyConnectionStateUpdates('disconnected');
+    this.socketService.disconnect();
   }
 }
