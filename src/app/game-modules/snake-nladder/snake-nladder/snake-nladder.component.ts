@@ -179,7 +179,8 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
         minPlayerCount: 2,
         maxPlayerCount: 6,
         preFillPlayers: this.players.length > 0 ? this.players : undefined
-      } as IPlayerAskConfig
+      } as IPlayerAskConfig,
+      disableClose: true
     })
   }
 

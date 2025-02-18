@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Inject, OnDestroy } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { IPlayer, IPlayerAskConfig, IUser } from '../../interfaces';
 import { FormsModule } from '@angular/forms';
@@ -11,15 +11,17 @@ import { Subject, filter, take, takeUntil, timeout } from 'rxjs';
 import { GameRequestStatus } from '../../types';
 import { GameDashboardService } from '../../services/game-dashboard.service';
 import { PlayerNamePipe } from '../../pipe/player-name.pipe';
+import { Router } from '@angular/router';
+import { NgxSpinnerModule, NgxSpinnerService } from 'ngx-spinner';
 
 @Component({
   selector: 'app-players-config',
   standalone: true,
-  imports: [MatDialogModule, CommonModule, FormsModule, MatIconModule, MatMenuModule, PlayerNamePipe],
+  imports: [MatDialogModule, CommonModule, FormsModule, MatIconModule, MatMenuModule, PlayerNamePipe, NgxSpinnerModule],
   templateUrl: './players-config.component.html',
   styleUrl: './players-config.component.scss'
 })
-export class PlayersConfigComponent implements OnDestroy {
+export class PlayersConfigComponent implements OnInit, OnDestroy {
 
   players: IPlayer[] = [];
   playerConenctionRequests = new Map<string, GameRequestStatus | undefined>();
@@ -35,7 +37,11 @@ export class PlayersConfigComponent implements OnDestroy {
       if (!nameCounts[p.name]) nameCounts[p.name] = 0;
       nameCounts[p.name] = nameCounts[p.name] + 1;
     });
-    return !this.players.some(p => !p.name) && !Object.values(nameCounts).some(count => count > 1);
+    const anyUnAceptedPlayer = this.players.some(p => {
+      if (p.userId === this.userService.me?.userId) return false;
+      return !!p.userId && (!this.playerConenctionRequests.has(p.name) || this.playerConenctionRequests.get(p.name) !== 'accepted')
+    })
+    return !this.players.some(p => !p.name) && !Object.values(nameCounts).some(count => count > 1) && !anyUnAceptedPlayer;
   }
 
   get isColorValid(): boolean {
@@ -52,23 +58,42 @@ export class PlayersConfigComponent implements OnDestroy {
 
   get isGameStart(): boolean {
     return this.gameDashboardService.selectedGame.value?.isGameStart ?? false;
-}
+  }
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public config: IPlayerAskConfig,
     public dialogRef: MatDialogRef<PlayersConfigComponent>,
     public userService: UserService,
-    public gameDashboardService: GameDashboardService
+    public gameDashboardService: GameDashboardService,
+    private router: Router,
+    private spinner: NgxSpinnerService
   ) {
+  }
+
+  ngOnInit(): void {
     if (!this.isGameStart) {
-      config.preFillPlayers
-        ? this.initializeExistingPlayersForm(config.preFillPlayers)
+      this.config.preFillPlayers
+        ? this.initializeExistingPlayersForm(this.config.preFillPlayers)
         : this.initializeDefaultPlayersForm();
+
+      this.gameDashboardService.incomingGameRequest$.pipe(takeUntil(this.componentIsActive))
+        .subscribe(request => {
+          this.spinner.show();
+          if (this.gameDashboardService.selectedGame.value) {
+            this.gameDashboardService.selectedGame.value.isGameStart = true;
+            this.handlePlayerUpdateFromHost();
+            this.handlePlayerGameStart();
+          }
+        });
+
     } else {
+      this.spinner.show();
       this.handlePlayerUpdateFromHost();
       this.handlePlayerGameStart();
     }
 
+    this.handleIncomingGameRequestResponse();
+    this.handleIncomingGameCancelRequest();
   }
 
   ngOnDestroy(): void {
@@ -97,18 +122,80 @@ export class PlayersConfigComponent implements OnDestroy {
 
   handlePlayerUpdateFromHost() {
     this.gameDashboardService.incomingGamePlayerUpdate$
-    .pipe(filter(playerUpdateRequest => playerUpdateRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key))
-    .subscribe(playerUpdateRequest => {
-      if (playerUpdateRequest?.gamePlayerUpdate) {
-        this.players = playerUpdateRequest.gamePlayerUpdate;
-      }
-    });
+      .pipe(filter(playerUpdateRequest => playerUpdateRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key))
+      .subscribe(playerUpdateRequest => {
+        this.spinner.hide();
+        if (playerUpdateRequest?.gamePlayerUpdate) {
+          this.players = playerUpdateRequest.gamePlayerUpdate;
+        }
+      });
   }
 
   handlePlayerGameStart() {
     this.gameDashboardService.incomingGameStart$
-    .pipe(filter(playerUpdateRequest => playerUpdateRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key))
-    .subscribe(playerUpdateRequest => {});
+      .pipe(filter(playerUpdateRequest => playerUpdateRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key))
+      .subscribe(playerUpdateRequest => { });
+  }
+
+  handleIncomingGameRequestResponse() {
+    this.gameDashboardService.incomingGameRequestResponse$
+      .pipe(
+        filter(response => response?.gameKey === this.gameDashboardService.selectedGame.value?.key),
+        takeUntil(this.componentIsActive)
+      )
+      .subscribe({
+        next: response => {
+          if (!response) return;
+
+          this.playerConenctionRequests.set(response.sourceUserName, response.gameRequestStatus);
+          const player = this.players.find(p => p.name === response.sourceUserName);
+          if (player && response?.gameRequestStatus === 'rejected') this.fadeoutSelectedPlayer(player);
+          setTimeout(() => {
+            this.sendPlayerUpdates();
+          }, 1000);
+        },
+        error: error => {
+          // this.playerConenctionRequests.set(response.sourceUserName, undefined);
+          // this.gameDashboardService.sendGameCancelRequest(this.config.game, player);
+          // this.fadeoutSelectedPlayer(player);
+          this.sendPlayerUpdates();
+        }
+      });
+  }
+
+  handleIncomingGameCancelRequest() {
+    this.gameDashboardService.incomingGameRequestCancel$
+      .pipe(
+        filter(response => response?.gameKey === this.gameDashboardService.selectedGame.value?.key),
+        takeUntil(this.componentIsActive)
+      )
+      .subscribe({
+        next: response => {
+          if (!response) return;
+
+          const selectedGame = this.gameDashboardService.selectedGame.value;
+
+          if (selectedGame && !selectedGame.gameOwner) {
+            this.playerConenctionRequests.set(response.sourceUserName, response.gameRequestStatus);
+
+            const player = this.players.find(p => p.name === response.sourceUserName);
+            if (player) this.fadeoutSelectedPlayer(player);
+            setTimeout(() => {
+              this.sendPlayerUpdates();
+            }, 1000);
+
+          } else {
+            this.dialogRef.close();
+            this.router.navigateByUrl('');
+          }
+        },
+        error: error => {
+          // this.playerConenctionRequests.set(response.sourceUserName, undefined);
+          // this.gameDashboardService.sendGameCancelRequest(this.config.game, player);
+          // this.fadeoutSelectedPlayer(player);
+          this.sendPlayerUpdates();
+        }
+      });
   }
 
   addPlayer(): void {
@@ -158,27 +245,7 @@ export class PlayersConfigComponent implements OnDestroy {
     const connectionStatus = this.playerConenctionRequests.get(player.name);
 
     if (!connectionStatus || connectionStatus === 'rejected') {
-      this.gameDashboardService.incomingGameRequestResponse$
-        .pipe(
-          filter(response => response?.gameKey === this.gameDashboardService.selectedGame.value?.key && response?.sourceUserId === player.userId),
-          take(1),
-          timeout(this.gameDashboardService.gameRequestWaitTime * 1000)
-        )
-        .subscribe({
-          next: response => {
-            this.playerConenctionRequests.set(player.name, response?.gameRequestStatus);
-            if (response?.gameRequestStatus === 'rejected') this.fadeoutSelectedPlayer(player);
-            setTimeout(() => {
-              this.sendPlayerUpdates();
-            }, 2000);
-          },
-          error: error => {
-            this.playerConenctionRequests.set(player.name, undefined);
-            this.gameDashboardService.sendGameCancelRequest(this.config.game, player);
-            this.fadeoutSelectedPlayer(player);
-            this.sendPlayerUpdates();
-          }
-        });
+
       this.gameDashboardService.sendGameRequest(this.config.game, player);
       this.playerConenctionRequests.set(player.name, 'pending');
       this.sendPlayerUpdates();
@@ -211,7 +278,7 @@ export class PlayersConfigComponent implements OnDestroy {
   }
 
   sendPlayerUpdates() {
-    if (!this.gameDashboardService.selectedGame.value) return 
+    if (!this.gameDashboardService.selectedGame.value) return
 
     this.gameDashboardService.sendGamePlayerUpdate(this.gameDashboardService.selectedGame.value, this.players);
   }
@@ -219,12 +286,23 @@ export class PlayersConfigComponent implements OnDestroy {
   cancelGame() {
     this.dialogRef.close();
 
-    if (!this.isGameStart) return;
+    // if (!this.isGameStart) return;
 
-    const ownerPlayer = this.players.find(p => p.userId === this.gameDashboardService.selectedGame.value?.gameOwner?.userId);
-    if (!ownerPlayer) return;
+    const selectedGame = this.gameDashboardService.selectedGame.value;
+    const me = this.userService.me;
 
-    this.gameDashboardService.sendGameCancelRequest(this.config.game, ownerPlayer);
+    if (selectedGame && selectedGame.gameOwner) {
+      const ownerPlayer = this.players.find(p => p.userId === this.gameDashboardService.selectedGame.value?.gameOwner?.userId);
+
+      if (!ownerPlayer) return;
+      this.gameDashboardService.sendGameCancelRequest(this.config.game, ownerPlayer);
+
+    } else if (selectedGame && me) {
+      const otherPlayers = this.players.filter(p => p.userId && p.userId !== me.userId);
+
+      if (otherPlayers.length === 0) return;
+      otherPlayers.forEach(op => this.gameDashboardService.sendGameCancelRequest(this.config.game, op));
+    }
   }
 
   submit(): void {

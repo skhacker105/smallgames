@@ -115,7 +115,8 @@ export class UserService {
       data: {
         title: 'Enter Your Name',
         defaultValue: this.me?.userName
-      }
+      },
+      disableClose: true
     })
   }
 
@@ -136,7 +137,8 @@ export class UserService {
 
   startConnectionWizard(): MatDialogRef<ScanUserComponent, any> {
     return this.dialog.open(ScanUserComponent, {
-      width: '99vw'
+      width: '99vw',
+      disableClose: true
     });
   }
 

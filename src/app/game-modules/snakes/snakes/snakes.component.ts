@@ -149,7 +149,8 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
       const ref = this.dialog.open(InfoComponent, {
         data: {
           message: 'Game Over!'
-        } as IInfo
+        } as IInfo,
+        disableClose: true
       });
 
       ref.afterClosed().pipe(take(1))

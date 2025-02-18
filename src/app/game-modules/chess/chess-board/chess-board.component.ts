@@ -131,7 +131,8 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
         maxPlayerCount: 2,
         preFillPlayers: this.players.length > 0 ? this.players : undefined,
         colorOptions: CHESS_COLORS
-      } as IPlayerAskConfig
+      } as IPlayerAskConfig,
+      disableClose: true
     })
   }
 

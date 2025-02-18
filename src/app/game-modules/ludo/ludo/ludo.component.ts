@@ -143,7 +143,8 @@ export class LudoComponent extends BaseComponent {
         maxPlayerCount: 4,
         preFillPlayers: this.players.length > 0 ? this.players : undefined,
         colorOptions: LUDO_COLORS
-      } as IPlayerAskConfig
+      } as IPlayerAskConfig,
+      disableClose: true
     })
   }
 

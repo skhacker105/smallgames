@@ -1,6 +1,8 @@
 <div class="player-ask-wrapper">
   <h1 class="title">Configure Players</h1>
 
+  <ngx-spinner size="medium" type="ball-scale-multiple">
+  </ngx-spinner>
   <div class="player-list">
     <div *ngFor="let player of players; let i = index" class="player-row">
       <label for="playerName{{ i }}">{{ (i + 1) }}:</label>
