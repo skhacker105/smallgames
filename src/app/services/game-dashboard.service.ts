@@ -55,6 +55,13 @@ export class GameDashboardService {
       image: 'assets/chess_icon.png',
       route: 'chess',
       settingsIconNeeded: false
+    },
+    {
+      key: 'hanoiOfTower',
+      name: 'Hanoi Tower',
+      image: 'assets/hanoioftower.png',
+      route: 'hanoiTower',
+      settingsIconNeeded: false
     }
   ];
   gameRequestWaitTime = 30; // in seconds
