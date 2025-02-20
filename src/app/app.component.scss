@@ -1,38 +1,117 @@
+@keyframes shine {
+    0%    { box-shadow: 0 0 30px 10px black; }
+    12.5% { box-shadow: 0 0 30px 8px black; }
+    25%   { box-shadow: 0 0 30px 6px black; }
+    37.5% { box-shadow: 0 0 30px 4px black; }
+    50%   { box-shadow: 0 0 30px 2px black; }
+    62.5% { box-shadow: 0 0 30px 4px black; }
+    75%   { box-shadow: 0 0 30px 6px black; }
+    87.5% { box-shadow: 0 0 30px 8px black; }
+    100%  { box-shadow: 0 0 30px 10px black; }
+  }
+
+.is-logo-loading {
+
+    .header {
+        height: 100% !important;
+        max-height: 100% !important;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        transition: grid-template-columns 1s ease-in-out, all 1s ease;
+
+        .logo {
+            flex: 1 auto !important;
+            display: flex !important;
+            padding-bottom: 20px;
+            transition: all 1s ease;
+
+            img {
+                width: 100px !important;
+                height: 100px !important;
+                margin: inherit !important;
+                margin-top: auto !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                // border-radius: 25px !important;
+                // animation: shine 2s ease infinite !important;
+                transition: all 1s ease;
+            }
+        }
+
+        .title, .title-text {
+            display: flex;
+            margin: inherit;
+            margin-left: auto;
+            margin-right: auto;
+            transition: all 1s ease !important;
+        }
+    }
+
+    .shadows {
+        color: #6a70a0 !important;
+        letter-spacing: -0.05em;
+        font-size: xx-large !important;
+    }
+
+    .body,
+    .footer {
+        display: none !important;
+        height: 0 !important;
+        transition: all 1 sease;
+        opacity: 0 !important;
+        padding: 0 !important;
+        transition: all 1s ease;
+    }
+}
+
 .container {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    background-image: url('../assets/bodybg.png');
+    // background-image: url('../assets/bodybg.png');
+    background: linear-gradient(145deg, #606191, #1e293b);
     background-repeat: no-repeat;
     background-position: center;
     background-size: 100% 100%;
 
+
     .header {
+        height: 35px;
+        max-height: 50px;
+        background-color: #6a70a0;
+        display: grid;
+        grid-template-columns: 40px auto;
+        padding: 5px;
+        transition: grid-template-columns 1s ease-in-out, all 1s ease;
+
+        .title, .title-text {
+            line-height: 35px;
+            transition: all 1s ease;
+        }
+
+        img {
+            width: 30px;
+            height: 30px;
+            margin: auto;
+            transition: all 1s ease;
+        }
+    }
+
+    .footer {
         opacity: 0.8;
         max-height: 50px;
         background-position: left;
-        border-bottom: solid 1px #6a70a0;
+        border-top: solid 1px #6a70a0;
         padding: 10px;
         color: white;
-
         display: flex;
+        transition: all 1s ease;
+        justify-content: space-between;
+        gap: 10px;
 
-        .title,
-        .action,
-        .spacer {
+        * {
             margin: auto;
-        }
-
-        .title {
-            font-size: x-large;
-            font-weight: bold;
-            font-family: 'Courier New', Courier, monospace;
-        }
-
-        .action-setting {
-            display: flex;
-            gap: 10px;
         }
     }
 
@@ -54,14 +133,35 @@
 
         .close-console {
             position: absolute;
-            right: 0px;
-            top: 0px;
+            right: 0;
+            top: 0;
         }
 
         .close-clear {
             position: absolute;
-            right: 0px;
-            bottom: 0px;
+            right: 0;
+            bottom: 0;
         }
     }
+}
+
+
+
+.title {
+    font-size: x-large;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.shadows {
+    position: relative;
+    text-transform: uppercase;
+    text-shadow: 0px 5px 20px black;
+    color: #c8ccf3;
+    letter-spacing: inherit;
+    font-family: 'Anton', Arial, sans-serif;
+    user-select: none;
+    text-transform: uppercase;
+    font-size: x-large;
+    transition: all 1s ease-out;
 }

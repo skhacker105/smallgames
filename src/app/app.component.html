@@ -1,33 +1,46 @@
-<div class="container">
+<div class="container" [ngClass]="{'is-logo-loading': isLogoLoading}">
 
-  <!-- Header -->
+
   <div class="header">
 
-    <div class="spacer home-icon" *ngIf="gameDashboardService.selectedGame.value || !isHomePage">
+    <div class="logo">
+      <img src="../assets/icon.png" width="24px" (click)="toggleIconLoading()">
+    </div>
+
+    <div class="title">
+
+      <div class="title-text shadows">
+        <ng-container *ngIf="!gameDashboardService.selectedGame.value">
+          {{ title }}
+        </ng-container>
+        <ng-container *ngIf="gameDashboardService.selectedGame.value">
+          {{ gameDashboardService.selectedGame.value.name }}
+        </ng-container>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Body -->
+  <div class="body spacer" *ngIf="isLogoLoadingComplete">
+    <router-outlet />
+  </div>
+
+  <!-- Footer -->
+  <div class="footer" *ngIf="isLogoLoadingComplete">
+
+    <div class="home-icon" *ngIf="gameDashboardService.selectedGame.value || !isHomePage">
       <mat-icon (click)="homeClicked()">home</mat-icon>
     </div>
 
-    <div class="spacer home-icon" *ngIf="!gameDashboardService.selectedGame.value && isHomePage">
+    <div class="home-icon" *ngIf="!gameDashboardService.selectedGame.value && isHomePage">
       <mat-icon (click)="showMyQRCode()">person</mat-icon>
     </div>
 
-    <div class="spacer title">
-
-      <ng-container *ngIf="!gameDashboardService.selectedGame.value">
-        {{ title }}
-      </ng-container>
-      <ng-container *ngIf="gameDashboardService.selectedGame.value">
-        {{ gameDashboardService.selectedGame.value.name }}
-      </ng-container>
-    </div>
-
-    <div class="spacer"></div>
-
-    <div class="action-setting">
 
       <mat-icon *ngIf="gameDashboardService.selectedGame.value?.settingsIconNeeded">settings</mat-icon>
 
-      <ng-container *ngIf="!gameDashboardService.selectedGame.value && isHomePage">
+      <ng-container *ngIf="!gameDashboardService.selectedGame.value">
         <mat-icon (click)="router.navigateByUrl('winners')">emoji_events</mat-icon>
         <mat-icon (click)="shoAboutInfo()">info</mat-icon>
       </ng-container>
@@ -39,12 +52,6 @@
 
       <mat-icon *ngIf="isSocketConnected" class="is-online">online_prediction</mat-icon>
 
-    </div>
-  </div>
-
-  <!-- Body -->
-  <div class="body spacer">
-    <router-outlet />
   </div>
 
   <!-- Logs -->

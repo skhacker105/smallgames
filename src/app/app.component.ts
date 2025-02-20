@@ -1,4 +1,4 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { NavigationEnd, Router, RouterModule, RouterOutlet } from '@angular/router';
 import { GameDashboardService } from './services/game-dashboard.service';
 import { CommonModule } from '@angular/common';
@@ -21,7 +21,10 @@ import { MyQRCodeComponent } from './components/my-qrcode/my-qrcode.component';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
+
+  isLogoLoading = true;
+  isLogoLoadingComplete = false;
   title = 'Small Games';
   baseTitle = 'Small Games';
 
@@ -53,6 +56,12 @@ export class AppComponent {
     if (Capacitor.getPlatform() !== 'web') {
       StatusBar.hide();
     }
+  }
+
+  ngOnInit(): void {
+    setTimeout(() => {
+      this.toggleIconLoading();
+    }, 1500);
   }
 
   @HostListener('window:beforeunload', ['$event'])
@@ -108,5 +117,12 @@ export class AppComponent {
 
   showMyQRCode() {
     this.dialog.open(MyQRCodeComponent)
+  }
+
+  toggleIconLoading() {
+    this.isLogoLoading = !this.isLogoLoading;
+    setTimeout(() => {
+      this.isLogoLoadingComplete = !this.isLogoLoadingComplete;
+    }, 1000);
   }
 }
