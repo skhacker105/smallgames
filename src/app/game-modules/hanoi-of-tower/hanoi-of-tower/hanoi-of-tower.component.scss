@@ -10,6 +10,24 @@
   color: white;
 }
 
+.level-selection {
+  margin-bottom: 20px;
+}
+
+.level-selection label {
+  font-size: 1.2em;
+  margin-right: 10px;
+}
+
+.level-selection select {
+  padding: 5px;
+  font-size: 1em;
+  border-radius: 5px;
+  background-color: #1e293b;
+  color: white;
+  border: 1px solid #64748b;
+}
+
 .towers-container {
   display: flex;
   justify-content: space-around;

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { GameDashboardService } from '../../../services/game-dashboard.service';
 
 @Component({
   selector: 'app-hanoi-of-tower',
@@ -8,7 +9,7 @@ import { Component } from '@angular/core';
   templateUrl: './hanoi-of-tower.component.html',
   styleUrl: './hanoi-of-tower.component.scss'
 })
-export class HanoiOfTowerComponent {
+export class HanoiOfTowerComponent implements OnInit, OnDestroy {
   towers: number[][] = [[], [], []];
   startTower: number = 0;
   endTower: number = 2;
@@ -16,18 +17,28 @@ export class HanoiOfTowerComponent {
   selectedTower: number | null = null;
   gameOver: boolean = false;
   numberOfDisks: number = 3;
-  errorMessage: string | null = null; // Added for error messages
+  numberOfTowers: number = 3;
+  errorMessage: string | null = null;
+  levels: number[] = [1, 2, 3, 4, 5]; // Levels 1 to 5
+  diskSizeMultiplier = 10;
 
-  constructor() {
-    this.resetGame();
+  constructor(private gameDashboardService: GameDashboardService) {
+  }
+
+  ngOnInit(): void {
+    this.loadGameState();
+  }
+
+  ngOnDestroy(): void {
+    this.saveGameState();
   }
 
   resetGame(): void {
-    this.towers = [[], [], []];
-    this.startTower = Math.floor(Math.random() * 3);
-    this.endTower = Math.floor(Math.random() * 3);
+    this.towers = Array.from({ length: this.numberOfTowers }, () => []);
+    this.startTower = Math.floor(Math.random() * this.numberOfTowers);
+    this.endTower = Math.floor(Math.random() * this.numberOfTowers);
     while (this.endTower === this.startTower) {
-      this.endTower = Math.floor(Math.random() * 3);
+      this.endTower = Math.floor(Math.random() * this.numberOfTowers);
     }
     for (let i = this.numberOfDisks; i > 0; i--) {
       this.towers[this.startTower].push(i);
@@ -35,7 +46,49 @@ export class HanoiOfTowerComponent {
     this.selectedDisk = null;
     this.selectedTower = null;
     this.gameOver = false;
-    this.errorMessage = null; // Reset error message
+    this.errorMessage = null;
+    this.saveGameState();
+  }
+
+  onLevelChange(event: Event): void {
+    const level = +(event.target as HTMLSelectElement).value;
+    this.setLevel(level);
+    this.resetGame();
+  }
+
+  setLevel(level: number): void {
+    switch (level) {
+      case 1:
+        this.numberOfDisks = 3;
+        this.numberOfTowers = 3;
+        this.diskSizeMultiplier = 30;
+        break;
+      case 2:
+        this.numberOfDisks = 4;
+        this.numberOfTowers = 3;
+        this.diskSizeMultiplier = 20;
+        break;
+      case 3:
+        this.numberOfDisks = 5;
+        this.numberOfTowers = 3;
+        this.diskSizeMultiplier = 20;
+        break;
+      case 4:
+        this.numberOfDisks = 6;
+        this.numberOfTowers = 4;
+        this.diskSizeMultiplier = 10;
+        break;
+      case 5:
+        this.numberOfDisks = 7;
+        this.numberOfTowers = 4;
+        this.diskSizeMultiplier = 10;
+        break;
+      default:
+        this.numberOfDisks = 3;
+        this.numberOfTowers = 3;
+        this.diskSizeMultiplier = 30;
+    }
+    this.saveGameState();
   }
 
   handleTowerClick(towerIndex: number): void {
@@ -46,13 +99,13 @@ export class HanoiOfTowerComponent {
       if (this.towers[towerIndex].length > 0) {
         this.selectedDisk = this.towers[towerIndex][this.towers[towerIndex].length - 1];
         this.selectedTower = towerIndex;
-        this.errorMessage = null; // Reset error message
+        this.errorMessage = null;
       }
     } else if (this.selectedTower === towerIndex) {
       // Deselect the disk if the same tower is clicked again
       this.selectedDisk = null;
       this.selectedTower = null;
-      this.errorMessage = null; // Reset error message
+      this.errorMessage = null;
     } else {
       // Move the selected disk to the clicked tower
       if (this.isValidMove(towerIndex)) {
@@ -60,13 +113,14 @@ export class HanoiOfTowerComponent {
         this.towers[this.selectedTower!].pop();
         this.selectedDisk = null;
         this.selectedTower = null;
-        this.errorMessage = null; // Reset error message
+        this.errorMessage = null;
         this.checkGameOver();
       } else {
         // Invalid move, show error message
         this.errorMessage = 'Invalid move! A larger disk cannot be placed on a smaller one.';
       }
     }
+    this.saveGameState();
   }
 
   isValidMove(towerIndex: number): boolean {
@@ -81,7 +135,7 @@ export class HanoiOfTowerComponent {
   }
 
   getDiskStyle(disk: number): any {
-    const width = 50 + disk * 30;
+    const width = disk * this.diskSizeMultiplier;
     return {
       width: `${width}px`,
       backgroundColor: `hsl(${disk * 30}, 70%, 50%)`
@@ -100,16 +154,16 @@ export class HanoiOfTowerComponent {
       selectedDisk: this.selectedDisk,
       selectedTower: this.selectedTower,
       gameOver: this.gameOver,
-      numberOfDisks: this.numberOfDisks
+      numberOfDisks: this.numberOfDisks,
+      numberOfTowers: this.numberOfTowers,
+      diskSizeMultiplier: this.diskSizeMultiplier
     };
-    localStorage.setItem('hanoiGameState', JSON.stringify(gameState));
-    alert('Game saved successfully!');
+    this.gameDashboardService.saveGameState(gameState);
   }
 
   loadGameState(): void {
-    const savedState = localStorage.getItem('hanoiGameState');
-    if (savedState) {
-      const gameState = JSON.parse(savedState);
+    const gameState = this.gameDashboardService.loadGameState();
+    if (gameState) {
       this.towers = gameState.towers;
       this.startTower = gameState.startTower;
       this.endTower = gameState.endTower;
@@ -117,10 +171,12 @@ export class HanoiOfTowerComponent {
       this.selectedTower = gameState.selectedTower;
       this.gameOver = gameState.gameOver;
       this.numberOfDisks = gameState.numberOfDisks;
-      this.errorMessage = null; // Reset error message
-      alert('Game loaded successfully!');
+      this.numberOfTowers = gameState.numberOfTowers;
+      this.errorMessage = null;
+      this.diskSizeMultiplier = gameState.diskSizeMultiplier;
     } else {
-      alert('No saved game found!');
+      this.setLevel(1);
+      this.resetGame();
     }
   }
 }

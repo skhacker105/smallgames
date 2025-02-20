@@ -1,4 +1,11 @@
 <div class="hanoi-game">
+    <div class="level-selection">
+      <label for="level">Select Level:</label>
+      <select id="level" (change)="onLevelChange($event)">
+        <option *ngFor="let level of levels" [value]="level">{{ level }}</option>
+      </select>
+    </div>
+  
     <div class="towers-container">
       <div *ngFor="let tower of towers; let i = index" class="tower" (click)="handleTowerClick(i)">
         <div class="peg"></div>
@@ -15,7 +22,7 @@
     </div>
   
     <div class="game-info">
-      <p *ngIf="!gameOver" class="instruction">
+      <p *ngIf="!gameOver && !errorMessage" class="instruction">
         Move all disks from <span class="highlight">Tower {{ startTower + 1 }}</span> to <span class="highlight">Tower {{ endTower + 1 }}</span>.
       </p>
       <p *ngIf="gameOver" class="winner-message">
