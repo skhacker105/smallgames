@@ -38,6 +38,10 @@ export const routes: Routes = [
         loadChildren: () => import('./game-modules/chess/chess.module').then(module => module.ChessModule)
     },
     {
+        path: 'pattern-puzzle',
+        loadChildren: () => import('./game-modules/pattern-puzzle/pattern-puzzle.module').then(module => module.PatternPuzzleModule)
+    },
+    {
         path: 'hanoiTower',
         loadChildren: () => import('./game-modules/hanoi-of-tower/hanoi-of-tower.module').then(module => module.HanoiOfTowerModule)
     },

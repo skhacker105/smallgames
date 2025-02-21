@@ -62,6 +62,13 @@ export class GameDashboardService {
       image: 'assets/hanoioftower.png',
       route: 'hanoiTower',
       settingsIconNeeded: false
+    },
+    {
+      key: 'patternPuzzle',
+      name: 'Puzzle',
+      image: 'assets/numPuzzle.png',
+      route: 'pattern-puzzle',
+      settingsIconNeeded: false
     }
   ];
   gameRequestWaitTime = 30; // in seconds

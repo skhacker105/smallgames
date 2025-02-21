@@ -4,8 +4,6 @@ import { GameDashboardService } from '../../../services/game-dashboard.service';
 
 @Component({
   selector: 'app-hanoi-of-tower',
-  standalone: true,
-  imports: [CommonModule],
   templateUrl: './hanoi-of-tower.component.html',
   styleUrl: './hanoi-of-tower.component.scss'
 })
