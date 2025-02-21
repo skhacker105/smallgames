@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-pattern-puzzle',
@@ -9,10 +8,12 @@ import { MatDialog } from '@angular/material/dialog';
 export class PatternPuzzleComponent implements OnInit {
   board: number[][] = []; // Represents the puzzle board
   emptyPosition: { row: number, col: number } = { row: -1, col: -1 }; // Position of the empty space
-  gridSize: number = 4; // 4x4 grid
+  gridSize: number = 3; // Default grid size (3x3)
   isGameOver: boolean = false;
+  selectedLevel: number = 1; // Default level
+  levels: number[] = [1, 2, 3, 4, 5]; // Available levels
 
-  constructor(private dialog: MatDialog) {}
+  constructor() { }
 
   ngOnInit(): void {
     this.initializeGame();
@@ -96,5 +97,19 @@ export class PatternPuzzleComponent implements OnInit {
   // Reset the game
   resetGame(): void {
     this.initializeGame();
+  }
+
+  // Handle level change
+  onLevelChange(): void {
+    this.gridSize = +this.selectedLevel + 2; // Level 1 = 3x3, Level 2 = 4x4, etc.
+    this.initializeGame();
+  }
+
+  puzzeTileDimention(): string {
+    return `calc(${Math.floor(100 / this.gridSize)}vw - 10px)`
+  }
+
+  boardDimension(): string {
+    return `repeat(${this.gridSize}, ` + this.puzzeTileDimention();
   }
 }

@@ -1,14 +1,25 @@
 <div class="puzzle-container">
-    <h1>Shape Solving Puzzle</h1>
-    <div class="puzzle-board">
+    
+    <!-- Level Selection Dropdown -->
+    <div class="level-selection">
+        <label for="level">Level:</label>
+        <select id="level" [(ngModel)]="selectedLevel" (change)="onLevelChange()">
+            <option *ngFor="let level of levels" [value]="level">{{ level }}</option>
+        </select>
+    </div>
+
+    <!-- Puzzle Board -->
+    <div class="puzzle-board" [style.grid-template-columns]="boardDimension()">
         <div *ngFor="let row of board; let i = index" class="puzzle-row">
             <div *ngFor="let tile of row; let j = index" class="puzzle-tile"
+            [ngStyle]="{ 'width': puzzeTileDimention(), 'height': puzzeTileDimention() }"
                 [ngClass]="{'empty': tile === 0}" (click)="moveTile(i, j)">
                 <div *ngIf="tile !== 0" class="tile-number">{{ tile }}</div>
             </div>
         </div>
     </div>
 
+    <!-- Game Info -->
     <div class="game-info">
         <p *ngIf="isGameOver" class="winner-message">🎉 Congratulations! You solved the puzzle! 🎉</p>
         <button mat-raised-button color="primary" (click)="resetGame()">Reset Game</button>

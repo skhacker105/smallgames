@@ -8,18 +8,32 @@
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     color: white;
-  }
-  
-  .puzzle-board {
+}
+
+.level-selection {
+    margin-bottom: 20px;
+}
+
+.level-selection label {
+    margin-right: 10px;
+}
+
+.level-selection select {
+    padding: 5px;
+    border-radius: 5px;
+    background-color: #22d3ee;
+    color: #0f172a;
+    border: none;
+    cursor: pointer;
+}
+
+.puzzle-board {
     display: grid;
-    grid-template-columns: repeat(4, calc(25vw - 15px));
     grid-gap: 5px;
     margin: 20px 0;
-  }
-  
-  .puzzle-tile {
-    width: calc(25vw - 15px);;
-    height: calc(25vw - 15px);
+}
+
+.puzzle-tile {
     background-position: center;
     border: 2px solid #fff;
     cursor: pointer;
@@ -30,52 +44,43 @@
     font-weight: bold;
     color: white;
     transition: transform 0.2s ease;
-  }
-  
-  .puzzle-tile.empty {
+}
+
+.puzzle-tile.empty {
     background: #64748b;
     border: 2px dashed #fff;
-  }
-  
-  .tile-number {
+}
+
+.tile-number {
     background: rgba(0, 0, 0, 0.5);
     padding: 5px;
     border-radius: 5px;
-  }
-  
-  .game-info {
+}
+
+.game-info {
     margin-top: 20px;
     text-align: center;
-  }
-  
-  .winner-message {
+}
+
+.winner-message {
     font-size: 1.5em;
     color: #22c55e;
     font-weight: bold;
     animation: fadeIn 1s ease-in-out;
-  }
-  
-  .final-image-preview img {
-    width: 150px;
-    height: 150px;
-    margin-top: 20px;
-    cursor: pointer;
-    border: 2px solid #fff;
-    border-radius: 10px;
-  }
-  
-  @keyframes fadeIn {
+}
+
+@keyframes fadeIn {
     from {
-      opacity: 0;
-      transform: translateY(-20px);
+        opacity: 0;
+        transform: translateY(-20px);
     }
     to {
-      opacity: 1;
-      transform: translateY(0);
+        opacity: 1;
+        transform: translateY(0);
     }
-  }
+}
 
-  button {
+button {
     padding: 10px 20px;
     font-size: 1em;
     border: none;
@@ -85,9 +90,19 @@
     cursor: pointer;
     transition: all 0.3s ease;
     margin: 5px;
-  }
-  
-  button:hover {
+}
+
+button:hover {
     background-color: #0ea5e9;
     transform: scale(1.05);
-  }
+}
+
+/* Dynamic tile size based on grid size */
+// .puzzle-board {
+//     grid-template-columns: repeat(var(--grid-size), calc((100 / var(--grid-size))vw - (5 * (var(--grid-size) - 1))px));
+// }
+
+// .puzzle-tile {
+//     width: calc((100 / var(--grid-size))vw - (5 * (var(--grid-size) - 1))px);
+//     height: calc((100 / var(--grid-size))vw - (5 * (var(--grid-size) - 1))px);
+// }
