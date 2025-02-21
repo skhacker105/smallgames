@@ -19,6 +19,7 @@ export class HanoiOfTowerComponent implements OnInit, OnDestroy {
   errorMessage: string | null = null;
   levels: number[] = [1, 2, 3, 4, 5]; // Levels 1 to 5
   diskSizeMultiplier = 10;
+  selectedLevel = 1;
 
   constructor(private gameDashboardService: GameDashboardService) {
   }
@@ -55,6 +56,7 @@ export class HanoiOfTowerComponent implements OnInit, OnDestroy {
   }
 
   setLevel(level: number): void {
+    this.selectedLevel = level;
     switch (level) {
       case 1:
         this.numberOfDisks = 3;
@@ -154,7 +156,8 @@ export class HanoiOfTowerComponent implements OnInit, OnDestroy {
       gameOver: this.gameOver,
       numberOfDisks: this.numberOfDisks,
       numberOfTowers: this.numberOfTowers,
-      diskSizeMultiplier: this.diskSizeMultiplier
+      diskSizeMultiplier: this.diskSizeMultiplier,
+      selectedLevel: this.selectedLevel
     };
     this.gameDashboardService.saveGameState(gameState);
   }
@@ -172,6 +175,7 @@ export class HanoiOfTowerComponent implements OnInit, OnDestroy {
       this.numberOfTowers = gameState.numberOfTowers;
       this.errorMessage = null;
       this.diskSizeMultiplier = gameState.diskSizeMultiplier;
+      this.selectedLevel = gameState.selectedLevel
     } else {
       this.setLevel(1);
       this.resetGame();

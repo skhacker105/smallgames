@@ -1,7 +1,7 @@
 <div class="hanoi-game">
     <div class="level-selection">
       <label for="level">Select Level:</label>
-      <select id="level" (change)="onLevelChange($event)">
+      <select id="level" [ngModel]="selectedLevel" (change)="onLevelChange($event)">
         <option *ngFor="let level of levels" [value]="level">{{ level }}</option>
       </select>
     </div>
