@@ -1,0 +1,78 @@
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(145deg, #0f172a, #1e293b);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    color: white;
+}
+
+.game-board {
+    display: flex;
+    flex-direction: column;
+    grid-gap: 10px;
+    margin: 20px 0;
+}
+
+.game-row {
+    display: flex;
+}
+
+.game-tile {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    border-radius: 5px;
+    background-color: #cdc1b4;
+    transition: background-color 0.2s ease;
+}
+
+.tile-number {
+    color: #776e65;
+}
+
+.game-info {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.game-over-message {
+    font-size: 1.5em;
+    color: #ff6b6b;
+    font-weight: bold;
+    animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 1em;
+    border: none;
+    border-radius: 5px;
+    background-color: #22d3ee;
+    color: #0f172a;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 5px;
+}
+
+button:hover {
+    background-color: #0ea5e9;
+    transform: scale(1.05);
+}

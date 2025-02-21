@@ -46,6 +46,13 @@ export const routes: Routes = [
         loadChildren: () => import('./game-modules/hanoi-of-tower/hanoi-of-tower.module').then(module => module.HanoiOfTowerModule)
     },
     {
+        path: 'game2048',
+        loadChildren: () => import('./game-modules/game2048/game2048.module').then(module => module.Game2048Module),
+        data: {
+            title: 'Winners List'
+        }
+    },
+    {
         path: 'winners',
         loadChildren: () => import('./game-modules/all-winners/all-winners.module').then(module => module.AllWinnersModule),
         data: {

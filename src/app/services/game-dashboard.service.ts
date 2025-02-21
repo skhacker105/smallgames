@@ -69,6 +69,13 @@ export class GameDashboardService {
       image: 'assets/numPuzzle.png',
       route: 'pattern-puzzle',
       settingsIconNeeded: false
+    },
+    {
+      key: 'game2048',
+      name: '2048',
+      image: 'assets/2048.png',
+      route: 'game2048',
+      settingsIconNeeded: false
     }
   ];
   gameRequestWaitTime = 30; // in seconds
