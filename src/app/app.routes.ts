@@ -48,9 +48,10 @@ export const routes: Routes = [
     {
         path: 'game2048',
         loadChildren: () => import('./game-modules/game2048/game2048.module').then(module => module.Game2048Module),
-        data: {
-            title: 'Winners List'
-        }
+    },
+    {
+        path: 'playCardMemorize',
+        loadChildren: () => import('./game-modules/play-card-memorize/play-card-memorize.module').then(module => module.PlayCardMemorizeModule),
     },
     {
         path: 'winners',

@@ -76,6 +76,13 @@ export class GameDashboardService {
       image: 'assets/2048.png',
       route: 'game2048',
       settingsIconNeeded: false
+    },
+    {
+      key: 'playCardMemorize',
+      name: 'Memory',
+      image: 'assets/playCardMemorize.png',
+      route: 'playCardMemorize',
+      settingsIconNeeded: false
     }
   ];
   gameRequestWaitTime = 30; // in seconds
