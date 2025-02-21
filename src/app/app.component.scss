@@ -32,8 +32,6 @@
                 margin-top: auto !important;
                 margin-left: auto !important;
                 margin-right: auto !important;
-                // border-radius: 25px !important;
-                // animation: shine 2s ease infinite !important;
                 transition: all 1s ease;
             }
         }
@@ -81,12 +79,12 @@
         max-height: 50px;
         background-color: #6a70a0;
         display: grid;
-        grid-template-columns: 40px auto;
+        grid-template-columns: 40px auto 40px;
         padding: 5px;
+        line-height: 35px;
         transition: grid-template-columns 1s ease-in-out, all 1s ease;
 
         .title, .title-text {
-            line-height: 35px;
             transition: all 1s ease;
         }
 
@@ -95,6 +93,10 @@
             height: 30px;
             margin: auto;
             transition: all 1s ease;
+        }
+
+        mat-icon {
+            line-height: 35px;
         }
     }
 

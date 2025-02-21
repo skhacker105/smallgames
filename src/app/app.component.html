@@ -19,6 +19,15 @@
       </div>
     </div>
 
+    <ng-container *ngIf="!isLogoLoading">
+      <ng-container *ngIf="!isSocketConnected">
+        <mat-icon *ngIf="isWifiConnected">wifi</mat-icon>
+        <mat-icon *ngIf="!isWifiConnected">wifi_off</mat-icon>
+      </ng-container>
+
+      <mat-icon *ngIf="isSocketConnected" class="is-online">online_prediction</mat-icon>
+    </ng-container>
+
   </div>
 
   <!-- Body -->
@@ -38,19 +47,12 @@
     </div>
 
 
-      <mat-icon *ngIf="gameDashboardService.selectedGame.value?.settingsIconNeeded">settings</mat-icon>
+    <mat-icon *ngIf="gameDashboardService.selectedGame.value?.settingsIconNeeded">settings</mat-icon>
 
-      <ng-container *ngIf="!gameDashboardService.selectedGame.value">
-        <mat-icon (click)="router.navigateByUrl('winners')">emoji_events</mat-icon>
-        <mat-icon (click)="shoAboutInfo()">info</mat-icon>
-      </ng-container>
-
-      <ng-container *ngIf="!isSocketConnected">
-        <mat-icon *ngIf="isWifiConnected">wifi</mat-icon>
-        <mat-icon *ngIf="!isWifiConnected">wifi_off</mat-icon>
-      </ng-container>
-
-      <mat-icon *ngIf="isSocketConnected" class="is-online">online_prediction</mat-icon>
+    <ng-container *ngIf="!gameDashboardService.selectedGame.value">
+      <mat-icon (click)="router.navigateByUrl('winners')">emoji_events</mat-icon>
+      <mat-icon (click)="shoAboutInfo()">info</mat-icon>
+    </ng-container>
 
   </div>
 
