@@ -245,7 +245,7 @@ export class Game2048Component implements OnInit {
       1024: '#edc53f',
       2048: '#edc22e'
     };
-    return colors[value] || '#3c3a32';
+    return colors[value] || 'transparent';
   }
 
   // Get tile font size based on value

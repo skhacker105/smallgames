@@ -13,11 +13,12 @@
 .game-board {
     display: flex;
     flex-direction: column;
-    grid-gap: 10px;
+    gap: 10px;
     margin: 20px 0;
 }
 
 .game-row {
+    gap: 10px;
     display: flex;
 }
 
@@ -31,6 +32,7 @@
     border-radius: 5px;
     background-color: #cdc1b4;
     transition: background-color 0.2s ease;
+    border: dotted 1px;
 }
 
 .tile-number {
