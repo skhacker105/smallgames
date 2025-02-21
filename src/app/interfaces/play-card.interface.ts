@@ -1,4 +1,6 @@
+import { RANKS, SUIT } from "../types";
+
 export interface Card {
-    suit: string;
-    rank: string;
+    suit: SUIT;
+    rank: RANKS;
 }

@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Card } from '../../../interfaces';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { RANKS, SUIT } from '../../../types';
 
 @Component({
   selector: 'app-play-card-memorize',
@@ -24,14 +25,12 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
   isAnswerSubmitted: boolean = false; // Track if the user has submitted an answer
   questionsRemaining: number = 0; // Number of questions remaining for the current set of cards
   isShowingCards: boolean = false; // Track if cards are currently being shown
+  cardShowTime = 100000;  // 100 seconds
 
-  constructor(private gameDashboardService: GameDashboardService) {}
+  constructor(private gameDashboardService: GameDashboardService) { }
 
   ngOnInit(): void {
     this.loadGameState();
-    if (!this.deck.length) {
-      this.resetGame();
-    }
   }
 
   ngOnDestroy(): void {
@@ -39,8 +38,8 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
   }
 
   generateDeck(): Card[] {
-    const suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
-    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    const suits: SUIT[] = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
+    const ranks: RANKS[] = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
     const deck: Card[] = [];
 
     for (const suit of suits) {
@@ -57,11 +56,10 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
     this.visibleCards = cards;
     this.currentQuestion = ''; // Hide any visible question
     setTimeout(() => {
-      this.visibleCards = [];
       this.isShowingCards = false; // Cards are no longer being shown
       this.questionsRemaining = 5; // Reset questions remaining
       this.startQuestions();
-    }, 10000); // 10 seconds
+    }, this.cardShowTime);
   }
 
   startQuestions(): void {
@@ -106,11 +104,27 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
     this.correctAnswers = randomCards.filter(card =>
       this.visibleCards.some(visibleCard => visibleCard.suit === card.suit && visibleCard.rank === card.rank)
     );
+
+    if (this.correctAnswers.length === 0) {
+      const numberOfCorrectAnswers = Math.floor(Math.random() * 4);
+
+      for (let i = 0; i < numberOfCorrectAnswers; i++) {
+        const asnwerPosition = Math.floor(Math.random() * 4);
+        const visibleCardsPickIndex = Math.floor(Math.random() * this.visibleCards.length);
+        randomCards[asnwerPosition] = this.visibleCards[visibleCardsPickIndex];
+      }
+
+      this.correctAnswers = randomCards.filter(card =>
+        this.visibleCards.some(visibleCard => visibleCard.suit === card.suit && visibleCard.rank === card.rank)
+      );
+    }
     this.options = randomCards; // Show 4 cards as options
   }
 
   generateYesNoQuestion(): void {
-    const randomCard = this.getRandomCard();
+    const needYesAnswer = Math.floor((Math.random() * 2) % 2) === 0;
+    const visibleCardsPickIndex = Math.floor(Math.random() * this.visibleCards.length);
+    const randomCard = needYesAnswer ? this.visibleCards[visibleCardsPickIndex] : this.getRandomCard();
     this.currentQuestion = `Was the ${randomCard.rank} of ${randomCard.suit} present on the table?`;
     this.correctAnswer = this.visibleCards.some(card => card.suit === randomCard.suit && card.rank === randomCard.rank);
     this.options = ['Yes', 'No']; // Yes/No options
@@ -241,6 +255,14 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
   }
 
   isCard(option: Card | string): option is Card {
-    return (option as Card).suit !== undefined;
+    try {
+      return (option as Card).suit !== undefined;
+    } catch (err) {
+      throw (err)
+    }
+  }
+
+  getCardbackgroundImage(card: Card): string {
+    return `url(assets/playingCards/${card.rank}${card.suit[0]}@1x.png)`;
   }
 }

@@ -2,7 +2,7 @@
     <!-- Card Display -->
     <div class="card-container" *ngIf="isShowingCards">
       <div *ngFor="let card of visibleCards" class="card">
-        <div class="card-front">
+        <div class="card-front" [style.background-image]="getCardbackgroundImage(card)">
           {{ card.rank }} of {{ card.suit }}
         </div>
         <div class="card-back">

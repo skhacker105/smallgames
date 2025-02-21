@@ -18,8 +18,8 @@
 }
 
 .card {
-  width: 100px;
-  height: 150px;
+  width: 80px;
+  height: 120px;
   margin: 10px;
   perspective: 1000px;
 }
@@ -29,17 +29,17 @@
   height: 100%;
   position: absolute;
   backface-visibility: hidden;
-  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5em;
+  font-size: 1em;
   font-weight: bold;
 }
 
 .card-front {
-  background-color: #ff6f61;
   color: white;
+  background-size: contain;
+  background-repeat: no-repeat;
 }
 
 .card-back {
