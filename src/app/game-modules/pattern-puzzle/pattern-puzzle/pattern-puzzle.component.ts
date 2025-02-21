@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { GameDashboardService } from '../../../services/game-dashboard.service';
 
 @Component({
   selector: 'app-pattern-puzzle',
@@ -13,10 +14,40 @@ export class PatternPuzzleComponent implements OnInit {
   selectedLevel: number = 1; // Default level
   levels: number[] = [1, 2, 3, 4, 5]; // Available levels
 
-  constructor() { }
+  constructor(private gameDashboardService: GameDashboardService) { }
 
   ngOnInit(): void {
-    this.initializeGame();
+    this.loadGameState();
+  }
+
+  ngOnDestroy(): void {
+    this.saveGameState();
+  }
+
+  
+
+  saveGameState(): void {
+    const gameState = {
+      board: this.board,
+      emptyPosition: this.emptyPosition,
+      gridSize: this.gridSize,
+      isGameOver: this.isGameOver,
+      selectedLevel: this.selectedLevel
+    };
+    this.gameDashboardService.saveGameState(gameState);
+  }
+
+  loadGameState(): void {
+    const gameState = this.gameDashboardService.loadGameState();
+    if (gameState) {
+      this.board = gameState.board;
+      this.emptyPosition = gameState.emptyPosition;
+      this.gridSize = gameState.gridSize;
+      this.isGameOver = gameState.isGameOver;
+      this.selectedLevel = gameState.selectedLevel;
+    } else {
+      this.initializeGame();
+    }
   }
 
   // Initialize the game
@@ -24,6 +55,7 @@ export class PatternPuzzleComponent implements OnInit {
     this.board = this.createPuzzleBoard();
     this.shuffleBoard();
     this.isGameOver = false;
+    this.saveGameState();
   }
 
   // Create the puzzle board
@@ -72,6 +104,7 @@ export class PatternPuzzleComponent implements OnInit {
       this.emptyPosition = { row, col };
       this.checkGameOver();
     }
+    this.saveGameState();
   }
 
   // Check if the move is valid
@@ -92,6 +125,7 @@ export class PatternPuzzleComponent implements OnInit {
       }
     }
     this.isGameOver = true;
+    this.saveGameState();
   }
 
   // Reset the game
