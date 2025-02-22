@@ -38,6 +38,6 @@
     </div>
   
     <!-- Game Controls -->
-    <button (click)="displayCards(getRandomCards(5))">Show Cards</button>
+    <button (click)="displayCards(getRandomCards(5))" [appLoadingButton]="cardShowTime" #showCard>Show Cards</button>
     <button (click)="resetGame()">Reset Game</button>
   </div>

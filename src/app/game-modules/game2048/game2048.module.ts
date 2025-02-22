@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { Game2048RoutingModule } from './game2048-routing.module';
 import { Game2048Component } from './game2048/game2048.component';
-import { SwipeDirectionDirective } from '../../directives/swipe-direction.directive';
+import { SwipeDirectionDirective } from '../../directives';
 
 
 @NgModule({

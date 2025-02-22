@@ -1,8 +1,9 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Card } from '../../../interfaces';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { RANKS, SUIT } from '../../../types';
+import { LoadingButtonDirective } from '../../../directives';
 
 @Component({
   selector: 'app-play-card-memorize',
@@ -25,7 +26,9 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
   isAnswerSubmitted: boolean = false; // Track if the user has submitted an answer
   questionsRemaining: number = 0; // Number of questions remaining for the current set of cards
   isShowingCards: boolean = false; // Track if cards are currently being shown
-  cardShowTime = 100000;  // 100 seconds
+  cardShowTime = 10000;  // 10 seconds
+
+  @ViewChild('showCard', { read: LoadingButtonDirective }) showCardDirective!: LoadingButtonDirective;
 
   constructor(private gameDashboardService: GameDashboardService) { }
 
@@ -55,6 +58,7 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
     this.isShowingCards = true; // Cards are being shown
     this.visibleCards = cards;
     this.currentQuestion = ''; // Hide any visible question
+    this.showCardDirective.startLoading();
     setTimeout(() => {
       this.isShowingCards = false; // Cards are no longer being shown
       this.questionsRemaining = 5; // Reset questions remaining
@@ -70,7 +74,7 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
   }
 
   getRandomQuestionType(): string {
-    const questionTypes = ['presence', 'multiple', 'yesNo'];
+    const questionTypes = ['multiple', 'yesNo'];
     return questionTypes[Math.floor(Math.random() * questionTypes.length)];
   }
 
@@ -79,9 +83,6 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
     this.isAnswerSubmitted = false; // Reset answer submission status
 
     switch (this.currentQuestionType) {
-      case 'presence':
-        this.generatePresenceQuestion();
-        break;
       case 'multiple':
         this.generateMultipleQuestion();
         break;
@@ -89,13 +90,6 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
         this.generateYesNoQuestion();
         break;
     }
-  }
-
-  generatePresenceQuestion(): void {
-    const randomCard = this.getRandomCard();
-    this.currentQuestion = `Was the ${randomCard.rank} of ${randomCard.suit} present on the table?`;
-    this.correctAnswer = this.visibleCards.some(card => card.suit === randomCard.suit && card.rank === randomCard.rank);
-    this.options = ['Yes', 'No']; // Yes/No options
   }
 
   generateMultipleQuestion(): void {

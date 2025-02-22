@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { PlayCardMemorizeRoutingModule } from './play-card-memorize-routing.module';
 import { PlayCardMemorizeComponent } from './play-card-memorize/play-card-memorize.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { LoadingButtonDirective } from '../../directives';
 
 
 @NgModule({
@@ -13,7 +14,8 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
   imports: [
     CommonModule,
     PlayCardMemorizeRoutingModule,
-    DragDropModule
+    DragDropModule,
+    LoadingButtonDirective
   ]
 })
 export class PlayCardMemorizeModule { }
