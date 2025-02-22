@@ -43,6 +43,7 @@
   color: white;
   background-size: contain;
   background-repeat: no-repeat;
+  background-position: center;
 }
 
 .card-back {
@@ -74,12 +75,10 @@
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  margin-top: 10px;
   flex: 1 auto;
 }
 
 .option {
-  padding: 5px;
   margin: 5px;
   border: 2px solid #64748b;
   border-radius: 5px;
@@ -122,12 +121,44 @@ button:hover {
   background-color: #0ea5e9;
 }
 
-.game-action
+.score-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 20px;
+}
 
 .score {
-  margin-top: 20px;
   font-size: 1.2em;
   font-weight: bold;
+  text-align: left;
+}
+
+.level-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.level-selector label {
+  font-size: 1em;
+  font-weight: bold;
+}
+
+.level-selector select {
+  padding: 5px 10px;
+  font-size: 1em;
+  border: 2px solid #64748b;
+  border-radius: 5px;
+  background-color: #1e293b;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.level-selector select:hover {
+  border-color: #22d3ee;
 }
 
 .sequence-options {
@@ -154,4 +185,8 @@ button:hover {
 
 .sequence-options .option.cdk-drag-placeholder {
   opacity: 0;
+}
+
+p {
+  margin: 0px
 }

@@ -1,13 +1,22 @@
 <div class="memory-game">
 
-  <!-- Score Display -->
-  <div class="score">
-    <p>Score: {{ score }} / {{ totalQuestions }}</p>
+  <div class="score-container">
+    <div class="score">
+      <p>Score: {{ score }} / {{ totalQuestions }}</p>
+    </div>
+    <div class="level-selector">
+      <label for="level">Level:</label>
+      <select id="level" (change)="onLevelChange($event)">
+        <option *ngFor="let level of levels" [value]="level" [selected]="level === selectedLevel">
+          {{ level }}
+        </option>
+      </select>
+    </div>
   </div>
 
 
   <!-- Card Display -->
-  <div class="card-container" *ngIf="isShowingCards">
+  <div class="card-container" *ngIf="!currentQuestion">
     <ng-container *ngFor="let card of visibleCards">
       <ng-container [ngTemplateOutlet]="cardDisplay" [ngTemplateOutletContext]="{card}">
       </ng-container>
@@ -52,7 +61,8 @@
 
   <!-- Game Controls -->
   <div class="game-action">
-    <button (click)="displayCards(getRandomCards(5))" [appLoadingButton]="cardShowTime" #showCard>Show Cards</button>
+    <button *ngIf="!currentQuestion" (click)="displayCards()" [appLoadingButton]="cardShowDuration" #showCard>Show Cards</button>
+    <button *ngIf="currentQuestion" (click)="displayNewCards()" [appLoadingButton]="cardShowDuration" #showCard>New Cards</button>
     <button (click)="resetGame()">Reset Game</button>
   </div>
 </div>

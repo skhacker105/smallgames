@@ -8,9 +8,9 @@ export class LoadingButtonDirective implements OnInit {
   @Input() appLoadingButton!: number; // Duration in seconds
 
   private originalContent!: string;
-  private overlay!: HTMLElement;
-  private spinner!: HTMLElement;
-  private countdown!: HTMLElement;
+  private overlay?: HTMLElement;
+  private spinner?: HTMLElement;
+  private countdown?: HTMLElement;
   private interval?: any;
 
   constructor(private el: ElementRef, private renderer: Renderer2) { }
@@ -25,7 +25,8 @@ export class LoadingButtonDirective implements OnInit {
 
     this.interval = setInterval(() => {
       remainingTime--;
-      this.countdown.innerText = remainingTime.toString();
+      if (this.countdown)
+        this.countdown.innerText = remainingTime.toString();
 
       if (remainingTime <= 0) {
         this.stopLoading();
@@ -59,7 +60,8 @@ export class LoadingButtonDirective implements OnInit {
     this.renderer.setStyle(this.countdown, 'position', 'absolute');
     this.renderer.setStyle(this.countdown, 'font-weight', 'bold');
     this.renderer.setStyle(this.countdown, 'color', '#333');
-    this.countdown.innerText = this.appLoadingButton.toString();
+    if (this.countdown)
+      this.countdown.innerText = this.appLoadingButton.toString();
 
     // Append elements
     this.renderer.appendChild(this.overlay, this.spinner);
@@ -70,6 +72,8 @@ export class LoadingButtonDirective implements OnInit {
   stopLoading() {
     if (this.interval) clearInterval(this.interval);
     this.el.nativeElement.disabled = false;
-    this.renderer.removeChild(this.el.nativeElement, this.overlay);
+    if (this.overlay)
+      this.renderer.removeChild(this.el.nativeElement, this.overlay);
+    this.overlay = undefined;
   }
 }

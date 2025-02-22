@@ -15,7 +15,8 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
   visibleCards: Card[] = [];
 
   selectedLevel: number = 1;
-  levels: number[] = [1, 2, 3, 4, 5];
+  levels: number[] = [1, 2, 3, 4, 5, 6, 7, 8];
+  durations: number[] = [10, 7, 12, 9, 15, 10, 15, 13];
 
   currentQuestionType: string = '';
   currentQuestion: Card | string = '';
@@ -24,16 +25,24 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
   score: number = 0; // Total correct answers
   totalQuestions: number = 0; // Total questions asked
   options: (Card | string)[] = []; // Options for the current question (can be cards or yes/no)
-  
+
   userAnswer: (Card | string)[] = []; // User's selected answer(s)
   isAnswerSubmitted: boolean = false; // Track if the user has submitted an answer
   questionsRemaining: number = 0; // Number of questions remaining for the current set of cards
-  
+
   isShowingCards: boolean = false; // Track if cards are currently being shown
-  cardShowTime = 10;  // 10 seconds
   interval?: any;
 
   @ViewChild('showCard', { read: LoadingButtonDirective }) showCardDirective!: LoadingButtonDirective;
+
+  get cardsSampleSize(): number {
+    return Math.ceil(this.selectedLevel / 2) + 2;
+  }
+
+  get cardShowDuration(): number {
+    const indx = this.levels.indexOf(this.selectedLevel);
+    return this.durations[indx === -1 ? 0 : indx];
+  }
 
   constructor(private gameDashboardService: GameDashboardService) { }
 
@@ -59,16 +68,24 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
     return deck;
   }
 
-  displayCards(cards: Card[]): void {
+  resetVisibleCards(): void {
+    this.visibleCards = this.getRandomCards(this.cardsSampleSize);
+  }
+
+  displayNewCards() {
+    this.resetVisibleCards();
+    this.currentQuestion = ''; // Hide any visible question
+  }
+
+  displayCards(): void {
     this.isShowingCards = true; // Cards are being shown
-    this.visibleCards = cards;
     this.currentQuestion = ''; // Hide any visible question
     this.showCardDirective.startLoading();
     this.interval = setTimeout(() => {
       this.isShowingCards = false; // Cards are no longer being shown
       this.questionsRemaining = 5; // Reset questions remaining
       this.startQuestions();
-    }, (this.cardShowTime * 1000));
+    }, (this.cardShowDuration * 1000));
   }
 
   startQuestions(): void {
@@ -177,7 +194,8 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
     if (this.questionsRemaining > 0) {
       this.startQuestions(); // Ask the next question
     } else {
-      this.displayCards(this.getRandomCards(5)); // Show new cards after 5 questions
+      this.resetVisibleCards();
+      this.displayCards(); // Show new cards after 5 questions
     }
   }
 
@@ -230,12 +248,12 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
       this.questionsRemaining = gameState.questionsRemaining;
       this.isShowingCards = gameState.isShowingCards;
     } else {
-      this.resetGame();
+      this.deck = this.generateDeck();
+      this.resetVisibleCards();
     }
   }
 
   resetGame(): void {
-    this.deck = this.generateDeck();
     this.visibleCards = [];
     this.currentQuestionType = '';
     this.currentQuestion = '';
@@ -245,7 +263,8 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
     this.totalQuestions = 0;
     this.questionsRemaining = 0;
     this.isShowingCards = false;
-    this.showCardDirective.stopLoading();
+    if (this.showCardDirective)
+      this.showCardDirective.stopLoading();
     if (this.interval) clearInterval(this.interval);
     this.saveGameState();
   }
@@ -253,7 +272,12 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
   onLevelChange(event: Event): void {
     const level = +(event.target as HTMLSelectElement).value;
     this.selectedLevel = level;
+    const existingScore = this.score;
+    const existingTotalQuestion = this.totalQuestions;
     this.resetGame();
+    this.score = existingScore;
+    this.totalQuestions = existingTotalQuestion;
+    this.saveGameState();
   }
 
   isCard(option: Card | string): option is Card {
