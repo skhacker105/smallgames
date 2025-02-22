@@ -17,7 +17,6 @@
   flex-wrap: wrap;
   margin-top: 20px;
   flex: 1 auto;
-  background: #0c3c0c;
 }
 
 .card {
@@ -25,6 +24,21 @@
   height: 120px;
   margin: 10px;
   perspective: 1000px;
+}
+
+.card.flipped {
+  transform: rotateY(180deg);
+  transition: transform 1s;
+
+  .card-front {
+    transform: rotateY(180deg);
+    transition: transform 1s;
+  }
+
+  .card-back {
+    transform: rotateY(0deg);
+    transition: transform 1s;
+  }
 }
 
 .card-front, .card-back {
@@ -40,18 +54,22 @@
 }
 
 .card-front {
+  transform: rotateY(0deg);
   color: white;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+  transition: transform 1s;
 }
 
 .card-back {
   background-color: #64748b;
-  background-image: url(../../../../assets/playingCards/back.png);
+  background-image: url(../../../../assets/playingCards/back.png) !important;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+  transform: rotateY(180deg);
+  transition: transform 1s;
 }
 
 .question-container {
@@ -95,9 +113,10 @@
   background-color: #1e293b;
 }
 
-// .yes-no-option {
-//   height: 20px;
-// }
+.yes-no-option {
+  padding: 10px;
+  display: block;
+}
 
 .submit-answer-action-container {
   display: flex;

@@ -33,7 +33,7 @@
       Was the below card present on the table?
 
       <div class="question-card-container">
-        <ng-container [ngTemplateOutlet]="cardDisplay" [ngTemplateOutletContext]="{card: currentQuestion}">
+        <ng-container [ngTemplateOutlet]="cardDisplay" [ngTemplateOutletContext]="{card: currentQuestion, showAlways: true}">
         </ng-container>
       </div>
     </ng-template>
@@ -69,12 +69,10 @@
 
 
 <ng-template #cardDisplay let-card="card" let-showAlways="showAlways">
-  <div class="card">
-    <div class="card-front" [style.background-image]="getCardbackgroundImage(card)" *ngIf="isShowingCards || showAlways">
+  <div class="card" [ngClass]="{'flipped': !isShowingCards && !showAlways}">
+    <div class="card-front" [style.background-image]="getCardbackgroundImage(card)">
     </div>
-    <div class="card-back" *ngIf="!isShowingCards && !showAlways">
-      <!-- Back of the card design -->
-      x
+    <div class="card-back">
     </div>
   </div>
 </ng-template>

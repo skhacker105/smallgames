@@ -75,6 +75,7 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
   displayNewCards() {
     this.resetVisibleCards();
     this.currentQuestion = ''; // Hide any visible question
+    this.saveGameState();
   }
 
   displayCards(): void {
@@ -85,6 +86,7 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
       this.isShowingCards = false; // Cards are no longer being shown
       this.questionsRemaining = 5; // Reset questions remaining
       this.startQuestions();
+      this.saveGameState();
     }, (this.cardShowDuration * 1000));
   }
 
@@ -195,8 +197,9 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
       this.startQuestions(); // Ask the next question
     } else {
       this.resetVisibleCards();
-      this.displayCards(); // Show new cards after 5 questions
+      this.displayNewCards(); // Show new cards after 5 questions
     }
+    this.saveGameState();
   }
 
   checkYesNoAnswer(): void {
@@ -228,7 +231,10 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
       deck: this.deck,
       selectedLevel: this.selectedLevel,
       questionsRemaining: this.questionsRemaining,
-      isShowingCards: this.isShowingCards
+      isShowingCards: this.isShowingCards,
+      userAnswer: this.userAnswer,
+      options: this.options,
+      isAnswerSubmitted: this.isAnswerSubmitted
     };
     this.gameDashboardService.saveGameState(gameState);
   }
@@ -247,6 +253,9 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
       this.selectedLevel = gameState.selectedLevel;
       this.questionsRemaining = gameState.questionsRemaining;
       this.isShowingCards = gameState.isShowingCards;
+      this.userAnswer = gameState.userAnswer;
+      this.options = gameState.options;
+      this.isAnswerSubmitted = gameState.isAnswerSubmitted;
     } else {
       this.deck = this.generateDeck();
       this.resetVisibleCards();
@@ -254,7 +263,7 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
   }
 
   resetGame(): void {
-    this.visibleCards = [];
+    this.resetVisibleCards();
     this.currentQuestionType = '';
     this.currentQuestion = '';
     this.correctAnswer = null;
@@ -263,6 +272,8 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
     this.totalQuestions = 0;
     this.questionsRemaining = 0;
     this.isShowingCards = false;
+    this.userAnswer = [];
+    this.isAnswerSubmitted = false;
     if (this.showCardDirective)
       this.showCardDirective.stopLoading();
     if (this.interval) clearInterval(this.interval);
