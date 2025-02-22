@@ -8,11 +8,11 @@
   // height: 400px; /* Fixed height for the container */
   display: flex;
   flex-direction: column;
+  height: calc(100% - 45px);
 }
 
 .header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
@@ -66,4 +66,13 @@ ul {
 
 .menu-item {
   padding: 10px;
+}
+
+.more-filter-trigger {
+  background: transparent;
+  border: 0px;
+  color: #add8e8 !important;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  cursor: pointer;
 }

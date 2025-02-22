@@ -1,13 +1,14 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
+import { BaseComponent } from '../../../components/base.component';
+import { Subject, interval, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-hanoi-of-tower',
   templateUrl: './hanoi-of-tower.component.html',
   styleUrl: './hanoi-of-tower.component.scss'
 })
-export class HanoiOfTowerComponent implements OnInit, OnDestroy {
+export class HanoiOfTowerComponent extends BaseComponent {
   towers: number[][] = [[], [], []];
   startTower: number = 0;
   endTower: number = 2;
@@ -20,19 +21,16 @@ export class HanoiOfTowerComponent implements OnInit, OnDestroy {
   levels: number[] = [1, 2, 3, 4, 5]; // Levels 1 to 5
   diskSizeMultiplier = 10;
   selectedLevel = 1;
+  timeSpent = 0;
 
-  constructor(private gameDashboardService: GameDashboardService) {
-  }
+  gameOverSubject = new Subject<boolean>();
 
-  ngOnInit(): void {
-    this.loadGameState();
-  }
-
-  ngOnDestroy(): void {
-    this.saveGameState();
+  constructor(gameDashboardService: GameDashboardService) {
+    super(gameDashboardService)
   }
 
   resetGame(): void {
+    this.gameOverSubject.next(true);
     this.towers = Array.from({ length: this.numberOfTowers }, () => []);
     this.startTower = Math.floor(Math.random() * this.numberOfTowers);
     this.endTower = Math.floor(Math.random() * this.numberOfTowers);
@@ -46,7 +44,9 @@ export class HanoiOfTowerComponent implements OnInit, OnDestroy {
     this.selectedTower = null;
     this.gameOver = false;
     this.errorMessage = null;
+    this.timeSpent = 0;
     this.saveGameState();
+    this.startTimer();
   }
 
   onLevelChange(event: Event): void {
@@ -91,6 +91,14 @@ export class HanoiOfTowerComponent implements OnInit, OnDestroy {
     this.saveGameState();
   }
 
+  startTimer(): void {
+    interval(1000).pipe(takeUntil(this.isComponentActive), takeUntil(this.gameOverSubject))
+    .subscribe(() => {
+      this.timeSpent++;
+      this.saveGameState();
+    });
+  }
+
   handleTowerClick(towerIndex: number): void {
     if (this.gameOver) return;
 
@@ -131,6 +139,8 @@ export class HanoiOfTowerComponent implements OnInit, OnDestroy {
   checkGameOver(): void {
     if (this.towers[this.endTower].length === this.numberOfDisks) {
       this.gameOver = true;
+      this.gameOverSubject.next(true);
+      this.gameDashboardService.saveGameDuration(this.timeSpent, this.selectedLevel.toString());
     }
   }
 
@@ -146,8 +156,10 @@ export class HanoiOfTowerComponent implements OnInit, OnDestroy {
     return this.selectedDisk === disk;
   }
 
-  saveGameState(): void {
-    const gameState = {
+
+  
+  override getGameState() {
+    return {
       towers: this.towers,
       startTower: this.startTower,
       endTower: this.endTower,
@@ -157,15 +169,12 @@ export class HanoiOfTowerComponent implements OnInit, OnDestroy {
       numberOfDisks: this.numberOfDisks,
       numberOfTowers: this.numberOfTowers,
       diskSizeMultiplier: this.diskSizeMultiplier,
-      selectedLevel: this.selectedLevel
+      selectedLevel: this.selectedLevel,
+      timeSpent: this.timeSpent
     };
-    this.gameDashboardService.saveGameState(gameState);
   }
-
-  loadGameState(): void {
-    const gameState = this.gameDashboardService.loadGameState();
-    if (gameState) {
-      this.towers = gameState.towers;
+  override setGameState(gameState: any): void {
+    this.towers = gameState.towers;
       this.startTower = gameState.startTower;
       this.endTower = gameState.endTower;
       this.selectedDisk = gameState.selectedDisk;
@@ -176,6 +185,19 @@ export class HanoiOfTowerComponent implements OnInit, OnDestroy {
       this.errorMessage = null;
       this.diskSizeMultiplier = gameState.diskSizeMultiplier;
       this.selectedLevel = gameState.selectedLevel
+      this.timeSpent = gameState.timeSpent ?? 0;
+  }
+
+  saveGameState(): void {
+    const gameState = this.getGameState();
+    this.gameDashboardService.saveGameState(gameState);
+  }
+
+  loadGameState(): void {
+    const gameState = this.gameDashboardService.loadGameState();
+    if (gameState) {
+      this.setGameState(gameState);
+      if (!this.gameOver) this.startTimer();
     } else {
       this.setLevel(1);
       this.resetGame();

@@ -18,4 +18,7 @@ export interface IGameWinner {
     winners?: IPlayer[];
     isDraw?: boolean;
     winDate: Date;
+    score?: string;
+    gameDuration?: number;
+    gameLevel?: string;
 }

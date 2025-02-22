@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { HanoiOfTowerRoutingModule } from './hanoi-of-tower-routing.module';
 import { HanoiOfTowerComponent } from './hanoi-of-tower/hanoi-of-tower.component';
 import { FormsModule } from '@angular/forms';
+import { SecondsToHMSPipe } from '../../pipe/seconds-to-hms.pipe';
 
 
 @NgModule({
@@ -11,7 +12,8 @@ import { FormsModule } from '@angular/forms';
   imports: [
     CommonModule,
     FormsModule,
-    HanoiOfTowerRoutingModule
+    HanoiOfTowerRoutingModule,
+    SecondsToHMSPipe
   ]
 })
 export class HanoiOfTowerModule { }

@@ -1,36 +1,47 @@
 <div class="hanoi-game">
-    <div class="level-selection">
-      <label for="level">Select Level:</label>
+  <div class="level-selection">
+
+    <div>
+      <label for="level">Level:</label>
       <select id="level" [ngModel]="selectedLevel" (change)="onLevelChange($event)">
         <option *ngFor="let level of levels" [value]="level">{{ level }}</option>
       </select>
     </div>
-  
-    <div class="towers-container">
-      <div *ngFor="let tower of towers; let i = index" class="tower" (click)="handleTowerClick(i)">
-        <div class="peg"></div>
-        <div *ngFor="let disk of tower" class="disk" [ngStyle]="getDiskStyle(disk)" [class.selected]="isSelectedDisk(disk)">
-          {{ disk }}
-        </div>
-      </div>
-    </div>
-  
-    <div class="tower-names">
-      <div *ngFor="let tower of towers; let i = index" class="tower-name">
-        Tower {{ i + 1 }}
-      </div>
-    </div>
-  
-    <div class="game-info">
-      <p *ngIf="!gameOver && !errorMessage" class="instruction">
-        Move all disks from <span class="highlight">Tower {{ startTower + 1 }}</span> to <span class="highlight">Tower {{ endTower + 1 }}</span>.
-      </p>
-      <p *ngIf="gameOver" class="winner-message">
-        🎉 Congratulations! You solved the puzzle! 🎉
-      </p>
-      <p *ngIf="errorMessage" class="error-message">
-        {{ errorMessage }}
-      </p>
-      <button (click)="resetGame()">Reset Game</button>
+
+    <div class="spacer"></div>
+
+    <div class="level">
+      <label for="level">{{ timeSpent | secondsToHMS: true }}</label>
     </div>
   </div>
+
+  <div class="towers-container">
+    <div *ngFor="let tower of towers; let i = index" class="tower" (click)="handleTowerClick(i)">
+      <div class="peg"></div>
+      <div *ngFor="let disk of tower" class="disk" [ngStyle]="getDiskStyle(disk)"
+        [class.selected]="isSelectedDisk(disk)">
+        {{ disk }}
+      </div>
+    </div>
+  </div>
+
+  <div class="tower-names">
+    <div *ngFor="let tower of towers; let i = index" class="tower-name">
+      Tower {{ i + 1 }}
+    </div>
+  </div>
+
+  <div class="game-info">
+    <p *ngIf="!gameOver && !errorMessage" class="instruction">
+      Move all disks from <span class="highlight">Tower {{ startTower + 1 }}</span> to <span class="highlight">Tower {{
+        endTower + 1 }}</span>.
+    </p>
+    <p *ngIf="gameOver" class="winner-message">
+      🎉 Congratulations! You solved the puzzle! 🎉
+    </p>
+    <p *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </p>
+    <button (click)="resetGame()">Reset Game</button>
+  </div>
+</div>

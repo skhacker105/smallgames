@@ -12,6 +12,8 @@
 
 .level-selection {
     margin-bottom: 20px;
+    display: flex;
+    width: 100%;
 }
 
 .level-selection label {
@@ -28,9 +30,14 @@
 }
 
 .puzzle-board {
-    display: grid;
-    grid-gap: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
     margin: 20px 0;
+}
+
+.puzzle-row {
+    display: flex;
 }
 
 .puzzle-tile {

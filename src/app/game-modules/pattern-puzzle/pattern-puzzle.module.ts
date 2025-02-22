@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { PatternPuzzleRoutingModule } from './pattern-puzzle-routing.module';
 import { PatternPuzzleComponent } from './pattern-puzzle/pattern-puzzle.component';
 import { FormsModule } from '@angular/forms';
+import { SecondsToHMSPipe } from '../../pipe/seconds-to-hms.pipe';
 
 
 @NgModule({
@@ -13,7 +14,8 @@ import { FormsModule } from '@angular/forms';
   imports: [
     CommonModule,
     FormsModule,
-    PatternPuzzleRoutingModule
+    PatternPuzzleRoutingModule,
+    SecondsToHMSPipe
   ]
 })
 export class PatternPuzzleModule { }

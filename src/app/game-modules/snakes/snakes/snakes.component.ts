@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { InfoComponent } from '../../../components/info/info.component';
 import { IInfo } from '../../../interfaces';
 import { take } from 'rxjs';
+import { UserService } from '../../../services/user.service';
 
 interface SnakeGameState {
   snake: { x: number; y: number }[];
@@ -36,6 +37,7 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
 
   constructor(
     gameDashboardService: GameDashboardService,
+    private userService: UserService,
     private dialog: MatDialog
   ) {
     super(gameDashboardService);
@@ -88,6 +90,12 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
     this.intervalId = undefined;
   }
 
+  saveGameScore(score: number): void {
+    if (!this.userService.me) return;
+
+    this.gameDashboardService.saveGameScore(score.toString());
+  }
+
   resetGame(): void {
     this.stopGame();
     this.snake = [{ x: 10, y: 10 }];
@@ -123,6 +131,7 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
       head.y >= this.gridSize ||
       this.snake.some(segment => segment.x === head.x && segment.y === head.y)
     ) {
+      this.saveGameScore(this.score);
       this.stopGame();
       // alert('Game Over!');
       this.informGameOver().then(() => this.resetGame());

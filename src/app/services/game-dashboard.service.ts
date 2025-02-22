@@ -149,6 +149,32 @@ export class GameDashboardService {
     localStorage.setItem(this.allWinnersKey, JSON.stringify(allSavedWinners));
   }
 
+  saveGameScore(score: string, gameLevel?: string): void {
+    if (!this.selectedGame.value || !this.userService.me) return;
+
+    const allSavedWinners = this.getAllWinners();
+    allSavedWinners.push({
+      key: this.selectedGame.value?.key,
+      score,
+      gameLevel,
+      winDate: new Date()
+    });
+    localStorage.setItem(this.allWinnersKey, JSON.stringify(allSavedWinners));
+  }
+
+  saveGameDuration(gameDuration: number, gameLevel?: string): void {
+    if (!this.selectedGame.value || !this.userService.me) return;
+
+    const allSavedWinners = this.getAllWinners();
+    allSavedWinners.push({
+      key: this.selectedGame.value?.key,
+      gameDuration,
+      gameLevel,
+      winDate: new Date()
+    });
+    localStorage.setItem(this.allWinnersKey, JSON.stringify(allSavedWinners));
+  }
+
   getAllWinners(): IGameWinner[] {
     const savedWInners = localStorage.getItem(this.allWinnersKey);
     if (!savedWInners) return [] as IGameWinner[];

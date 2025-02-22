@@ -222,6 +222,7 @@ export class Game2048Component implements OnInit {
         }
       }
       this.isGameOver = true;
+      this.gameDashboardService.saveGameScore(this.score.toString())
     }
   }
 

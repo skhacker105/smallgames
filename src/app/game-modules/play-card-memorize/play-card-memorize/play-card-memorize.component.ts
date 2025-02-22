@@ -263,6 +263,9 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
   }
 
   resetGame(): void {
+    if (this.totalQuestions) {
+      this.gameDashboardService.saveGameScore(this.score.toString(), this.selectedLevel.toString())
+    }
     this.resetVisibleCards();
     this.currentQuestionType = '';
     this.currentQuestion = '';

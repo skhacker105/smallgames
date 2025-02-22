@@ -3,7 +3,7 @@
   <div class="spacer"></div>
 
   <div class="difficulti-level">
-    <label for="level">Choose Difficulty:</label>
+    <label for="level">Level:</label>
     <select id="level" [(ngModel)]="level" (change)="onLevelChange(level)">
       <option *ngFor="let lvl of levels" [value]="lvl">{{ lvl }}</option>
     </select>

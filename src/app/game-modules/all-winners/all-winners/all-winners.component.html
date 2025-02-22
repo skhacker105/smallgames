@@ -3,6 +3,10 @@
     <button mat-icon-button [matMenuTriggerFor]="filterMenu">
       <mat-icon>filter_list</mat-icon>
     </button>
+    {{ selectedFilters }}
+    <button mat-button *ngIf="moreFiltersCount > 0" class="more-filter-trigger" [matTooltip]="moreFilters">
+      +{{ moreFiltersCount }}
+    </button>
   </div>
 
   <mat-menu #filterMenu="matMenu">
@@ -25,7 +29,13 @@
         
         <span class="winner-name" *ngIf="!gameWinner.isDraw && gameWinner.winner">{{ gameWinner.winner.name }}</span>
         
-        <span class="winner-name" *ngIf="!gameWinner.isDraw && gameWinner.winner">{{ gameWinner.winDate | date: 'dd MMM yy' }}</span>
+        <span class="winner-name" *ngIf="gameWinner.score">{{ gameWinner.score }}</span>
+        
+        <span class="winner-name" *ngIf="gameWinner.gameDuration">{{ gameWinner.gameDuration | secondsToHMS: true }}</span>
+        
+        <span class="winner-name" *ngIf="gameWinner.gameLevel">Level {{ gameWinner.gameLevel }}</span>
+        
+        <span class="winner-name">{{ gameWinner.winDate | date: 'dd MMM yy' }}</span>
         
       </li>
     </ul>

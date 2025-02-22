@@ -49,14 +49,14 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     private dialog: MatDialog,
     private router: Router,
     private userService: UserService
-    ) {
+  ) {
     super(gameDashboardService);
     this.chess = new Chess(); // Initialize the Chess instance
   }
 
   override ngOnInit(): void {
     super.ngOnInit();
-    this.updateBoard();
+    // this.updateBoard();
     this.sendGameStateUpdate();
   }
 
@@ -89,7 +89,7 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     const savedState = this.gameDashboardService.loadGameState();
     if (savedState) {
       this.setGameState(savedState);
-      
+
       if (!savedState.winner) {
         if (this.winner || this.players.length === 0 || this.chess.fen() === DEFAULT_POSITION) {
           this.askForPlayers();
@@ -183,7 +183,8 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
         this.board[i][j] = piece; // Add piece details to the board
       }
     }
-    this.checkGameOver();
+    if (!this.winner)
+      this.checkGameOver();
   }
 
   indicesToSquare(i: number, j: number): Square {
