@@ -48,7 +48,10 @@
 
 .card-back {
   background-color: #64748b;
-  transform: rotateY(180deg);
+  background-image: url(../../../../assets/playingCards/back.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .question-container {

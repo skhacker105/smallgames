@@ -44,7 +44,7 @@
         [class.selected]="userAnswer.includes(option)">
         <!-- Display card name or yes/no option -->
         <ng-container *ngIf="isCard(option); else yesNoOption">
-          <ng-container [ngTemplateOutlet]="cardDisplay" [ngTemplateOutletContext]="{card: option}">
+          <ng-container [ngTemplateOutlet]="cardDisplay" [ngTemplateOutletContext]="{card: option, showAlways: true}">
           </ng-container>
         </ng-container>
         <ng-template #yesNoOption>
@@ -68,13 +68,13 @@
 </div>
 
 
-<ng-template #cardDisplay let-card="card">
+<ng-template #cardDisplay let-card="card" let-showAlways="showAlways">
   <div class="card">
-    <div class="card-front" [style.background-image]="getCardbackgroundImage(card)">
-      {{ card.rank }} of {{ card.suit }}
+    <div class="card-front" [style.background-image]="getCardbackgroundImage(card)" *ngIf="isShowingCards || showAlways">
     </div>
-    <div class="card-back">
+    <div class="card-back" *ngIf="!isShowingCards && !showAlways">
       <!-- Back of the card design -->
+      x
     </div>
   </div>
 </ng-template>
