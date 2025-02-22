@@ -11,8 +11,9 @@ export class LoadingButtonDirective implements OnInit {
   private overlay!: HTMLElement;
   private spinner!: HTMLElement;
   private countdown!: HTMLElement;
+  private interval?: any;
 
-  constructor(private el: ElementRef, private renderer: Renderer2) {}
+  constructor(private el: ElementRef, private renderer: Renderer2) { }
 
   ngOnInit() {
     this.originalContent = this.el.nativeElement.innerHTML;
@@ -20,14 +21,13 @@ export class LoadingButtonDirective implements OnInit {
 
   startLoading() {
     this.createOverlay();
-    let remainingTime = this.appLoadingButton / 1000;
+    let remainingTime = this.appLoadingButton;
 
-    const interval = setInterval(() => {
+    this.interval = setInterval(() => {
       remainingTime--;
       this.countdown.innerText = remainingTime.toString();
 
       if (remainingTime <= 0) {
-        clearInterval(interval);
         this.stopLoading();
       }
     }, 1000);
@@ -67,7 +67,8 @@ export class LoadingButtonDirective implements OnInit {
     this.renderer.appendChild(this.el.nativeElement, this.overlay);
   }
 
-  private stopLoading() {
+  stopLoading() {
+    if (this.interval) clearInterval(this.interval);
     this.el.nativeElement.disabled = false;
     this.renderer.removeChild(this.el.nativeElement, this.overlay);
   }

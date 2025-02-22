@@ -1,19 +1,33 @@
 <div class="memory-game">
+
+  <!-- Score Display -->
+  <div class="score">
+    <p>Score: {{ score }} / {{ totalQuestions }}</p>
+  </div>
+
+
   <!-- Card Display -->
   <div class="card-container" *ngIf="isShowingCards">
-    <div *ngFor="let card of visibleCards" class="card">
-      <div class="card-front" [style.background-image]="getCardbackgroundImage(card)">
-        {{ card.rank }} of {{ card.suit }}
-      </div>
-      <div class="card-back">
-        <!-- Back of the card design -->
-      </div>
-    </div>
+    <ng-container *ngFor="let card of visibleCards">
+      <ng-container [ngTemplateOutlet]="cardDisplay" [ngTemplateOutletContext]="{card}">
+      </ng-container>
+    </ng-container>
   </div>
 
   <!-- Question Container -->
   <div class="question-container" *ngIf="!isShowingCards && currentQuestion">
-    <p>{{ currentQuestion }}</p>
+
+    <ng-container *ngIf="!isCard(currentQuestion); else yesNoQuestion">
+      <p>{{ currentQuestion }}</p>
+    </ng-container>
+    <ng-template #yesNoQuestion>
+      Was the below card present on the table?
+
+      <div class="question-card-container">
+        <ng-container [ngTemplateOutlet]="cardDisplay" [ngTemplateOutletContext]="{card: currentQuestion}">
+        </ng-container>
+      </div>
+    </ng-template>
 
     <!-- Options for Questions -->
     <div class="options">
@@ -21,24 +35,36 @@
         [class.selected]="userAnswer.includes(option)">
         <!-- Display card name or yes/no option -->
         <ng-container *ngIf="isCard(option); else yesNoOption">
-          {{ option.rank }} of {{ option.suit }}
+          <ng-container [ngTemplateOutlet]="cardDisplay" [ngTemplateOutletContext]="{card: option}">
+          </ng-container>
         </ng-container>
         <ng-template #yesNoOption>
-          {{ option }}
+          <span class="yes-no-option">{{ option }}</span>
         </ng-template>
       </div>
     </div>
 
     <!-- Submit Button -->
-    <button (click)="submitAnswer()" [disabled]="isAnswerSubmitted">Submit Answer</button>
-  </div>
-
-  <!-- Score Display -->
-  <div class="score">
-    <p>Score: {{ score }} / {{ totalQuestions }}</p>
+    <div class="submit-answer-action-container">
+      <button class="submit-answer" (click)="submitAnswer()" [disabled]="isAnswerSubmitted">Submit Answer</button>
+    </div>
   </div>
 
   <!-- Game Controls -->
-  <button (click)="displayCards(getRandomCards(5))" [appLoadingButton]="cardShowTime" #showCard>Show Cards</button>
-  <button (click)="resetGame()">Reset Game</button>
+  <div class="game-action">
+    <button (click)="displayCards(getRandomCards(5))" [appLoadingButton]="cardShowTime" #showCard>Show Cards</button>
+    <button (click)="resetGame()">Reset Game</button>
+  </div>
 </div>
+
+
+<ng-template #cardDisplay let-card="card">
+  <div class="card">
+    <div class="card-front" [style.background-image]="getCardbackgroundImage(card)">
+      {{ card.rank }} of {{ card.suit }}
+    </div>
+    <div class="card-back">
+      <!-- Back of the card design -->
+    </div>
+  </div>
+</ng-template>

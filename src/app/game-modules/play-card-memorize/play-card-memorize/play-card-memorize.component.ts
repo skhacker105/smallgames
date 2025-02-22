@@ -13,20 +13,25 @@ import { LoadingButtonDirective } from '../../../directives';
 export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
   deck: Card[] = [];
   visibleCards: Card[] = [];
+
+  selectedLevel: number = 1;
+  levels: number[] = [1, 2, 3, 4, 5];
+
   currentQuestionType: string = '';
-  currentQuestion: string = '';
+  currentQuestion: Card | string = '';
   correctAnswer: boolean | null = null;
   correctAnswers: Card[] = [];
   score: number = 0; // Total correct answers
   totalQuestions: number = 0; // Total questions asked
-  selectedLevel: number = 1;
-  levels: number[] = [1, 2, 3, 4, 5];
   options: (Card | string)[] = []; // Options for the current question (can be cards or yes/no)
+  
   userAnswer: (Card | string)[] = []; // User's selected answer(s)
   isAnswerSubmitted: boolean = false; // Track if the user has submitted an answer
   questionsRemaining: number = 0; // Number of questions remaining for the current set of cards
+  
   isShowingCards: boolean = false; // Track if cards are currently being shown
-  cardShowTime = 10000;  // 10 seconds
+  cardShowTime = 10;  // 10 seconds
+  interval?: any;
 
   @ViewChild('showCard', { read: LoadingButtonDirective }) showCardDirective!: LoadingButtonDirective;
 
@@ -59,11 +64,11 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
     this.visibleCards = cards;
     this.currentQuestion = ''; // Hide any visible question
     this.showCardDirective.startLoading();
-    setTimeout(() => {
+    this.interval = setTimeout(() => {
       this.isShowingCards = false; // Cards are no longer being shown
       this.questionsRemaining = 5; // Reset questions remaining
       this.startQuestions();
-    }, this.cardShowTime);
+    }, (this.cardShowTime * 1000));
   }
 
   startQuestions(): void {
@@ -119,7 +124,8 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
     const needYesAnswer = Math.floor((Math.random() * 2) % 2) === 0;
     const visibleCardsPickIndex = Math.floor(Math.random() * this.visibleCards.length);
     const randomCard = needYesAnswer ? this.visibleCards[visibleCardsPickIndex] : this.getRandomCard();
-    this.currentQuestion = `Was the ${randomCard.rank} of ${randomCard.suit} present on the table?`;
+    // this.currentQuestion = `Was the ${randomCard.rank} of ${randomCard.suit} present on the table?`;
+    this.currentQuestion = randomCard;
     this.correctAnswer = this.visibleCards.some(card => card.suit === randomCard.suit && card.rank === randomCard.rank);
     this.options = ['Yes', 'No']; // Yes/No options
   }
@@ -239,6 +245,8 @@ export class PlayCardMemorizeComponent implements OnInit, OnDestroy {
     this.totalQuestions = 0;
     this.questionsRemaining = 0;
     this.isShowingCards = false;
+    this.showCardDirective.stopLoading();
+    if (this.interval) clearInterval(this.interval);
     this.saveGameState();
   }
 

@@ -4,10 +4,11 @@
   align-items: center;
   font-family: Arial, sans-serif;
   background: linear-gradient(145deg, #0f172a, #1e293b);
-  padding: 20px;
+  padding: 10px;
   border-radius: 10px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   color: white;
+  height: calc(100% - 20px);
 }
 
 .card-container {
@@ -15,6 +16,8 @@
   justify-content: center;
   flex-wrap: wrap;
   margin-top: 20px;
+  flex: 1 auto;
+  background: #0c3c0c;
 }
 
 .card {
@@ -50,6 +53,21 @@
 .question-container {
   margin-top: 20px;
   text-align: center;
+  flex: 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border: solid 1px;
+  margin: 10px;
+  background: #430a0a;
+}
+
+.question-card-container {
+  display: flex;
+  flex: 1 auto;
+  div {
+    margin: auto;
+  }
 }
 
 .options {
@@ -57,20 +75,35 @@
   justify-content: center;
   flex-wrap: wrap;
   margin-top: 10px;
+  flex: 1 auto;
 }
 
 .option {
-  padding: 10px;
+  padding: 5px;
   margin: 5px;
   border: 2px solid #64748b;
   border-radius: 5px;
   cursor: pointer;
+  height: fit-content;
   transition: all 0.3s ease;
 }
 
 .option.selected {
   border-color: #22d3ee;
   background-color: #1e293b;
+}
+
+// .yes-no-option {
+//   height: 20px;
+// }
+
+.submit-answer-action-container {
+  display: flex;
+}
+
+.submit-answer {
+  width: 240px;
+  margin: auto;
 }
 
 button {
@@ -87,8 +120,9 @@ button {
 
 button:hover {
   background-color: #0ea5e9;
-  transform: scale(1.05);
 }
+
+.game-action
 
 .score {
   margin-top: 20px;
