@@ -1,43 +1,44 @@
 <div class="memory-game">
-    <!-- Card Display -->
-    <div class="card-container" *ngIf="isShowingCards">
-      <div *ngFor="let card of visibleCards" class="card">
-        <div class="card-front" [style.background-image]="getCardbackgroundImage(card)">
-          {{ card.rank }} of {{ card.suit }}
-        </div>
-        <div class="card-back">
-          <!-- Back of the card design -->
-        </div>
+  <!-- Card Display -->
+  <div class="card-container" *ngIf="isShowingCards">
+    <div *ngFor="let card of visibleCards" class="card">
+      <div class="card-front" [style.background-image]="getCardbackgroundImage(card)">
+        {{ card.rank }} of {{ card.suit }}
+      </div>
+      <div class="card-back">
+        <!-- Back of the card design -->
       </div>
     </div>
-  
-    <!-- Question Container -->
-    <div class="question-container" *ngIf="!isShowingCards && currentQuestion">
-      <p>{{ currentQuestion }}</p>
-  
-      <!-- Options for Questions -->
-      <div class="options">
-        <div *ngFor="let option of options" class="option" (click)="selectOption(option)" [class.selected]="userAnswer.includes(option)">
-          <!-- Display card name or yes/no option -->
-          <ng-container *ngIf="isCard(option); else yesNoOption">
-            {{ option.rank }} of {{ option.suit }}
-          </ng-container>
-          <ng-template #yesNoOption>
-            {{ option }}
-          </ng-template>
-        </div>
-      </div>
-  
-      <!-- Submit Button -->
-      <button (click)="submitAnswer()" [disabled]="isAnswerSubmitted">Submit Answer</button>
-    </div>
-  
-    <!-- Score Display -->
-    <div class="score">
-      <p>Score: {{ score }} / {{ totalQuestions }}</p>
-    </div>
-  
-    <!-- Game Controls -->
-    <button (click)="displayCards(getRandomCards(5))" [appLoadingButton]="cardShowTime" #showCard>Show Cards</button>
-    <button (click)="resetGame()">Reset Game</button>
   </div>
+
+  <!-- Question Container -->
+  <div class="question-container" *ngIf="!isShowingCards && currentQuestion">
+    <p>{{ currentQuestion }}</p>
+
+    <!-- Options for Questions -->
+    <div class="options">
+      <div *ngFor="let option of options" class="option" (click)="selectOption(option)"
+        [class.selected]="userAnswer.includes(option)">
+        <!-- Display card name or yes/no option -->
+        <ng-container *ngIf="isCard(option); else yesNoOption">
+          {{ option.rank }} of {{ option.suit }}
+        </ng-container>
+        <ng-template #yesNoOption>
+          {{ option }}
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button (click)="submitAnswer()" [disabled]="isAnswerSubmitted">Submit Answer</button>
+  </div>
+
+  <!-- Score Display -->
+  <div class="score">
+    <p>Score: {{ score }} / {{ totalQuestions }}</p>
+  </div>
+
+  <!-- Game Controls -->
+  <button (click)="displayCards(getRandomCards(5))" [appLoadingButton]="cardShowTime" #showCard>Show Cards</button>
+  <button (click)="resetGame()">Reset Game</button>
+</div>
