@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SecondsToHMSPipe } from '../../pipe/seconds-to-hms.pipe';
 import { MatDialogModule } from '@angular/material/dialog';
+import { FormsModule } from '@angular/forms';
 
 
 @NgModule({
@@ -26,7 +27,8 @@ import { MatDialogModule } from '@angular/material/dialog';
     MatCheckboxModule,
     MatTooltipModule,
     SecondsToHMSPipe,
-    MatDialogModule
+    MatDialogModule,
+    FormsModule
   ]
 })
 export class AllWinnersModule { }

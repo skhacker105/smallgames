@@ -1,14 +1,26 @@
 <div class="winners-container">
   <div class="header">
-    <button mat-icon-button (click)="openFilterDialog()">
-      <mat-icon>filter_list</mat-icon>
+    <button class="filter-button" (click)="openFilterDialog()">
+      <span class="filter-icon">&#9776;</span> <!-- Filter icon -->
     </button>
     <span class="selected-filters">
       {{ selectedFilters }}
-      <span *ngIf="moreFiltersCount > 0" class="more-filter-trigger" [matTooltip]="moreFilters">
+      <span *ngIf="moreFiltersCount > 0" class="more-filter-trigger" [title]="moreFilters">
         +{{ moreFiltersCount }}
       </span>
     </span>
+    <div class="sorting-options">
+      <select [(ngModel)]="sortCriteria" (change)="applySorting()">
+        <option value="gameName">Game Name</option>
+        <option value="date">Date</option>
+        <option *ngIf="shouldShowScoreSorting()" value="score">Score</option>
+        <option *ngIf="shouldShowDurationSorting()" value="duration">Duration</option>
+        <option *ngIf="shouldShowLevelSorting()" value="level">Level</option>
+      </select>
+      <button class="sort-order-button" (click)="toggleSortOrder()">
+        <span class="sort-icon">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span> <!-- Arrow icons -->
+      </button>
+    </div>
   </div>
 
   <div class="winners-grid">
@@ -29,7 +41,7 @@
 </div>
 
 <ng-template #filterDialog>
-  <mat-dialog-content>
+  <div class="filter-dialog">
     <div class="filter-actions">
       <button class="select-all-button" (click)="selectAllFilters()">Select All</button>
       <button class="clear-all-button" (click)="clearAllFilters()">Clear All</button>
@@ -45,9 +57,9 @@
         {{ game.name }}
       </label>
     </div>
-  </mat-dialog-content>
-  <mat-dialog-actions>
-    <button class="cancel-button" (click)="closeFilterDialog()">Cancel</button>
-    <button class="apply-button" (click)="applyFilters()" [disabled]="!areFiltersChanged">Apply</button>
-  </mat-dialog-actions>
+    <div class="dialog-actions">
+      <button class="cancel-button" (click)="closeFilterDialog()">Cancel</button>
+      <button class="apply-button" (click)="applyFilters()" [disabled]="!areFiltersChanged">Apply</button>
+    </div>
+  </div>
 </ng-template>

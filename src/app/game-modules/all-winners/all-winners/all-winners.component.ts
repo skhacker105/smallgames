@@ -18,6 +18,9 @@ export class AllWinnersComponent implements OnInit {
   allGames: Set<string> = new Set();
   areFiltersChanged: boolean = false; // Track if filters are changed
 
+  sortCriteria: string = 'date';
+  sortOrder: 'asc' | 'desc' = 'desc';
+
   constructor(private gameDashboardService: GameDashboardService, private dialog: MatDialog) { }
 
   ngOnInit(): void {
@@ -48,8 +51,13 @@ export class AllWinnersComponent implements OnInit {
     return pendingGames.map(g => g.name).join(', ');
   }
 
+  // get filteredWinners(): IGameWinner[] {
+  //   return this.winners.filter((winner) => this.selectedGames.has(winner.key));
+  // }
+
   get filteredWinners(): IGameWinner[] {
-    return this.winners.filter((winner) => this.selectedGames.has(winner.key));
+    let winners = this.winners.filter((winner) => this.selectedGames.has(winner.key));
+    return this.sortWinners(winners);
   }
 
   getGame(winner: IGameWinner): IGameInfo | undefined {
@@ -103,5 +111,67 @@ export class AllWinnersComponent implements OnInit {
     this.areFiltersChanged =
       this.tempSelectedGames.size !== this.selectedGames.size ||
       [...this.tempSelectedGames].some(key => !this.selectedGames.has(key));
+  }
+
+  sortWinners(winners: IGameWinner[]): IGameWinner[] {
+    return winners.sort((a, b) => {
+      let valueA, valueB;
+
+      switch (this.sortCriteria) {
+        case 'gameName':
+          valueA = this.getGame(a)?.name ?? '';
+          valueB = this.getGame(b)?.name ?? '';
+          break;
+        case 'date':
+          valueA = new Date(a.winDate).getTime();
+          valueB = new Date(b.winDate).getTime();
+          break;
+        case 'score':
+          valueA = a.score ?? 0;
+          valueB = b.score ?? 0;
+          break;
+        case 'duration':
+          valueA = a.gameDuration ?? 0;
+          valueB = b.gameDuration ?? 0;
+          break;
+        case 'level':
+          valueA = a.gameLevel ?? '';
+          valueB = b.gameLevel ?? '';
+          break;
+        default:
+          valueA = '';
+          valueB = '';
+      }
+
+      if (valueA < valueB) {
+        return this.sortOrder === 'asc' ? -1 : 1;
+      } else if (valueA > valueB) {
+        return this.sortOrder === 'asc' ? 1 : -1;
+      } else {
+        return 0;
+      }
+    });
+  }
+
+  shouldShowScoreSorting(): boolean {
+    return this.filteredWinners.every(winner => winner.score !== undefined);
+  }
+
+  shouldShowDurationSorting(): boolean {
+    return this.filteredWinners.every(winner => winner.gameDuration !== undefined);
+  }
+
+  shouldShowLevelSorting(): boolean {
+    return this.filteredWinners.every(winner => winner.gameLevel !== undefined);
+  }
+
+  toggleSortOrder(): void {
+    this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+    this.applySorting();
+  }
+
+  applySorting(): void {
+    // Trigger change detection
+    // this.filteredWinners = [...this.filteredWinners];
   }
 }
