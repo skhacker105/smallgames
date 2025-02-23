@@ -1,43 +1,53 @@
 <div class="winners-container">
   <div class="header">
-    <button mat-icon-button [matMenuTriggerFor]="filterMenu">
+    <button mat-icon-button (click)="openFilterDialog()">
       <mat-icon>filter_list</mat-icon>
     </button>
-    {{ selectedFilters }}
-    <button mat-button *ngIf="moreFiltersCount > 0" class="more-filter-trigger" [matTooltip]="moreFilters">
-      +{{ moreFiltersCount }}
-    </button>
+    <span class="selected-filters">
+      {{ selectedFilters }}
+      <span *ngIf="moreFiltersCount > 0" class="more-filter-trigger" [matTooltip]="moreFilters">
+        +{{ moreFiltersCount }}
+      </span>
+    </span>
   </div>
 
-  <mat-menu #filterMenu="matMenu">
-    <div *ngFor="let game of games" class="menu-item">
-      <mat-checkbox
-        [checked]="game ? selectedGames.has(game.key) : false"
-        (change)="game ? toggleGameSelection(game.key) : null"
-      >
-        {{ game?.name }}
-      </mat-checkbox>
-    </div>
-  </mat-menu>
-
-  <div class="winners-list">
-    <ul>
-      <li *ngFor="let gameWinner of filteredWinners; let i = index" class="winner-item">
+  <div class="winners-grid">
+    <div *ngFor="let gameWinner of filteredWinners; let i = index" class="winner-card">
+      <div class="game-info">
         <span class="game-key">{{ getGame(gameWinner)?.name }}</span>
-        
-        <span class="winner-name" *ngIf="gameWinner.isDraw">Draw between {{ getAllPlayerNames(gameWinner) ?? ' all players.' }}</span>
-        
+        <span class="winner-date">{{ gameWinner.winDate | date: 'dd MMM yy' }}</span>
+      </div>
+      <div class="winner-details">
+        <span class="winner-name" *ngIf="gameWinner.isDraw">Draw between {{ getAllPlayerNames(gameWinner) ?? 'all players' }}</span>
         <span class="winner-name" *ngIf="!gameWinner.isDraw && gameWinner.winner">{{ gameWinner.winner.name }}</span>
-        
-        <span class="winner-name" *ngIf="gameWinner.score">{{ gameWinner.score }}</span>
-        
-        <span class="winner-name" *ngIf="gameWinner.gameDuration">{{ gameWinner.gameDuration | secondsToHMS: true }}</span>
-        
-        <span class="winner-name" *ngIf="gameWinner.gameLevel">Level {{ gameWinner.gameLevel }}</span>
-        
-        <span class="winner-name">{{ gameWinner.winDate | date: 'dd MMM yy' }}</span>
-        
-      </li>
-    </ul>
+        <span class="winner-score" *ngIf="gameWinner.score">Score: {{ gameWinner.score }}</span>
+        <span class="winner-duration" *ngIf="gameWinner.gameDuration">Duration: {{ gameWinner.gameDuration | secondsToHMS: true }}</span>
+        <span class="winner-level" *ngIf="gameWinner.gameLevel">Level: {{ gameWinner.gameLevel }}</span>
+      </div>
+    </div>
   </div>
 </div>
+
+<ng-template #filterDialog>
+  <mat-dialog-content>
+    <div class="filter-actions">
+      <button class="select-all-button" (click)="selectAllFilters()">Select All</button>
+      <button class="clear-all-button" (click)="clearAllFilters()">Clear All</button>
+    </div>
+    <div *ngFor="let game of games" class="filter-option">
+      <label class="checkbox-container">
+        <input
+          type="checkbox"
+          [checked]="tempSelectedGames.has(game.key)"
+          (change)="toggleTempGameSelection(game.key)"
+        />
+        <span class="checkmark"></span>
+        {{ game.name }}
+      </label>
+    </div>
+  </mat-dialog-content>
+  <mat-dialog-actions>
+    <button class="cancel-button" (click)="closeFilterDialog()">Cancel</button>
+    <button class="apply-button" (click)="applyFilters()" [disabled]="!areFiltersChanged">Apply</button>
+  </mat-dialog-actions>
+</ng-template>
