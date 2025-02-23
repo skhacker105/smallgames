@@ -1,5 +1,11 @@
 <div class="game-container" appSwipeDirection (swipe)="changeDirection($event)">
     
+
+    <!-- Game Info -->
+    <div class="game-info">
+        <button mat-raised-button color="primary" (click)="resetGame()">Reset Game</button>
+    </div>
+    
     <!-- Game Board -->
     <div class="game-board">
         <div *ngFor="let row of board; let i = index" class="game-row">
@@ -14,6 +20,5 @@
     <div class="game-info">
         <p>Score: {{ score }}</p>
         <p *ngIf="isGameOver" class="game-over-message">Game Over! No more moves.</p>
-        <button mat-raised-button color="primary" (click)="resetGame()">Reset Game</button>
     </div>
 </div>
