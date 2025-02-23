@@ -3,15 +3,18 @@ import { MatDialog } from '@angular/material/dialog';
 import { IGameInfo, IGameWinner } from '../../../interfaces';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 
+interface IGameWinnerInfo extends IGameWinner, IGameInfo {}
+
 @Component({
   selector: 'app-all-winners',
   templateUrl: './all-winners.component.html',
   styleUrls: ['./all-winners.component.scss']
 })
 export class AllWinnersComponent implements OnInit {
+
   @ViewChild('filterDialog') filterDialog!: TemplateRef<any>;
 
-  winners: IGameWinner[] = [];
+  winners: IGameWinnerInfo[] = [];
   games: IGameInfo[] = [];
   selectedGames: Set<string> = new Set();
   tempSelectedGames: Set<string> = new Set(); // Temporary selection for dialog
@@ -24,7 +27,12 @@ export class AllWinnersComponent implements OnInit {
   constructor(private gameDashboardService: GameDashboardService, private dialog: MatDialog) { }
 
   ngOnInit(): void {
-    this.winners = this.gameDashboardService.getAllWinners();
+    const winners = this.gameDashboardService.getAllWinners();
+    this.winners = winners.map(w => {
+      const gameInfo = this.gameDashboardService.games.find(g => g.key === w.key) ?? {};
+      return {...w,...gameInfo} as IGameWinnerInfo;
+    });
+
     this.selectedGames = new Set<string>(this.winners.map((winner) => winner.key));
     this.allGames = new Set<string>(this.selectedGames);
     this.games = this.gameDashboardService.games.filter(game => this.selectedGames.has(game.key));
@@ -51,20 +59,12 @@ export class AllWinnersComponent implements OnInit {
     return pendingGames.map(g => g.name).join(', ');
   }
 
-  // get filteredWinners(): IGameWinner[] {
-  //   return this.winners.filter((winner) => this.selectedGames.has(winner.key));
-  // }
-
-  get filteredWinners(): IGameWinner[] {
+  get filteredWinners(): IGameWinnerInfo[] {
     let winners = this.winners.filter((winner) => this.selectedGames.has(winner.key));
     return this.sortWinners(winners);
   }
 
-  getGame(winner: IGameWinner): IGameInfo | undefined {
-    return this.gameDashboardService.games.find(game => game.key === winner.key);
-  }
-
-  getAllPlayerNames(winner: IGameWinner): string {
+  getAllPlayerNames(winner: IGameWinnerInfo): string {
     return winner.winners?.map(w => w.name).join(', ') ?? 'all players';
   }
 
@@ -113,14 +113,14 @@ export class AllWinnersComponent implements OnInit {
       [...this.tempSelectedGames].some(key => !this.selectedGames.has(key));
   }
 
-  sortWinners(winners: IGameWinner[]): IGameWinner[] {
+  sortWinners(winners: IGameWinnerInfo[]): IGameWinnerInfo[] {
     return winners.sort((a, b) => {
       let valueA, valueB;
 
       switch (this.sortCriteria) {
         case 'gameName':
-          valueA = this.getGame(a)?.name ?? '';
-          valueB = this.getGame(b)?.name ?? '';
+          valueA = a.name ?? '';
+          valueB = b.name ?? '';
           break;
         case 'date':
           valueA = new Date(a.winDate).getTime();

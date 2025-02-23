@@ -4,10 +4,12 @@
       <span class="filter-icon">&#9776;</span> <!-- Filter icon -->
     </button>
     <span class="selected-filters">
-      {{ selectedFilters }}
-      <span *ngIf="moreFiltersCount > 0" class="more-filter-trigger" [title]="moreFilters">
+      <div class="selected-filters-text" [ngClass]="{'with-more': moreFiltersCount > 0}">
+        {{ selectedFilters }}
+      </div>
+      <button mat-button *ngIf="moreFiltersCount > 0" class="more-filter-trigger" [matTooltip]="moreFilters">
         +{{ moreFiltersCount }}
-      </span>
+      </button>
     </span>
     <div class="sorting-options">
       <select [(ngModel)]="sortCriteria" (change)="applySorting()">
@@ -17,24 +19,35 @@
         <option *ngIf="shouldShowDurationSorting()" value="duration">Duration</option>
         <option *ngIf="shouldShowLevelSorting()" value="level">Level</option>
       </select>
-      <button class="sort-order-button" (click)="toggleSortOrder()">
-        <span class="sort-icon">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span> <!-- Arrow icons -->
-      </button>
+      <!-- <button > -->
+        <!-- <span class="sort-icon">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span> -->
+        <mat-icon class="sort-order-button" (click)="toggleSortOrder()">
+          {{ sortOrder === 'asc' ? 'keyboard_double_arrow_up' : 'keyboard_double_arrow_down' }}
+        </mat-icon>
+      <!-- </button> -->
     </div>
   </div>
 
   <div class="winners-grid">
-    <div *ngFor="let gameWinner of filteredWinners; let i = index" class="winner-card">
-      <div class="game-info">
-        <span class="game-key">{{ getGame(gameWinner)?.name }}</span>
-        <span class="winner-date">{{ gameWinner.winDate | date: 'dd MMM yy' }}</span>
+
+    <div *ngFor="let gameWinner of filteredWinners; let i = index" class="winner-card-container">
+
+      <div class="game-icon">
+        <img [attr.src]="gameWinner.image">
       </div>
-      <div class="winner-details">
-        <span class="winner-name" *ngIf="gameWinner.isDraw">Draw between {{ getAllPlayerNames(gameWinner) ?? 'all players' }}</span>
-        <span class="winner-name" *ngIf="!gameWinner.isDraw && gameWinner.winner">{{ gameWinner.winner.name }}</span>
-        <span class="winner-score" *ngIf="gameWinner.score">Score: {{ gameWinner.score }}</span>
-        <span class="winner-duration" *ngIf="gameWinner.gameDuration">Duration: {{ gameWinner.gameDuration | secondsToHMS: true }}</span>
-        <span class="winner-level" *ngIf="gameWinner.gameLevel">Level: {{ gameWinner.gameLevel }}</span>
+
+      <div class="winner-card">
+        <div class="game-info">
+          <span class="game-key">{{ gameWinner.name }}</span>
+          <span class="winner-date">{{ gameWinner.winDate | date: 'dd MMM yy' }}</span>
+        </div>
+        <div class="winner-details">
+          <span class="winner-name" *ngIf="gameWinner.isDraw">Draw between {{ getAllPlayerNames(gameWinner) }}</span>
+          <span class="winner-name" *ngIf="!gameWinner.isDraw && gameWinner.winner">{{ gameWinner.winner.name }}</span>
+          <span class="winner-score" *ngIf="gameWinner.score">Score: {{ gameWinner.score }}</span>
+          <span class="winner-duration" *ngIf="gameWinner.gameDuration">Duration: {{ gameWinner.gameDuration | secondsToHMS: true }}</span>
+          <span class="winner-level" *ngIf="gameWinner.gameLevel">Level: {{ gameWinner.gameLevel }}</span>
+        </div>
       </div>
     </div>
   </div>

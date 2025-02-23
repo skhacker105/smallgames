@@ -1,190 +1,229 @@
 .winners-container {
-  background: linear-gradient(145deg, #0f172a, #1e293b);
-  color: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+    background: linear-gradient(145deg, #0f172a, #1e293b);
+    color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    height: calc(100% - 40px);
+    display: flex;
+    flex-direction: column;
 }
 
 .header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-
-  .filter-button {
-    background: none;
-    border: none;
-    color: #e2e8f0;
-    cursor: pointer;
-    font-size: 1.5em;
-  }
-
-  .selected-filters {
-    margin-left: 10px;
-    color: #94a3b8;
-  }
-
-  .more-filter-trigger {
-    color: #add8e8;
-    text-decoration: underline;
-    text-underline-offset: 5px;
-    cursor: pointer;
-  }
-
-  .sorting-options {
     display: flex;
     align-items: center;
-    margin-left: auto;
+    margin-bottom: 20px;
 
-    select {
-      padding: 5px;
-      border-radius: 5px;
-      background: #334155;
-      color: #e2e8f0;
-      border: 1px solid #64748b;
-      margin-right: 10px;
+    .filter-button {
+        background: none;
+        border: none;
+        color: #e2e8f0;
+        cursor: pointer;
+        font-size: 1.5em;
     }
 
-    .sort-order-button {
-      background: none;
-      border: none;
-      color: #e2e8f0;
-      cursor: pointer;
-      font-size: 1.2em;
+    .selected-filters {
+        margin-left: 10px;
+        color: #94a3b8;
+        // white-space: nowrap;
+        display: flex;
+
+        .selected-filters-text {
+            white-space: nowrap;
+            overflow: hidden;
+            width: calc(100vw - 215px);
+            max-width: calc(100vw - 215px);
+            text-overflow: ellipsis;
+
+            &.with-more {
+                max-width: calc(100vw - 268px) !important;
+                text-overflow: ellipsis !important;
+            }
+        }
     }
-  }
+
+    .more-filter-trigger {
+        color: #add8e8;
+        text-decoration: underline;
+        text-underline-offset: 5px;
+        cursor: pointer;
+        padding: 0 !important;
+        height: 19px;
+        margin-left: -10px;
+    }
+
+    .sorting-options {
+        display: flex;
+        align-items: center;
+        margin-left: auto;
+
+        select {
+            padding: 5px;
+            border-radius: 5px;
+            background: #334155;
+            color: #e2e8f0;
+            border: 1px solid #64748b;
+            margin-right: 10px;
+        }
+
+        .sort-order-button {
+            background: none;
+            border: none;
+            color: #e2e8f0;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+    }
 }
 
 .winners-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  overflow-y: auto;
-  flex-grow: 1;
-}
-
-.winner-card {
-  background-color: #334155;
-  border-radius: 10px;
-  padding: 15px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-  }
-
-  .game-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-
-    .game-key {
-      font-weight: bold;
-      color: #94a3b8;
-    }
-
-    .winner-date {
-      color: #e2e8f0;
-      font-size: 0.9em;
-    }
-  }
-
-  .winner-details {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 20px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
 
-    .winner-name, .winner-score, .winner-duration, .winner-level {
-      color: #e2e8f0;
-      font-size: 0.9em;
+.winner-card-container {
+    display: flex;
+    background-color: #334155;
+    border-radius: 10px;
+    padding: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    .game-icon {
+        display: flex;
+        padding-right: 20px;
+
+        img {
+            width: 10vw;
+            height: 10vw;
+            margin: auto;
+            background: #b1bbe8;
+            padding: 3px;
+            border-radius: 10px;
+        }
     }
-  }
+
+    .winner-card {
+        flex: 1 auto;
+        display: flex;
+        flex-direction: column;
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+
+            .game-key {
+                font-weight: bold;
+                color: #94a3b8;
+            }
+
+            .winner-date {
+                color: #e2e8f0;
+                font-size: 0.9em;
+            }
+        }
+
+        .winner-details {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+
+            .winner-name,
+            .winner-score,
+            .winner-duration,
+            .winner-level {
+                color: #e2e8f0;
+                font-size: 0.9em;
+            }
+        }
+    }
+
 }
 
 .filter-dialog {
-  background: #1e293b;
-  color: #e2e8f0;
-  padding: 20px;
-  border-radius: 10px;
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 20px;
+    border-radius: 10px;
+    border: solid 2px #0e6596;
 
-  .filter-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
+    .filter-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
 
-    button {
-      background: #475569;
-      color: #e2e8f0;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.3s ease;
+        button {
+            background: #475569;
+            color: #e2e8f0;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
 
-      &:hover {
-        background: #64748b;
-      }
-    }
-  }
-
-  .filter-option {
-    padding: 10px;
-    display: flex;
-    align-items: center;
-
-    .checkbox-container {
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      color: #e2e8f0;
-
-      input {
-        margin-right: 10px;
-      }
-    }
-  }
-
-  .dialog-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-
-    button {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.3s ease;
+            &:hover {
+                background: #64748b;
+            }
+        }
     }
 
-    .cancel-button {
-      background: #475569;
-      color: #e2e8f0;
+    .filter-option {
+        padding: 10px;
+        display: flex;
+        align-items: center;
 
-      &:hover {
-        background: #64748b;
-      }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: #e2e8f0;
+
+            input {
+                margin-right: 10px;
+            }
+        }
     }
 
-    .apply-button {
-      background: #4f46e5;
-      color: #e2e8f0;
+    .dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
 
-      &:hover {
-        background: #6366f1;
-      }
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
 
-      &:disabled {
-        background: #64748b;
-        cursor: not-allowed;
-        opacity: 0.7;
-      }
+        .cancel-button {
+            background: #475569;
+            color: #e2e8f0;
+
+            &:hover {
+                background: #64748b;
+            }
+        }
+
+        .apply-button {
+            background: #4f46e5;
+            color: #e2e8f0;
+
+            &:hover {
+                background: #6366f1;
+            }
+
+            &:disabled {
+                background: #64748b;
+                cursor: not-allowed;
+                opacity: 0.7;
+            }
+        }
     }
-  }
 }
