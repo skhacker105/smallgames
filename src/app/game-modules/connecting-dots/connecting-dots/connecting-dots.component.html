@@ -1,0 +1,36 @@
+<div class="game-container">
+    <!-- Level Selection Dropdown -->
+    <div class="level-selection">
+        <div>
+            <label for="level">Level:</label>
+            <select id="level" [(ngModel)]="selectedLevel" (change)="onLevelChange()">
+                <option *ngFor="let level of levels" [value]="level">{{ level }}</option>
+            </select>
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="level">
+            <label for="level">{{ timeSpent | secondsToHMS: true }}</label>
+        </div>
+    </div>
+
+    <!-- Game Board -->
+    <div class="game-board" *ngIf="!isGameOver">
+        <svg #svgElement class="svg-canvas">
+            <!-- Draw dots -->
+            <circle *ngFor="let dot of dots" [attr.cx]="dot.x" [attr.cy]="dot.y" [attr.r]="circleRadius" [attr.fill]="dot.color" />
+            <!-- Draw lines -->
+            <path *ngFor="let line of lines" [attr.d]="line.path" [attr.stroke]="line.color" stroke-width="3" fill="none" />
+            <!-- Draw current path -->
+            <path *ngIf="currentPath" [attr.d]="currentPath" stroke="white" stroke-width="3" fill="none" />
+        </svg>
+    </div>
+
+    <!-- Game Info -->
+    <div class="game-info">
+        <p *ngIf="isGameOver" class="winner-message">🎉 Congratulations! You connected all the dots! 🎉</p>
+        <button mat-raised-button color="primary" (click)="resetGame()">Reset Game</button>
+        <button mat-raised-button color="accent" (click)="undo()" [disabled]="lines.length === 0 || isGameOver">Undo</button>
+    </div>
+</div>

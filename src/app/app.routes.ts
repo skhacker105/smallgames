@@ -54,6 +54,10 @@ export const routes: Routes = [
         loadChildren: () => import('./game-modules/play-card-memorize/play-card-memorize.module').then(module => module.PlayCardMemorizeModule),
     },
     {
+        path: 'connectingDots',
+        loadChildren: () => import('./game-modules/connecting-dots/connecting-dots.module').then(module => module.ConnectingDotsModule),
+    },
+    {
         path: 'winners',
         loadChildren: () => import('./game-modules/all-winners/all-winners.module').then(module => module.AllWinnersModule),
         data: {

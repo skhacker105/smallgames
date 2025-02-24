@@ -83,6 +83,13 @@ export class GameDashboardService {
       image: 'assets/playCardMemorize.png',
       route: 'playCardMemorize',
       settingsIconNeeded: false
+    },
+    {
+      key: 'connectingDots',
+      name: 'Dots',
+      image: 'assets/playCardMemorize.png',
+      route: 'connectingDots',
+      settingsIconNeeded: false
     }
   ];
   gameRequestWaitTime = 30; // in seconds

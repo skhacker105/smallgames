@@ -1,4 +1,4 @@
-.puzzle-container {
+.game-container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -8,6 +8,7 @@
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     color: white;
+    max-height: calc(100% - 47px);
 }
 
 .level-selection {
@@ -29,39 +30,17 @@
     cursor: pointer;
 }
 
-.puzzle-board {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    margin: 20px 0;
+.game-board {
+    width: 100%;
+    height: 70vh;
+    position: relative;
 }
 
-.puzzle-row {
-    display: flex;
-}
-
-.puzzle-tile {
-    background-position: center;
-    border: 2px solid #fff;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.5em;
-    font-weight: bold;
-    color: white;
-    transition: transform 0.2s ease;
-}
-
-.puzzle-tile.empty {
-    background: #64748b;
-    border: 2px dashed #fff;
-}
-
-.tile-number {
-    background: rgba(0, 0, 0, 0.5);
-    padding: 5px;
-    border-radius: 5px;
+.svg-canvas {
+    width: 100%;
+    height: 100%;
+    background-color: #1e293b;
+    border-radius: 10px;
 }
 
 .game-info {
@@ -102,4 +81,9 @@ button {
 button:hover {
     background-color: #0ea5e9;
     transform: scale(1.05);
+}
+
+button:disabled {
+    background-color: #64748b;
+    cursor: not-allowed;
 }
