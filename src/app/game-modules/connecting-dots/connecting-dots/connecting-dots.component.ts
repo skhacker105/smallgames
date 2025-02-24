@@ -48,7 +48,12 @@ export class ConnectingDotsComponent extends BaseComponent {
   }
 
   ngAfterViewInit(): void {
+    this.addSvgListeners();
+  }
+
+  addSvgListeners() {
     const svg = this.svgElement.nativeElement;
+    if (!svg) return;
 
     // Add mouse event listeners
     this.renderer.listen(svg, 'mousedown', (event: MouseEvent) => this.onMouseDown(event));
@@ -59,7 +64,7 @@ export class ConnectingDotsComponent extends BaseComponent {
     this.renderer.listen(svg, 'touchstart', (event: TouchEvent) => this.onMouseDown(event));
     this.renderer.listen(svg, 'touchmove', (event: TouchEvent) => this.onMouseMove(event));
     this.renderer.listen(svg, 'touchend', () => this.onMouseUp());
-}
+  }
 
 
   startTimer(): void {
@@ -113,6 +118,7 @@ export class ConnectingDotsComponent extends BaseComponent {
     this.lines = [];
     this.saveGameState();
     this.startTimer();
+    this.addSvgListeners();
   }
 
   generateDots(): Dot[] {
@@ -146,56 +152,56 @@ export class ConnectingDotsComponent extends BaseComponent {
   }
 
   onMouseDown(event: MouseEvent | TouchEvent): void {
-      event.preventDefault(); // Prevent default touch behavior
-      if (!this.svgElement) return;
+    event.preventDefault(); // Prevent default touch behavior
+    if (!this.svgElement) return;
 
-      const svgRect = this.svgElement.nativeElement.getBoundingClientRect();
-      const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
-      const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
-      const x = clientX - svgRect.left;
-      const y = clientY - svgRect.top;
-  
-      const clickedDot = this.dots.find(dot => Math.sqrt((dot.x - x) ** 2 + (dot.y - y) ** 2) <= 10);
-      if (clickedDot) {
-          this.isDrawing = true;
-          this.startDot = clickedDot;
-          this.currentColor = clickedDot.color;
-          this.currentPath = `M${clickedDot.x},${clickedDot.y}`;
-      }
+    const svgRect = this.svgElement.nativeElement.getBoundingClientRect();
+    const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
+    const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
+    const x = clientX - svgRect.left;
+    const y = clientY - svgRect.top;
+
+    const clickedDot = this.dots.find(dot => Math.sqrt((dot.x - x) ** 2 + (dot.y - y) ** 2) <= 10);
+    if (clickedDot) {
+      this.isDrawing = true;
+      this.startDot = clickedDot;
+      this.currentColor = clickedDot.color;
+      this.currentPath = `M${clickedDot.x},${clickedDot.y}`;
+    }
   }
-  
+
   onMouseMove(event: MouseEvent | TouchEvent): void {
-      if (!this.isDrawing) return;
-  
-      event.preventDefault(); // Prevent default touch behavior
-      const svgRect = this.svgElement.nativeElement.getBoundingClientRect();
-      const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
-      const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
-      const x = clientX - svgRect.left;
-      const y = clientY - svgRect.top;
-  
-      if (this.currentPath) {
-          this.currentPath += ` L${x},${y}`;
-      }
-  
-      // Check if the path reaches another dot of the same color
-      const reachedDot = this.dots.find(dot => 
-          dot.color === this.currentColor && 
-          dot !== this.startDot && 
-          Math.sqrt((dot.x - x) ** 2 + (dot.y - y) ** 2) <= 10
-      );
-  
-      if (reachedDot) {
-          this.isDrawing = false;
-          this.lines.push({ path: `${this.currentPath} L${reachedDot.x},${reachedDot.y}`, color: this.currentColor! });
-          this.currentPath = null;
-          this.checkGameOver();
-      }
-  }
-  
-  onMouseUp(): void {
+    if (!this.isDrawing) return;
+
+    event.preventDefault(); // Prevent default touch behavior
+    const svgRect = this.svgElement.nativeElement.getBoundingClientRect();
+    const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
+    const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
+    const x = clientX - svgRect.left;
+    const y = clientY - svgRect.top;
+
+    if (this.currentPath) {
+      this.currentPath += ` L${x},${y}`;
+    }
+
+    // Check if the path reaches another dot of the same color
+    const reachedDot = this.dots.find(dot =>
+      dot.color === this.currentColor &&
+      dot !== this.startDot &&
+      Math.sqrt((dot.x - x) ** 2 + (dot.y - y) ** 2) <= 10
+    );
+
+    if (reachedDot) {
       this.isDrawing = false;
+      this.lines.push({ path: `${this.currentPath} L${reachedDot.x},${reachedDot.y}`, color: this.currentColor! });
       this.currentPath = null;
+      this.checkGameOver();
+    }
+  }
+
+  onMouseUp(): void {
+    this.isDrawing = false;
+    this.currentPath = null;
   }
 
   isPathIntersecting(path1: string, path2: string): boolean {
