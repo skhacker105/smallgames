@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener, Renderer2 } from '@angular/core';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { BaseComponent } from '../../../components/base.component';
 import { Subject, interval, takeUntil } from 'rxjs';
@@ -43,9 +43,24 @@ export class ConnectingDotsComponent extends BaseComponent {
     return +this.selectedLevel * 4;
   }
 
-  constructor(gameDashboardService: GameDashboardService) {
+  constructor(gameDashboardService: GameDashboardService, private renderer: Renderer2) {
     super(gameDashboardService);
   }
+
+  ngAfterViewInit(): void {
+    const svg = this.svgElement.nativeElement;
+
+    // Add mouse event listeners
+    this.renderer.listen(svg, 'mousedown', (event: MouseEvent) => this.onMouseDown(event));
+    this.renderer.listen(svg, 'mousemove', (event: MouseEvent) => this.onMouseMove(event));
+    this.renderer.listen(svg, 'mouseup', () => this.onMouseUp());
+
+    // Add touch event listeners
+    this.renderer.listen(svg, 'touchstart', (event: TouchEvent) => this.onMouseDown(event));
+    this.renderer.listen(svg, 'touchmove', (event: TouchEvent) => this.onMouseMove(event));
+    this.renderer.listen(svg, 'touchend', () => this.onMouseUp());
+}
+
 
   startTimer(): void {
     interval(1000).pipe(takeUntil(this.isComponentActive), takeUntil(this.gameOverSubject))
@@ -84,21 +99,25 @@ export class ConnectingDotsComponent extends BaseComponent {
       this.setGameState(gameState);
       this.startTimer();
     } else {
-      this.initializeGame();
+      setTimeout(() => {
+        this.initializeGame();
+      }, 10);
     }
   }
 
   initializeGame(): void {
-    this.isGameOver = false;
     this.gameOverSubject.next(true);
     this.timeSpent = 0;
     this.dots = this.generateDots();
+    this.isGameOver = false;
     this.lines = [];
     this.saveGameState();
     this.startTimer();
   }
 
   generateDots(): Dot[] {
+    if (!this.svgElement) return [];
+
     const dotPairs = this.dotPairs; // Level 1 = 2 pairs, Level 2 = 3 pairs, etc.
     const dots: Dot[] = [];
     const svgWidth = this.svgElement.nativeElement.clientWidth;
@@ -126,54 +145,57 @@ export class ConnectingDotsComponent extends BaseComponent {
     return dots;
   }
 
-  @HostListener('mousedown', ['$event'])
-  onMouseDown(event: MouseEvent): void {
-    if (!this.svgElement) return;
+  onMouseDown(event: MouseEvent | TouchEvent): void {
+      event.preventDefault(); // Prevent default touch behavior
+      if (!this.svgElement) return;
 
-    const svgRect = this.svgElement.nativeElement.getBoundingClientRect();
-    const x = event.clientX - svgRect.left;
-    const y = event.clientY - svgRect.top;
-
-    const clickedDot = this.dots.find(dot => Math.sqrt((dot.x - x) ** 2 + (dot.y - y) ** 2) <= 10);
-    if (clickedDot) {
-      this.isDrawing = true;
-      this.startDot = clickedDot;
-      this.currentColor = clickedDot.color;
-      this.currentPath = `M${clickedDot.x},${clickedDot.y}`;
-    }
+      const svgRect = this.svgElement.nativeElement.getBoundingClientRect();
+      const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
+      const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
+      const x = clientX - svgRect.left;
+      const y = clientY - svgRect.top;
+  
+      const clickedDot = this.dots.find(dot => Math.sqrt((dot.x - x) ** 2 + (dot.y - y) ** 2) <= 10);
+      if (clickedDot) {
+          this.isDrawing = true;
+          this.startDot = clickedDot;
+          this.currentColor = clickedDot.color;
+          this.currentPath = `M${clickedDot.x},${clickedDot.y}`;
+      }
   }
-
-  @HostListener('mousemove', ['$event'])
-  onMouseMove(event: MouseEvent): void {
-    if (!this.isDrawing) return;
-
-    const svgRect = this.svgElement.nativeElement.getBoundingClientRect();
-    const x = event.clientX - svgRect.left;
-    const y = event.clientY - svgRect.top;
-
-    if (this.currentPath) {
-      this.currentPath += ` L${x},${y}`;
-    }
-
-    // Check if the path reaches another dot of the same color
-    const reachedDot = this.dots.find(dot =>
-      dot.color === this.currentColor &&
-      dot !== this.startDot &&
-      Math.sqrt((dot.x - x) ** 2 + (dot.y - y) ** 2) <= 10
-    );
-
-    if (reachedDot) {
-      this.isDrawing = false;
-      this.lines.push({ path: `${this.currentPath} L${reachedDot.x},${reachedDot.y}`, color: this.currentColor! });
-      this.currentPath = null;
-      this.checkGameOver();
-    }
+  
+  onMouseMove(event: MouseEvent | TouchEvent): void {
+      if (!this.isDrawing) return;
+  
+      event.preventDefault(); // Prevent default touch behavior
+      const svgRect = this.svgElement.nativeElement.getBoundingClientRect();
+      const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
+      const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
+      const x = clientX - svgRect.left;
+      const y = clientY - svgRect.top;
+  
+      if (this.currentPath) {
+          this.currentPath += ` L${x},${y}`;
+      }
+  
+      // Check if the path reaches another dot of the same color
+      const reachedDot = this.dots.find(dot => 
+          dot.color === this.currentColor && 
+          dot !== this.startDot && 
+          Math.sqrt((dot.x - x) ** 2 + (dot.y - y) ** 2) <= 10
+      );
+  
+      if (reachedDot) {
+          this.isDrawing = false;
+          this.lines.push({ path: `${this.currentPath} L${reachedDot.x},${reachedDot.y}`, color: this.currentColor! });
+          this.currentPath = null;
+          this.checkGameOver();
+      }
   }
-
-  @HostListener('mouseup')
+  
   onMouseUp(): void {
-    this.isDrawing = false;
-    this.currentPath = null;
+      this.isDrawing = false;
+      this.currentPath = null;
   }
 
   isPathIntersecting(path1: string, path2: string): boolean {
