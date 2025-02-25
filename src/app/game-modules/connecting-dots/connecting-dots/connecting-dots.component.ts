@@ -4,15 +4,10 @@ import { BaseComponent } from '../../../components/base.component';
 import { Subject, interval, takeUntil } from 'rxjs';
 import { generateRandomNumbers } from '../../../utils/support.utils';
 
-interface Dot {
-  x: number;
-  y: number;
-  color: string;
-}
 
-interface Line {
-  path: string;
-  color: string;
+interface Cell {
+  dot: string | null;
+  path: string | null;
 }
 
 @Component({
@@ -21,51 +16,176 @@ interface Line {
   styleUrls: ['./connecting-dots.component.scss']
 })
 export class ConnectingDotsComponent extends BaseComponent {
-  @ViewChild('svgElement') svgElement!: ElementRef<SVGElement>;
-
-  dots: Dot[] = [];
-  lines: Line[] = [];
-  currentPath: string | null = null;
-  isGameOver: boolean = false;
-  selectedLevel: number = 1;
-  levels: number[] = [1, 2, 3, 4, 5];
+  board: { dot: string | null, path: boolean }[][] = [];
+  selectedLevel = 1;
+  levels = [1, 2, 3, 4, 5];
+  dotColors = ['#22d3ee', '#22c55e', '#f59e0b', '#ef4444', '#a855f7', '#10b981', '#3b82f6', '#f97316', '#8b5cf6', '#06b6d4', '#84cc16', '#f43f5e', '#0ea5e9', '#d946ef', '#eab308', '#64748b', '#f472b6', '#14b8a6', '#1d4ed8', '#facc15'];
   timeSpent = 0;
-  private isDrawing = false;
-  private startDot: Dot | null = null;
-  private currentColor: string | null = null;
-
-  circleRadius = 10;
-  colors = ['#22d3ee', '#22c55e', '#f59e0b', '#ef4444', '#a855f7', '#10b981', '#3b82f6', '#f97316', '#8b5cf6', '#06b6d4', '#84cc16', '#f43f5e', '#0ea5e9', '#d946ef', '#eab308', '#64748b', '#f472b6', '#14b8a6', '#1d4ed8', '#facc15']
+  gameOver = false;
+  isDragging = false;
+  startCell: { row: number, col: number } | null = null;
+  currentPath: { row: number, col: number }[] = [];
+  undoStack: { row: number, col: number }[][] = [];
+  highlightedPath: { row: number, col: number }[] = [];
 
   gameOverSubject = new Subject<boolean>();
 
-  get dotPairs(): number {
-    return +this.selectedLevel * 4;
-  }
-
-  constructor(gameDashboardService: GameDashboardService, private renderer: Renderer2) {
+  constructor(gameDashboardService: GameDashboardService) {
     super(gameDashboardService);
   }
 
-  ngAfterViewInit(): void {
-    this.addSvgListeners();
+  get dotPairs(): number {
+    return +this.selectedLevel * 2 + 1;
   }
 
-  addSvgListeners() {
-    const svg = this.svgElement.nativeElement;
-    if (!svg) return;
-
-    // Add mouse event listeners
-    this.renderer.listen(svg, 'mousedown', (event: MouseEvent) => this.onMouseDown(event));
-    this.renderer.listen(svg, 'mousemove', (event: MouseEvent) => this.onMouseMove(event));
-    this.renderer.listen(svg, 'mouseup', () => this.onMouseUp());
-
-    // Add touch event listeners
-    this.renderer.listen(svg, 'touchstart', (event: TouchEvent) => this.onMouseDown(event));
-    this.renderer.listen(svg, 'touchmove', (event: TouchEvent) => this.onMouseMove(event));
-    this.renderer.listen(svg, 'touchend', () => this.onMouseUp());
+  resetGame(): void {
+    this.board = this.generateBoard();
+    this.timeSpent = 0;
+    this.gameOver = false;
+    this.isDragging = false;
+    this.startCell = null;
+    this.currentPath = [];
+    this.undoStack = [];
+    this.highlightedPath = [];
+    this.saveGameState();
+    this.startTimer();
   }
 
+  generateBoard(): { dot: string | null, path: boolean }[][] {
+    const size = this.dotPairs * 2 - 1;
+    const board: any = Array.from({ length: size }, () =>
+      Array.from({ length: size }, () => ({ dot: null, path: false }))
+    );
+
+    const colors = this.dotColors.slice(0, this.dotPairs);
+    colors.forEach(color => {
+      for (let i = 0; i < 2; i++) {
+        let row, col;
+        do {
+          row = Math.floor(Math.random() * size);
+          col = Math.floor(Math.random() * size);
+        } while (board[row][col].dot !== null);
+        board[row][col].dot = color;
+      }
+    });
+
+    return board;
+  }
+
+  onMouseDown(row: number, col: number): void {
+    if (this.board[row][col].dot && !this.board[row][col].path) {
+      this.isDragging = true;
+      this.startCell = { row, col };
+      this.currentPath = [{ row, col }];
+      this.highlightedPath = [{ row, col }];
+    }
+  }
+
+  onMouseEnter(row: number, col: number): void {
+    if (this.isDragging && this.startCell) {
+      const lastCell = this.currentPath[this.currentPath.length - 1];
+      const isAdjacent = Math.abs(row - lastCell.row) + Math.abs(col - lastCell.col) === 1; // Only horizontal/vertical moves
+      if (isAdjacent && !this.board[row][col].path) {
+        if (this.board[row][col].dot === this.board[this.startCell.row][this.startCell.col].dot) {
+          this.currentPath.push({ row, col });
+          this.connectPath();
+          this.isDragging = false;
+          this.startCell = null;
+          this.highlightedPath = [];
+          this.checkGameOver();
+        } else if (!this.board[row][col].dot) {
+          this.currentPath.push({ row, col });
+          this.highlightedPath = [...this.currentPath];
+        }
+      }
+    }
+  }
+
+  onMouseUp(): void {
+    if (this.isDragging) {
+      this.clearCurrentPath();
+      this.isDragging = false;
+      this.startCell = null;
+      this.highlightedPath = [];
+    }
+  }
+
+  connectPath(): void {
+    this.undoStack.push([...this.currentPath]);
+    this.currentPath.forEach(cell => {
+      this.board[cell.row][cell.col].path = true;
+    });
+    this.currentPath = [];
+    this.saveGameState();
+  }
+
+  clearCurrentPath(): void {
+    this.currentPath.forEach(cell => {
+      if (!this.board[cell.row][cell.col].dot) {
+        this.board[cell.row][cell.col].path = false;
+      }
+    });
+    this.currentPath = [];
+  }
+
+  undo(): void {
+    if (this.undoStack.length > 0) {
+      const lastPath = this.undoStack.pop();
+      lastPath?.forEach(cell => {
+        this.board[cell.row][cell.col].path = false;
+      });
+      this.saveGameState();
+    }
+  }
+
+  get canUndo(): boolean {
+    return this.undoStack.length > 0;
+  }
+
+  checkGameOver(): void {
+    const allConnected = this.board.every(row =>
+      row.every(cell => !cell.dot || cell.path)
+    );
+    if (allConnected) {
+      this.gameOver = true;
+      this.gameOverSubject.next(true);
+      this.gameDashboardService.saveGameDuration(this.timeSpent, this.selectedLevel.toString());
+    }
+  }
+
+  getCellStyle(cell: { dot: string | null, path: boolean }, row: number, col: number): any {
+    const isHighlighted = this.highlightedPath.some(c => c.row === row && c.col === col);
+    const isStartCell = this.startCell?.row === row && this.startCell?.col === col;
+
+    if (isHighlighted && this.startCell) {
+      const dotColor = this.board[this.startCell.row][this.startCell.col].dot;
+      return {
+        backgroundColor: cell.path ? dotColor : this.lightenColor(dotColor!, 0.5)
+      };
+    } else if (cell.path) {
+      return {
+        backgroundColor: cell.dot
+      };
+    } else {
+      return {
+        backgroundColor: 'transparent'
+      };
+    }
+  }
+
+  lightenColor(color: string, amount: number): string {
+    const hex = color.replace('#', '');
+    const rgb = parseInt(hex, 16);
+    const r = (rgb >> 16) + Math.round((255 - (rgb >> 16)) * amount);
+    const g = ((rgb >> 8) & 0x00FF) + Math.round((255 - ((rgb >> 8) & 0x00FF)) * amount);
+    const b = (rgb & 0x0000FF) + Math.round((255 - (rgb & 0x0000FF)) * amount);
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+  }
+
+  onLevelChange(event: Event): void {
+    this.selectedLevel = +(event.target as HTMLSelectElement).value;
+    this.resetGame();
+  }
 
   startTimer(): void {
     interval(1000).pipe(takeUntil(this.isComponentActive), takeUntil(this.gameOverSubject))
@@ -75,22 +195,23 @@ export class ConnectingDotsComponent extends BaseComponent {
       });
   }
 
-  override getGameState() {
+  override getGameState(): any {
     return {
-      dots: this.dots,
-      lines: this.lines,
-      isGameOver: this.isGameOver,
+      board: this.board,
       selectedLevel: this.selectedLevel,
-      timeSpent: this.timeSpent
+      timeSpent: this.timeSpent,
+      gameOver: this.gameOver,
+      undoStack: this.undoStack
     };
   }
 
   override setGameState(gameState: any): void {
-    this.dots = gameState.dots;
-    this.lines = gameState.lines;
-    this.isGameOver = gameState.isGameOver;
+    this.board = gameState.board;
     this.selectedLevel = gameState.selectedLevel;
-    this.timeSpent = gameState.timeSpent ?? 0;
+    this.timeSpent = gameState.timeSpent;
+    this.gameOver = gameState.gameOver;
+    this.undoStack = gameState.undoStack;
+    if (!this.gameOver) this.startTimer();
   }
 
   saveGameState(): void {
@@ -102,141 +223,8 @@ export class ConnectingDotsComponent extends BaseComponent {
     const gameState = this.gameDashboardService.loadGameState();
     if (gameState) {
       this.setGameState(gameState);
-      this.startTimer();
     } else {
-      setTimeout(() => {
-        this.initializeGame();
-      }, 10);
+      this.resetGame();
     }
-  }
-
-  initializeGame(): void {
-    this.gameOverSubject.next(true);
-    this.timeSpent = 0;
-    this.dots = this.generateDots();
-    this.isGameOver = false;
-    this.lines = [];
-    this.saveGameState();
-    this.startTimer();
-    this.addSvgListeners();
-  }
-
-  generateDots(): Dot[] {
-    if (!this.svgElement) return [];
-
-    const dotPairs = this.dotPairs; // Level 1 = 2 pairs, Level 2 = 3 pairs, etc.
-    const dots: Dot[] = [];
-    const svgWidth = this.svgElement.nativeElement.clientWidth;
-    const svgHeight = this.svgElement.nativeElement.clientHeight;
-    const randomNumbers = generateRandomNumbers(dotPairs * 4);
-
-    // Calculated after removing circle half width
-    const calcWidtht = svgWidth - (this.circleRadius * 2);
-    const calcHeight = svgHeight - (this.circleRadius * 2);
-
-    // Ensure only 2 dots of the same color
-    for (let i = 0; i < dotPairs; i++) {
-      const color = this.colors[i % this.colors.length];
-      for (let j = 0; j < 2; j++) {
-        const xpos = (i * 4) + (j * 2);
-        const x = this.circleRadius + Math.floor(randomNumbers[xpos] * calcWidtht);
-        const y = this.circleRadius + Math.floor(randomNumbers[xpos + 1] * calcHeight);
-        dots.push({
-          x: x,
-          y: y,
-          color: color
-        });
-      }
-    }
-    return dots;
-  }
-
-  onMouseDown(event: MouseEvent | TouchEvent): void {
-    event.preventDefault(); // Prevent default touch behavior
-    if (!this.svgElement) return;
-
-    const svgRect = this.svgElement.nativeElement.getBoundingClientRect();
-    const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
-    const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
-    const x = clientX - svgRect.left;
-    const y = clientY - svgRect.top;
-
-    const clickedDot = this.dots.find(dot => Math.sqrt((dot.x - x) ** 2 + (dot.y - y) ** 2) <= 10);
-    if (clickedDot) {
-      this.isDrawing = true;
-      this.startDot = clickedDot;
-      this.currentColor = clickedDot.color;
-      this.currentPath = `M${clickedDot.x},${clickedDot.y}`;
-    }
-  }
-
-  onMouseMove(event: MouseEvent | TouchEvent): void {
-    if (!this.isDrawing) return;
-
-    event.preventDefault(); // Prevent default touch behavior
-    const svgRect = this.svgElement.nativeElement.getBoundingClientRect();
-    const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
-    const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
-    const x = clientX - svgRect.left;
-    const y = clientY - svgRect.top;
-
-    if (this.currentPath) {
-      this.currentPath += ` L${x},${y}`;
-    }
-
-    // Check if the path reaches another dot of the same color
-    const reachedDot = this.dots.find(dot =>
-      dot.color === this.currentColor &&
-      dot !== this.startDot &&
-      Math.sqrt((dot.x - x) ** 2 + (dot.y - y) ** 2) <= 10
-    );
-
-    if (reachedDot) {
-      this.isDrawing = false;
-      this.lines.push({ path: `${this.currentPath} L${reachedDot.x},${reachedDot.y}`, color: this.currentColor! });
-      this.currentPath = null;
-      this.checkGameOver();
-    }
-  }
-
-  onMouseUp(): void {
-    this.isDrawing = false;
-    this.currentPath = null;
-  }
-
-  isPathIntersecting(path1: string, path2: string): boolean {
-    // Simplified intersection logic (for demonstration purposes)
-    // In a real implementation, use a proper line intersection algorithm
-    return false;
-  }
-
-  checkGameOver(): void {
-    const connectedPairs = this.dots.filter(dot =>
-      this.lines.some(line => line.color === dot.color)
-    ).length / 2;
-
-    if (connectedPairs === this.dotPairs) {
-      this.isGameOver = true;
-      this.saveGameState();
-      this.gameDashboardService.saveGameDuration(this.timeSpent, this.selectedLevel.toString());
-    }
-  }
-
-  resetGame(): void {
-    this.isGameOver = false;
-    setTimeout(() => {
-      this.initializeGame();
-    }, 10);
-  }
-
-  undo(): void {
-    if (this.lines.length > 0) {
-      this.lines.pop();
-      this.saveGameState();
-    }
-  }
-
-  onLevelChange(): void {
-    this.initializeGame();
   }
 }

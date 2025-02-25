@@ -1,89 +1,116 @@
-.game-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(145deg, #0f172a, #1e293b);
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    color: white;
-    max-height: calc(100% - 47px);
+.connect-dots-game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(145deg, #0f172a, #1e293b);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  color: white;
 }
 
 .level-selection {
-    margin-bottom: 20px;
-    display: flex;
-    width: 100%;
+  margin-bottom: 20px;
+  display: flex;
+  width: 100%;
 }
 
 .level-selection label {
-    margin-right: 10px;
+  font-size: 1.2em;
+  margin-right: 10px;
 }
 
 .level-selection select {
-    padding: 5px;
-    border-radius: 5px;
-    background-color: #22d3ee;
-    color: #0f172a;
-    border: none;
-    cursor: pointer;
+  padding: 5px;
+  font-size: 1em;
+  border-radius: 5px;
+  background-color: #1e293b;
+  color: white;
+  border: 1px solid #64748b;
 }
 
-.game-board {
-    width: 100%;
-    height: 70vh;
-    position: relative;
+.board {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid #64748b;
 }
 
-.svg-canvas {
-    width: 100%;
-    height: 100%;
-    background-color: #1e293b;
-    border-radius: 10px;
+.row {
+  display: flex;
+}
+
+.cell {
+  width: 50px;
+  height: 50px;
+  border: 1px solid #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.path {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .game-info {
-    margin-top: 20px;
-    text-align: center;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.instruction {
+  font-size: 1.2em;
+  color: #e2e8f0;
 }
 
 .winner-message {
-    font-size: 1.5em;
-    color: #22c55e;
-    font-weight: bold;
-    animation: fadeIn 1s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  font-size: 1.5em;
+  color: #22c55e;
+  font-weight: bold;
+  animation: fadeIn 1s ease-in-out;
 }
 
 button {
-    padding: 10px 20px;
-    font-size: 1em;
-    border: none;
-    border-radius: 5px;
-    background-color: #22d3ee;
-    color: #0f172a;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin: 5px;
+  padding: 10px 20px;
+  font-size: 1em;
+  border: none;
+  border-radius: 5px;
+  background-color: #22d3ee;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 5px;
 }
 
 button:hover {
-    background-color: #0ea5e9;
-    transform: scale(1.05);
+  background-color: #0ea5e9;
+  transform: scale(1.05);
 }
 
 button:disabled {
-    background-color: #64748b;
-    cursor: not-allowed;
+  background-color: #64748b;
+  cursor: not-allowed;
+}
+
+.path-highlight {
+  opacity: 0.5;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
