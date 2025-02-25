@@ -4,6 +4,10 @@ import { BaseComponent } from '../../../components/base.component';
 import { Subject, interval, takeUntil } from 'rxjs';
 import { generateRandomNumbers } from '../../../utils/support.utils';
 
+interface Cell {
+  dot: string | null;
+  path: string | null; // Store the color of the path
+}
 
 interface Cell {
   dot: string | null;
@@ -16,7 +20,7 @@ interface Cell {
   styleUrls: ['./connecting-dots.component.scss']
 })
 export class ConnectingDotsComponent extends BaseComponent {
-  board: { dot: string | null, path: boolean }[][] = [];
+  board: Cell[][] = [];
   selectedLevel = 1;
   levels = [1, 2, 3, 4, 5];
   dotColors = ['#22d3ee', '#22c55e', '#f59e0b', '#ef4444', '#a855f7', '#10b981', '#3b82f6', '#f97316', '#8b5cf6', '#06b6d4', '#84cc16', '#f43f5e', '#0ea5e9', '#d946ef', '#eab308', '#64748b', '#f472b6', '#14b8a6', '#1d4ed8', '#facc15'];
@@ -51,10 +55,10 @@ export class ConnectingDotsComponent extends BaseComponent {
     this.startTimer();
   }
 
-  generateBoard(): { dot: string | null, path: boolean }[][] {
+  generateBoard(): Cell[][] {
     const size = this.dotPairs * 2 - 1;
-    const board: any = Array.from({ length: size }, () =>
-      Array.from({ length: size }, () => ({ dot: null, path: false }))
+    const board: Cell[][] = Array.from({ length: size }, () =>
+      Array.from({ length: size }, () => ({ dot: null, path: null }))
     );
 
     const colors = this.dotColors.slice(0, this.dotPairs);
@@ -85,13 +89,13 @@ export class ConnectingDotsComponent extends BaseComponent {
     if (this.isDragging && this.startCell) {
       const lastCell = this.currentPath[this.currentPath.length - 1];
       const isAdjacent = Math.abs(row - lastCell.row) + Math.abs(col - lastCell.col) === 1; // Only horizontal/vertical moves
+
       if (isAdjacent && !this.board[row][col].path) {
         if (this.board[row][col].dot === this.board[this.startCell.row][this.startCell.col].dot) {
           this.currentPath.push({ row, col });
           this.connectPath();
           this.isDragging = false;
           this.startCell = null;
-          this.highlightedPath = [];
           this.checkGameOver();
         } else if (!this.board[row][col].dot) {
           this.currentPath.push({ row, col });
@@ -111,28 +115,31 @@ export class ConnectingDotsComponent extends BaseComponent {
   }
 
   connectPath(): void {
+    const color = this.board[this.startCell!.row][this.startCell!.col].dot;
     this.undoStack.push([...this.currentPath]);
     this.currentPath.forEach(cell => {
-      this.board[cell.row][cell.col].path = true;
+      this.board[cell.row][cell.col].path = color; // Set path color
     });
     this.currentPath = [];
+    this.highlightedPath = [];
     this.saveGameState();
   }
 
   clearCurrentPath(): void {
     this.currentPath.forEach(cell => {
       if (!this.board[cell.row][cell.col].dot) {
-        this.board[cell.row][cell.col].path = false;
+        this.board[cell.row][cell.col].path = null; // Clear path
       }
     });
     this.currentPath = [];
+    this.highlightedPath = [];
   }
 
   undo(): void {
     if (this.undoStack.length > 0) {
       const lastPath = this.undoStack.pop();
       lastPath?.forEach(cell => {
-        this.board[cell.row][cell.col].path = false;
+        this.board[cell.row][cell.col].path = null; // Clear path color
       });
       this.saveGameState();
     }
@@ -153,7 +160,7 @@ export class ConnectingDotsComponent extends BaseComponent {
     }
   }
 
-  getCellStyle(cell: { dot: string | null, path: boolean }, row: number, col: number): any {
+  getCellStyle(cell: Cell, row: number, col: number): any {
     const isHighlighted = this.highlightedPath.some(c => c.row === row && c.col === col);
     const isStartCell = this.startCell?.row === row && this.startCell?.col === col;
 
@@ -164,7 +171,7 @@ export class ConnectingDotsComponent extends BaseComponent {
       };
     } else if (cell.path) {
       return {
-        backgroundColor: cell.dot
+        backgroundColor: cell.path // Use path color
       };
     } else {
       return {

@@ -8,7 +8,7 @@ import { GameDashboardService } from '../../../services/game-dashboard.service';
 })
 export class Game2048Component implements OnInit {
   board: number[][] = []; // Represents the 2048 game board
-  gridSize: number = 4; // Default grid size (4x4)
+  gridSize: number = 6; // Default grid size (4x4)
   isGameOver: boolean = false;
   score: number = 0;
 
