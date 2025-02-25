@@ -1,0 +1,35 @@
+<div class="puzzle-container">
+    <!-- Level Selection Dropdown -->
+    <div class="level-selection">
+        <div>
+            <label for="level">Level:</label>
+            <select id="level" [(ngModel)]="selectedLevel" (change)="onLevelChange()">
+                <option *ngFor="let level of levels" [value]="level">{{ level }}</option>
+            </select>
+        </div>
+
+        <div class="spacer"></div>
+    
+        <div class="level">
+          <label for="level">{{ timeSpent | secondsToHMS: true }}</label>
+        </div>
+    </div>
+
+    <!-- Puzzle Board -->
+    <div class="puzzle-board" *ngIf="!isGameOver">
+        <div *ngFor="let row of board; let i = index" class="puzzle-row">
+            <div *ngFor="let tile of row; let j = index" class="puzzle-tile"
+                [ngStyle]="{ 'width': puzzeTileDimention(), 'height': puzzeTileDimention() }"
+                [ngClass]="{'empty': tile === null}" (click)="moveTile(i, j)">
+                <div *ngIf="tile !== null" class="tile-image" [ngStyle]="{'background-image': 'url(' + currentImage + ')', 'background-position': tile }"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Info -->
+    <div class="game-info">
+        <p *ngIf="isGameOver" class="winner-message">🎉 Congratulations! You solved the puzzle! 🎉</p>
+        <button mat-raised-button color="primary" (click)="resetGame()">Reset Game</button>
+        <button (click)="solve()" *ngIf="false">Solve</button>
+    </div>
+</div>

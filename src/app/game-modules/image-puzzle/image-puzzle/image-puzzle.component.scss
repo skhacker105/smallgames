@@ -1,0 +1,107 @@
+.puzzle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(145deg, #0f172a, #1e293b);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    color: white;
+}
+
+.level-selection {
+    margin-bottom: 20px;
+    display: flex;
+    width: 100%;
+}
+
+.level-selection label {
+    margin-right: 10px;
+}
+
+.level-selection select {
+    padding: 5px;
+    border-radius: 5px;
+    background-color: #22d3ee;
+    color: #0f172a;
+    border: none;
+    cursor: pointer;
+}
+
+.puzzle-board {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin: 20px 0;
+}
+
+.puzzle-row {
+    display: flex;
+}
+
+.puzzle-tile {
+    background-position: center;
+    border: 2px solid #fff;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: white;
+    transition: transform 0.2s ease;
+    overflow: hidden;
+}
+
+.puzzle-tile.empty {
+    background: #64748b;
+    border: 2px dashed #fff;
+}
+
+.tile-image {
+    width: 100%;
+    height: 100%;
+    background-size: calc(100% * var(--grid-size)) calc(100% * var(--grid-size));
+    background-repeat: no-repeat;
+}
+
+.game-info {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.winner-message {
+    font-size: 1.5em;
+    color: #22c55e;
+    font-weight: bold;
+    animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 1em;
+    border: none;
+    border-radius: 5px;
+    background-color: #22d3ee;
+    color: #0f172a;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 5px;
+}
+
+button:hover {
+    background-color: #0ea5e9;
+    transform: scale(1.05);
+}

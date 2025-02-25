@@ -42,20 +42,24 @@ export const routes: Routes = [
         loadChildren: () => import('./game-modules/pattern-puzzle/pattern-puzzle.module').then(module => module.PatternPuzzleModule)
     },
     {
-        path: 'hanoiTower',
+        path: 'hanoi-tower',
         loadChildren: () => import('./game-modules/hanoi-of-tower/hanoi-of-tower.module').then(module => module.HanoiOfTowerModule)
     },
     {
-        path: 'game2048',
+        path: 'game-2048',
         loadChildren: () => import('./game-modules/game2048/game2048.module').then(module => module.Game2048Module),
     },
     {
-        path: 'playCardMemorize',
+        path: 'play-card-memorize',
         loadChildren: () => import('./game-modules/play-card-memorize/play-card-memorize.module').then(module => module.PlayCardMemorizeModule),
     },
     {
-        path: 'connectingDots',
+        path: 'connecting-dots',
         loadChildren: () => import('./game-modules/connecting-dots/connecting-dots.module').then(module => module.ConnectingDotsModule),
+    },
+    {
+        path: 'image-puzzle',
+        loadChildren: () => import('./game-modules/image-puzzle/image-puzzle.module').then(module => module.ImagePuzzleModule),
     },
     {
         path: 'winners',

@@ -60,7 +60,7 @@ export class GameDashboardService {
       key: 'hanoiOfTower',
       name: 'Hanoi Tower',
       image: 'assets/hanoioftower.png',
-      route: 'hanoiTower',
+      route: 'hanoi-tower',
       settingsIconNeeded: false
     },
     {
@@ -74,23 +74,30 @@ export class GameDashboardService {
       key: 'game2048',
       name: '2048',
       image: 'assets/2048.png',
-      route: 'game2048',
+      route: 'game-2048',
       settingsIconNeeded: false
     },
     {
-      key: 'playCardMemorize',
+      key: 'play-card-memorize',
       name: 'Memory',
       image: 'assets/playCardMemorize.png',
       route: 'playCardMemorize',
       settingsIconNeeded: false
     },
+    // {
+    //   key: 'connectingDots',
+    //   name: 'Dots',
+    //   image: 'assets/connectingDots.png',
+    //   route: 'connecting-dots',
+    //   settingsIconNeeded: false
+    // }
     {
-      key: 'connectingDots',
-      name: 'Dots',
-      image: 'assets/connectingDots.png',
-      route: 'connectingDots',
+      key: 'imagePuzzle',
+      name: 'Image Puzzle',
+      image: 'assets/playCardMemorize.png',
+      route: 'image-puzzle',
       settingsIconNeeded: false
-    }
+    },
   ];
   gameRequestWaitTime = 30; // in seconds
   allWinnersKey = 'allWinner';
