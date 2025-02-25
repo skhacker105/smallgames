@@ -33,7 +33,7 @@
       <p *ngIf="gameOver" class="winner-message">
         🎉 Congratulations! You solved the puzzle! 🎉
       </p>
-      <button (click)="undo()" [disabled]="!canUndo">Undo</button>
+      <button (click)="undo()" [disabled]="!canUndo || gameOver">Undo</button>
       <button (click)="resetGame()">Reset Game</button>
     </div>
   </div>

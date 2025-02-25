@@ -87,7 +87,7 @@ export class GameDashboardService {
     {
       key: 'connectingDots',
       name: 'Dots',
-      image: 'assets/playCardMemorize.png',
+      image: 'assets/connectingDots.png',
       route: 'connectingDots',
       settingsIconNeeded: false
     }
