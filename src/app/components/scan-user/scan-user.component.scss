@@ -5,9 +5,10 @@
     border-radius: 8px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
     padding: 20px;
-    width: calc(100% - 40px); /* Updated width */
+    width: calc(100% - 42px); /* Updated width */
     max-width: 400px; /* Ensures it doesn't get too wide on larger screens */
     margin: auto;
+    border: solid 1px white;
 }
 
 /* Header */
@@ -44,8 +45,15 @@
     }
 }
 
+.scannerd-user {
+    color: white;
+    text-transform: uppercase;
+    padding: 20px;
+}
+
 /* QR Code Section */
 .qr-section {
+    display: none;
     background: #0a0f1a;
     padding: 20px;
     border-radius: 10px;

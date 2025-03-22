@@ -20,9 +20,13 @@
                 <button mat-icon-button class="glow-button" (click)="startScan()">
                     <mat-icon>qr_code_scanner</mat-icon>
                 </button>
-                <button class="glow-button" mat-icon-button type="button" (click)="downloadQRCode(qrCodeElement)">
+                <!-- <button class="glow-button" mat-icon-button type="button" (click)="downloadQRCode(qrCodeElement)">
                     <mat-icon>download</mat-icon>
-                </button>
+                </button> -->
+            </div>
+
+            <div class="scannerd-user" *ngIf="scannedUser">
+                {{ scannedUser.userName }}
             </div>
 
             <div class="error" *ngIf="scanError">
@@ -44,9 +48,9 @@
         <button mat-icon-button class="glow-button cancel-button" (click)="dialogRef.close()">
             Cancel
         </button>
-        <button mat-icon-button class="glow-button submit-button" (click)="createAndSaveConnection()"
-            [disabled]="!scannedUser">
-            Submit
+        <button mat-icon-button class="glow-button" (click)="createAndSaveConnection()"
+            [disabled]="!scannedUser" [ngClass]="{ 'submit-button': !!scannedUser }">
+            Connect
         </button>
     </div>
 </div>

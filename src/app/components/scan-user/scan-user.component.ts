@@ -7,6 +7,8 @@ import { Camera, CameraResultType } from '@capacitor/camera';
 import { BrowserQRCodeReader } from '@zxing/browser';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
+import { LoggerService } from '../../services/logger.service';
+import { CapacitorException } from '@capacitor/core';
 
 @Component({
   selector: 'app-scan-user',
@@ -26,12 +28,14 @@ export class ScanUserComponent {
   constructor(
     public dialogRef: MatDialogRef<ScanUserComponent>,
     private userService: UserService,
+    private loggerService: LoggerService,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.localDataAsQRCodeText = JSON.stringify(this.userService.me);
   }
 
   async startScan() {
+    this.scanError = '';
     try {
       const image = await Camera.getPhoto({
         quality: 90,
@@ -44,11 +48,27 @@ export class ScanUserComponent {
         const scannedUser: IUser = JSON.parse(scannedText) as IUser;
         const validationError = this.validateScannedUser(scannedUser);
         if (!validationError) this.scannedUser = scannedUser;
-        this.scanError = validationError;
+        else {
+          this.scannedUser = null;
+          this.scanError = validationError;
+        }
       }
-    } catch (error) {
-      this.scanError = 'Error scanning QR code. Please try again.';
-      console.error('Error scanning QR code:', error);
+    } catch (error: any) {
+      console.log({ error })
+      console.log('error type = ', error instanceof CapacitorException)
+      if (error && error instanceof CapacitorException && error.message === 'User cancelled photos app') {
+        if (this.scannedUser) {
+          // do nothing
+        } else {
+          this.scannedUser = null;
+          this.scanError = 'No QR code found';
+          this.loggerService.log('No QR code found');
+        }
+      } else {
+        this.scannedUser = null;
+        this.scanError = 'Invalid QR code. Please try again.';
+        this.loggerService.log('Error scanning QR code:');
+      }
     }
   }
 
@@ -82,14 +102,14 @@ export class ScanUserComponent {
 
         img.onerror = (error) => reject(`Error loading image: ${error}`);
       } catch (error) {
-        reject(`Error scanning QR code: ${error}`);
+        reject(`Invalid QR code: ${error}`);
       }
     });
   }
 
   validateScannedUser(scannedUser: IUser): string {
     if (scannedUser.userId === this.userService.me?.userId)
-      return 'Invalid user selected'
+      return 'Invalid QR. You cannot add yourself.'
     return '';
   }
 
