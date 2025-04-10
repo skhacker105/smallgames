@@ -7,9 +7,9 @@ export interface IGameInfo {
     image: string;
     route: string;
     settingsIconNeeded: boolean;
-    incomingRequestConfirmationDialogRef?: MatDialogRef<any>;
-    gameOwner?: IUser;
-    isGameStart?: boolean;
+    // incomingRequestConfirmationDialogRef?: MatDialogRef<any>;
+    // gameOwner?: IUser;
+    // isGameStart?: boolean;
 }
 
 export interface IGameWinner {

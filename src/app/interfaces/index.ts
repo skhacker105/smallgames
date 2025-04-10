@@ -1,4 +1,5 @@
 export * from './game-info.interface';
+export * from './game-multiplayer.interface';
 export * from './info.interface';
 export * from './path-cell.interface';
 export * from './play-card.interface';

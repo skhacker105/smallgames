@@ -1,0 +1,1 @@
+export type GamePlayState = 'playerSetting' | 'gameInProgress' | 'gameEnd' | 'gameCancel';

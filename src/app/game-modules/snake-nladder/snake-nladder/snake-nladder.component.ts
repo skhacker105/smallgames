@@ -195,8 +195,8 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
         }
         else this.startGameWithPlayers(players);
 
-        if (this.gameDashboardService.selectedGame.value)
-          this.gameDashboardService.sendGameStartRequest(this.gameDashboardService.selectedGame.value, this.players, this.getGameState());
+        // if (this.gameDashboardService.selectedGame.value)
+        //   this.gameDashboardService.sendGameStartRequest(this.gameDashboardService.selectedGame.value, this.players, this.getGameState());
       });
   }
 

@@ -4,10 +4,10 @@ import { IPlayer } from "./player.interface";
 export interface ISocketMessage {
     sourceUserId: string;
     sourceUserName: string;
+    gameKey: string; // Game Request
     sentOn: Date;
-    type: 'status' | 'gameKey' | 'gameRequest' | 'gamePlayerUpdate' | 'gameState' | 'gameWinner';
+    type: 'status' | 'gameRequest' | 'gamePlayerUpdate' | 'gameState' | 'gameStateAcknowledgment' | 'gameWinner'; //  | 'gameKey'
     connectionStatus?: ConnectionState;
-    gameKey?: string; // Game Request
     gameRequestStatus?: GameRequestStatus;
     gamePlayerUpdate?: IPlayer[];
     gameState?: any;

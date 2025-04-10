@@ -1,1 +1,1 @@
-export type GameRequestStatus = 'pending' | 'accepted' | 'rejected' | 'requestCancel' | 'gameStart';
+export type GameRequestStatus = 'pending' | 'accepted' | 'rejected' | 'requestCancel' | 'gameStart' | 'busy';
