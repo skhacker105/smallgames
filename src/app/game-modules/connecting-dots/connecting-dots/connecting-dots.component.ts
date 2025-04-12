@@ -3,6 +3,7 @@ import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { BaseComponent } from '../../../components/base.component';
 import { Subject, interval, takeUntil } from 'rxjs';
 import { generateRandomNumbers } from '../../../utils/support.utils';
+import { MultiPlayerService } from '../../../services/multi-player.service';
 
 interface Cell {
   dot: string | null;
@@ -34,8 +35,9 @@ export class ConnectingDotsComponent extends BaseComponent {
 
   gameOverSubject = new Subject<boolean>();
 
-  constructor(gameDashboardService: GameDashboardService) {
-    super(gameDashboardService);
+  constructor(gameDashboardService: GameDashboardService,
+    multiPlayerService: MultiPlayerService) {
+    super(gameDashboardService, multiPlayerService);
   }
 
   get dotPairs(): number {

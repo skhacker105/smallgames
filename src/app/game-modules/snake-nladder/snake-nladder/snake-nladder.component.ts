@@ -8,6 +8,7 @@ import { PlayersConfigComponent } from '../../../components/players-config/playe
 import { take } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserService } from '../../../services/user.service';
+import { MultiPlayerService } from '../../../services/multi-player.service';
 
 export interface IGameBoard {
   name: string;
@@ -70,8 +71,14 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
     return this.players[this.currentPlayer]
   }
 
-  constructor(gameDashboardService: GameDashboardService, private dialog: MatDialog, private router: Router, private userService: UserService) {
-    super(gameDashboardService);
+  constructor(
+    gameDashboardService: GameDashboardService,
+    private dialog: MatDialog,
+    private router: Router,
+    private userService: UserService,
+    multiPlayerService: MultiPlayerService
+    ) {
+    super(gameDashboardService, multiPlayerService);
   }
 
   override ngOnInit(): void {
@@ -117,7 +124,6 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
   }
 
   loadGameState(): void {
-    if (this.isGameStart) return;
 
     const savedState = this.gameDashboardService.loadGameState();
     if (savedState) {

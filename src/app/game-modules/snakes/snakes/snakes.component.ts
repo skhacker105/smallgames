@@ -6,6 +6,7 @@ import { InfoComponent } from '../../../components/info/info.component';
 import { IInfo } from '../../../interfaces';
 import { take } from 'rxjs';
 import { UserService } from '../../../services/user.service';
+import { MultiPlayerService } from '../../../services/multi-player.service';
 
 interface SnakeGameState {
   snake: { x: number; y: number }[];
@@ -38,9 +39,10 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
   constructor(
     gameDashboardService: GameDashboardService,
     private userService: UserService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    multiPlayerService: MultiPlayerService
   ) {
-    super(gameDashboardService);
+    super(gameDashboardService, multiPlayerService);
   }
 
   override ngOnInit(): void {

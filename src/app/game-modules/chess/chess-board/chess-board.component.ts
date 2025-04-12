@@ -10,6 +10,7 @@ import { take } from 'rxjs';
 import { Router } from '@angular/router';
 import { isChessColor } from '../../../utils/support.utils';
 import { UserService } from '../../../services/user.service';
+import { MultiPlayerService } from '../../../services/multi-player.service';
 
 @Component({
   selector: 'app-chess-board',
@@ -48,9 +49,10 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     gameDashboardService: GameDashboardService,
     private dialog: MatDialog,
     private router: Router,
-    private userService: UserService
+    private userService: UserService,
+    multiPlayerService: MultiPlayerService
   ) {
-    super(gameDashboardService);
+    super(gameDashboardService, multiPlayerService);
     this.chess = new Chess(); // Initialize the Chess instance
   }
 
@@ -84,7 +86,6 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   }
 
   loadGameState(): void {
-    if (this.isGameStart) return;
 
     const savedState = this.gameDashboardService.loadGameState();
     if (savedState) {
@@ -155,8 +156,8 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
             this.listenForGameStateChange();
           }
 
-          if (this.gameDashboardService.selectedGame.value)
-            this.gameDashboardService.sendGameStartRequest(this.gameDashboardService.selectedGame.value, this.players, this.getGameState());
+          // if (this.gameDashboardService.selectedGame.value)
+          //   this.gameDashboardService.sendGameStartRequest(this.gameDashboardService.selectedGame.value, this.players, this.getGameState());
         }
       })
   }

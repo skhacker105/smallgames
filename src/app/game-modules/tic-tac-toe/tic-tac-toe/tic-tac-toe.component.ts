@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { BaseComponent } from '../../../components/base.component';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
+import { MultiPlayerService } from '../../../services/multi-player.service';
 
 type PlayerType = 'X' | 'O' | '';
 type Cuts = 'horizontal' | 'vertical' | 'diagonal_left' | 'diagonal_right'
@@ -20,8 +21,9 @@ export class TicTacToeComponent extends BaseComponent {
   currentPlayer: PlayerType;
   winnerResult: { winner: PlayerType, positions: IPosition[], cut: Cuts } | undefined;
 
-  constructor(gameDashboardService: GameDashboardService) {
-    super(gameDashboardService);
+  constructor(gameDashboardService: GameDashboardService,
+    multiPlayerService: MultiPlayerService) {
+    super(gameDashboardService, multiPlayerService);
     this.board = Array(3).fill(null).map(() => Array(3).fill(''));
     this.currentPlayer = 'X';
   }

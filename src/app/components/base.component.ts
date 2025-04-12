@@ -3,11 +3,11 @@ import { Subject, filter, take, takeUntil } from "rxjs";
 import { GameDashboardService } from "../services/game-dashboard.service";
 import { MatDialogRef } from "@angular/material/dialog";
 import { IPlayer, IUser } from "../interfaces";
+import { MultiPlayerService } from "../services/multi-player.service";
 
 @Directive()
 export abstract class BaseComponent implements OnInit, OnDestroy {
 
-    gameOwner?: IUser;
     players: IPlayer[] = [];
 
     protected isComponentActive = new Subject<boolean>();
@@ -25,24 +25,26 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
 
     private playerConfigPopupRef?: MatDialogRef<any, any>;
 
-    get isGameStart(): boolean {
-        return this.gameDashboardService.selectedGame.value?.isGameStart ?? false;
-    }
+    // get isGameStart(): boolean {
+    //     return false;
+    //     // return this.gameDashboardService.selectedGame.value?.isGameStart ?? false;
+    // }
 
     get isMultiPlayerGame(): boolean {
         return this.players.filter(p => p.userId !== undefined).length > 1
     }
 
-    constructor(protected gameDashboardService: GameDashboardService) {
-        this.gameOwner = this.gameDashboardService.selectedGame.value?.gameOwner;
+    constructor(protected gameDashboardService: GameDashboardService, protected multiPlayerService: MultiPlayerService) {
+        // this.gameOwner = this.gameDashboardService.selectedGame.value?.gameOwner;
     }
 
     ngOnInit(): void {
-        this.loadGameState();
-        if (this.isGameStart) {
-            this.startBySettingPlayers();
+
+        if (!this.multiPlayerService.anyGameInProgressStatus(this.gameDashboardService.selectedGame.value?.key ?? ''))
+            this.loadGameState();
+
+        else
             this.waitForGameStart();
-        }
     }
 
     ngOnDestroy(): void {
@@ -55,29 +57,27 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         return undefined;
     }
 
-    startBySettingPlayers(): void {
-        this.playerConfigPopupRef = this.getPlayerConfigPopup();
-    }
-
     waitForGameStart() {
-        this.gameDashboardService.incomingGameStart$.pipe(
+        console.log('waitForGameStart')
+        this.multiPlayerService.incomingGameStart$.pipe(
             filter(gameStartRequest => gameStartRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key),
             takeUntil(this.isComponentActive),
             take(1)
         )
             .subscribe(gameStartRequest => {
+                console.log({gameStartRequest})
                 if (gameStartRequest && gameStartRequest.gameState) {
                     this.setGameState(gameStartRequest.gameState);
                     this.listenForGameStateChange();
-                    if (this.gameDashboardService.selectedGame.value)
-                        this.gameDashboardService.selectedGame.value.isGameStart = false;
+                    // if (this.gameDashboardService.selectedGame.value)
+                    // this.gameDashboardService.selectedGame.value.isGameStart = false;
                 }
                 this.playerConfigPopupRef?.close();
             });
     }
 
     listenForGameStateChange() {
-        this.gameDashboardService.incomingGameStateChanged$
+        this.multiPlayerService.incomingGameStateChanged$
             .pipe(
                 filter(gameStartRequest => gameStartRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key),
                 takeUntil(this.isComponentActive)
@@ -94,6 +94,6 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         const selectedGame = this.gameDashboardService.selectedGame.value;
         if (!selectedGame) return;
 
-        this.gameDashboardService.sendGameStateUpdate(selectedGame, this.players, this.getGameState());
+        // this.gameDashboardService.sendGameStateUpdate(selectedGame, this.players, this.getGameState());
     }
 }

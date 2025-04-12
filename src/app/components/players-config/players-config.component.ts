@@ -1,35 +1,40 @@
 import { CommonModule } from '@angular/common';
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { IPlayer, IPlayerAskConfig, IUser } from '../../interfaces';
+import { IGameMultiPlayerConnection, IPlayer, IPlayerAskConfig, ISocketMessage, IUser } from '../../interfaces';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { PLAYER_COLOR } from '../../config';
 import { MatMenuModule } from '@angular/material/menu';
 import { UserService } from '../../services/user.service';
-import { Subject, filter, take, takeUntil, timeout } from 'rxjs';
+import { Observable, Subject, filter, merge, take, takeUntil, timeout } from 'rxjs';
 import { GameRequestStatus } from '../../types';
 import { GameDashboardService } from '../../services/game-dashboard.service';
 import { PlayerNamePipe } from '../../pipe/player-name.pipe';
 import { Router } from '@angular/router';
 import { NgxSpinnerModule, NgxSpinnerService } from 'ngx-spinner';
+import { MultiPlayerService } from '../../services/multi-player.service';
+import { LoggerService } from '../../services/logger.service';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-players-config',
   standalone: true,
-  imports: [MatDialogModule, CommonModule, FormsModule, MatIconModule, MatMenuModule, PlayerNamePipe, NgxSpinnerModule],
+  imports: [MatDialogModule, CommonModule, FormsModule, MatIconModule, MatMenuModule, PlayerNamePipe, NgxSpinnerModule, MatProgressSpinnerModule],
   templateUrl: './players-config.component.html',
   styleUrl: './players-config.component.scss'
 })
 export class PlayersConfigComponent implements OnInit, OnDestroy {
 
   players: IPlayer[] = [];
-  playerConenctionRequests = new Map<string, GameRequestStatus | undefined>();
   errorMessage: string = '';
   activeColorPickerIndex: number | null = null;
 
-  gameStarted = new Subject<boolean>();
   componentIsActive = new Subject<boolean>();
+
+  multiPlayerConnection?: IGameMultiPlayerConnection;
+  multiUserState = new Map<string, GameRequestStatus>();
+  playersResponse$: Observable<ISocketMessage | null>[] = [];
 
   get isNamesValid(): boolean {
     const nameCounts: { [key: string]: number } = {};
@@ -37,11 +42,11 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
       if (!nameCounts[p.name]) nameCounts[p.name] = 0;
       nameCounts[p.name] = nameCounts[p.name] + 1;
     });
-    const anyUnAceptedPlayer = this.players.some(p => {
-      if (p.userId === this.userService.me?.userId) return false;
-      return !!p.userId && (!this.playerConenctionRequests.has(p.name) || this.playerConenctionRequests.get(p.name) !== 'accepted')
-    })
-    return !this.players.some(p => !p.name) && !Object.values(nameCounts).some(count => count > 1) && !anyUnAceptedPlayer;
+    // const anyUnAceptedPlayer = this.players.some(p => {
+    //   if (p.userId === this.userService.me?.userId) return false;
+    //   return !!p.userId
+    // })
+    return !this.players.some(p => !p.name) && !Object.values(nameCounts).some(count => count > 1) // && !anyUnAceptedPlayer;
   }
 
   get isColorValid(): boolean {
@@ -56,8 +61,12 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
     return this.isNamesValid && this.isColorValid
   }
 
-  get isGameStart(): boolean {
-    return this.gameDashboardService.selectedGame.value?.isGameStart ?? false;
+  // get isGameStart(): boolean {
+  //   return false;
+  // }
+
+  get isAnyPlayerOnline(): boolean {
+    return this.players.some(player => !!player.userId); // any player having user id
   }
 
   constructor(
@@ -66,39 +75,44 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
     public userService: UserService,
     public gameDashboardService: GameDashboardService,
     private router: Router,
-    private spinner: NgxSpinnerService
+    private spinner: NgxSpinnerService,
+    private multiPlayerService: MultiPlayerService,
+    private loggerService: LoggerService
   ) {
   }
 
   ngOnInit(): void {
-    if (!this.isGameStart) {
+    // if (!this.isGameStart) {
+    const anyExistingGame = this.multiPlayerService.anyGameInProgressStatus(this.config.game.key);
+
+    if (!anyExistingGame) {
       this.config.preFillPlayers
         ? this.initializeExistingPlayersForm(this.config.preFillPlayers)
         : this.initializeDefaultPlayersForm();
-
-      this.gameDashboardService.incomingGameRequest$.pipe(takeUntil(this.componentIsActive))
-        .subscribe(request => {
-          this.spinner.show();
-          if (this.gameDashboardService.selectedGame.value) {
-            this.gameDashboardService.selectedGame.value.isGameStart = true;
-            this.handlePlayerUpdateFromHost();
-            this.handlePlayerGameStart();
-          }
-        });
-
     } else {
-      this.spinner.show();
-      this.handlePlayerUpdateFromHost();
-      this.handlePlayerGameStart();
+      // Pending code to ask if want to continue with prev game or set new game players by cancelling previous one
     }
+    // this.gameDashboardService.incomingGameRequest$.pipe(takeUntil(this.componentIsActive))
+    //   .subscribe(request => {
+    //     this.spinner.show();
+    //     if (this.gameDashboardService.selectedGame.value) {
+    //       this.gameDashboardService.selectedGame.value.isGameStart = true;
+    //       this.handlePlayerUpdateFromHost();
+    //       this.handlePlayerGameStart();
+    //     }
+    //   });
 
-    this.handleIncomingGameRequestResponse();
-    this.handleIncomingGameCancelRequest();
+    // } else {
+    //   this.spinner.show();
+    //   this.handlePlayerUpdateFromHost();
+    //   this.handlePlayerGameStart();
+    // }
+
+    // this.handleIncomingGameRequestResponse();
+    // this.handleIncomingGameCancelRequest();
   }
 
   ngOnDestroy(): void {
-    this.gameStarted.next(true);
-    this.gameStarted.complete();
     this.componentIsActive.next(true);
     this.componentIsActive.complete();
   }
@@ -120,88 +134,88 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
     }
   }
 
-  handlePlayerUpdateFromHost() {
-    this.gameDashboardService.incomingGamePlayerUpdate$
-      .pipe(filter(playerUpdateRequest => playerUpdateRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key))
-      .subscribe(playerUpdateRequest => {
-        this.spinner.hide();
-        if (playerUpdateRequest?.gamePlayerUpdate) {
-          this.players = playerUpdateRequest.gamePlayerUpdate;
-        }
-      });
-  }
+  // handlePlayerUpdateFromHost() {
+  //   this.gameDashboardService.incomingGamePlayerUpdate$
+  //     .pipe(filter(playerUpdateRequest => playerUpdateRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key))
+  //     .subscribe(playerUpdateRequest => {
+  //       this.spinner.hide();
+  //       if (playerUpdateRequest?.gamePlayerUpdate) {
+  //         this.players = playerUpdateRequest.gamePlayerUpdate;
+  //       }
+  //     });
+  // }
 
-  handlePlayerGameStart() {
-    this.gameDashboardService.incomingGameStart$
-      .pipe(filter(playerUpdateRequest => playerUpdateRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key))
-      .subscribe(playerUpdateRequest => { });
-  }
+  // handlePlayerGameStart() {
+  //   this.gameDashboardService.incomingGameStart$
+  //     .pipe(filter(playerUpdateRequest => playerUpdateRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key))
+  //     .subscribe(playerUpdateRequest => { });
+  // }
 
-  handleIncomingGameRequestResponse() {
-    this.gameDashboardService.incomingGameRequestResponse$
-      .pipe(
-        filter(response => response?.gameKey === this.gameDashboardService.selectedGame.value?.key),
-        takeUntil(this.componentIsActive)
-      )
-      .subscribe({
-        next: response => {
-          if (!response) return;
+  // handleIncomingGameRequestResponse() {
+  //   this.gameDashboardService.incomingGameRequestResponse$
+  //     .pipe(
+  //       filter(response => response?.gameKey === this.gameDashboardService.selectedGame.value?.key),
+  //       takeUntil(this.componentIsActive)
+  //     )
+  //     .subscribe({
+  //       next: response => {
+  //         if (!response) return;
 
-          this.playerConenctionRequests.set(response.sourceUserName, response.gameRequestStatus);
-          const player = this.players.find(p => p.name === response.sourceUserName);
-          if (player && response?.gameRequestStatus === 'rejected') this.fadeoutSelectedPlayer(player);
-          setTimeout(() => {
-            this.sendPlayerUpdates();
-          }, 1000);
-        },
-        error: error => {
-          // this.playerConenctionRequests.set(response.sourceUserName, undefined);
-          // this.gameDashboardService.sendGameCancelRequest(this.config.game, player);
-          // this.fadeoutSelectedPlayer(player);
-          this.sendPlayerUpdates();
-        }
-      });
-  }
+  //         this.playerConenctionRequests.set(response.sourceUserName, response.gameRequestStatus);
+  //         const player = this.players.find(p => p.name === response.sourceUserName);
+  //         if (player && response?.gameRequestStatus === 'rejected') this.fadeoutSelectedPlayer(player);
+  //         setTimeout(() => {
+  //           this.sendPlayerUpdates();
+  //         }, 1000);
+  //       },
+  //       error: error => {
+  //         // this.playerConenctionRequests.set(response.sourceUserName, undefined);
+  //         // this.gameDashboardService.sendGameCancelRequest(this.config.game, player);
+  //         // this.fadeoutSelectedPlayer(player);
+  //         this.sendPlayerUpdates();
+  //       }
+  //     });
+  // }
 
-  handleIncomingGameCancelRequest() {
-    this.gameDashboardService.incomingGameRequestCancel$
-      .pipe(
-        filter(response => response?.gameKey === this.gameDashboardService.selectedGame.value?.key),
-        takeUntil(this.componentIsActive)
-      )
-      .subscribe({
-        next: response => {
-          if (!response) return;
+  // handleIncomingGameCancelRequest() {
+  //   this.gameDashboardService.incomingGameRequestCancel$
+  //     .pipe(
+  //       filter(response => response?.gameKey === this.gameDashboardService.selectedGame.value?.key),
+  //       takeUntil(this.componentIsActive)
+  //     )
+  //     .subscribe({
+  //       next: response => {
+  //         if (!response) return;
 
-          const selectedGame = this.gameDashboardService.selectedGame.value;
+  //         const selectedGame = this.gameDashboardService.selectedGame.value;
 
-          if (selectedGame && !selectedGame.gameOwner) {
-            this.playerConenctionRequests.set(response.sourceUserName, response.gameRequestStatus);
+  //         if (selectedGame && !selectedGame.gameOwner) {
+  //           this.playerConenctionRequests.set(response.sourceUserName, response.gameRequestStatus);
 
-            const player = this.players.find(p => p.name === response.sourceUserName);
-            if (player) this.fadeoutSelectedPlayer(player);
-            setTimeout(() => {
-              this.sendPlayerUpdates();
-            }, 1000);
+  //           const player = this.players.find(p => p.name === response.sourceUserName);
+  //           if (player) this.fadeoutSelectedPlayer(player);
+  //           setTimeout(() => {
+  //             this.sendPlayerUpdates();
+  //           }, 1000);
 
-          } else {
-            this.dialogRef.close();
-            this.router.navigateByUrl('');
-          }
-        },
-        error: error => {
-          // this.playerConenctionRequests.set(response.sourceUserName, undefined);
-          // this.gameDashboardService.sendGameCancelRequest(this.config.game, player);
-          // this.fadeoutSelectedPlayer(player);
-          this.sendPlayerUpdates();
-        }
-      });
-  }
+  //         } else {
+  //           this.dialogRef.close();
+  //           this.router.navigateByUrl('');
+  //         }
+  //       },
+  //       error: error => {
+  //         // this.playerConenctionRequests.set(response.sourceUserName, undefined);
+  //         // this.gameDashboardService.sendGameCancelRequest(this.config.game, player);
+  //         // this.fadeoutSelectedPlayer(player);
+  //         this.sendPlayerUpdates();
+  //       }
+  //     });
+  // }
 
   addPlayer(): void {
     if (this.players.length < this.config.maxPlayerCount) {
       this.players.push({ name: '', color: this.config.colorOptions ? this.config.colorOptions[0] : undefined });
-      this.sendPlayerUpdates();
+      // this.sendPlayerUpdates();
     } else {
       this.errorMessage = `Cannot exceed maximum of ${this.config.maxPlayerCount} players.`;
     }
@@ -211,7 +225,7 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
     if (this.players.length > this.config.minPlayerCount) {
       this.players.splice(index, 1);
       this.errorMessage = '';
-      this.sendPlayerUpdates();
+      // this.sendPlayerUpdates();
     } else {
       this.errorMessage = `Cannot have fewer than ${this.config.minPlayerCount} players.`;
     }
@@ -220,12 +234,12 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
   selectColor(player: IPlayer, color: PLAYER_COLOR): void {
     player.color = color;
     this.activeColorPickerIndex = null;
-    this.sendPlayerUpdates();
+    // this.sendPlayerUpdates();
   }
 
   toggleColorPicker(index: number): void {
     this.activeColorPickerIndex = this.activeColorPickerIndex === index ? null : index;
-    this.sendPlayerUpdates();
+    // this.sendPlayerUpdates();
   }
 
   startConnectionWizard(player: IPlayer): void {
@@ -242,67 +256,67 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
   setPlayerConnection(player: IPlayer, usrCon: IUser) {
     player.userId = usrCon.userId;
     player.name = usrCon.userName;
-    const connectionStatus = this.playerConenctionRequests.get(player.name);
+    // const connectionStatus = this.playerConenctionRequests.get(player.name);
 
-    if (!connectionStatus || connectionStatus === 'rejected') {
+    // if (!connectionStatus || connectionStatus === 'rejected') {
 
-      this.gameDashboardService.sendGameRequest(this.config.game, player);
-      this.playerConenctionRequests.set(player.name, 'pending');
-      this.sendPlayerUpdates();
-    }
+    //   this.gameDashboardService.sendGameRequest(this.config.game, player);
+    //   this.playerConenctionRequests.set(player.name, 'pending');
+    //   this.sendPlayerUpdates();
+    // }
   }
 
-  fadeoutSelectedPlayer(player: IPlayer) {
-    setTimeout(() => {
-      this.playerConenctionRequests.delete(player.name);
-      player.name = '';
-      player.userId = undefined;
-      this.sendPlayerUpdates();
-    }, 1500);
-  }
+  // fadeoutSelectedPlayer(player: IPlayer) {
+  //   setTimeout(() => {
+  //     this.playerConenctionRequests.delete(player.name);
+  //     player.name = '';
+  //     player.userId = undefined;
+  //     this.sendPlayerUpdates();
+  //   }, 1500);
+  // }
 
   resetPlayer(player: IPlayer) {
     player.name = '';
     player.userId = undefined;
-    this.sendPlayerUpdates();
+    // this.sendPlayerUpdates();
   }
 
-  getPlayerRequestState(player: IPlayer): string {
-    if (!player.userId) return 'no-connection';
+  // getPlayerRequestState(player: IPlayer): string {
+  //   if (!player.userId) return 'no-connection';
 
-    if (!this.playerConenctionRequests.has(player.name)) return 'no-connection';
+  //   if (!this.playerConenctionRequests.has(player.name)) return 'no-connection';
 
-    const stat = this.playerConenctionRequests.get(player.name);
-    if (stat === undefined) return 'time-out';
-    else return stat
-  }
+  //   const stat = this.playerConenctionRequests.get(player.name);
+  //   if (stat === undefined) return 'time-out';
+  //   else return stat
+  // }
 
-  sendPlayerUpdates() {
-    if (!this.gameDashboardService.selectedGame.value) return
+  // sendPlayerUpdates() {
+  //   if (!this.gameDashboardService.selectedGame.value) return
 
-    this.gameDashboardService.sendGamePlayerUpdate(this.gameDashboardService.selectedGame.value, this.players);
-  }
+  //   this.gameDashboardService.sendGamePlayerUpdate(this.gameDashboardService.selectedGame.value, this.players);
+  // }
 
   cancelGame() {
     this.dialogRef.close();
 
     // if (!this.isGameStart) return;
 
-    const selectedGame = this.gameDashboardService.selectedGame.value;
-    const me = this.userService.me;
+    // const selectedGame = this.gameDashboardService.selectedGame.value;
+    // const me = this.userService.me;
 
-    if (selectedGame && selectedGame.gameOwner) {
-      const ownerPlayer = this.players.find(p => p.userId === this.gameDashboardService.selectedGame.value?.gameOwner?.userId);
+    // if (selectedGame && selectedGame.gameOwner) {
+    //   const ownerPlayer = this.players.find(p => p.userId === this.gameDashboardService.selectedGame.value?.gameOwner?.userId);
 
-      if (!ownerPlayer) return;
-      this.gameDashboardService.sendGameCancelRequest(this.config.game, ownerPlayer);
+    //   if (!ownerPlayer) return;
+    //   this.gameDashboardService.sendGameCancelRequest(this.config.game, ownerPlayer);
 
-    } else if (selectedGame && me) {
-      const otherPlayers = this.players.filter(p => p.userId && p.userId !== me.userId);
+    // } else if (selectedGame && me) {
+    //   const otherPlayers = this.players.filter(p => p.userId && p.userId !== me.userId);
 
-      if (otherPlayers.length === 0) return;
-      otherPlayers.forEach(op => this.gameDashboardService.sendGameCancelRequest(this.config.game, op));
-    }
+    //   if (otherPlayers.length === 0) return;
+    //   otherPlayers.forEach(op => this.gameDashboardService.sendGameCancelRequest(this.config.game, op));
+    // }
   }
 
   submit(): void {
@@ -316,23 +330,87 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.dialogRef.close(this.players);
+    if (this.isAnyPlayerOnline) {
+      this.spinner.show();
+
+      // Create multiplayer game and send requestes to all players
+      const multiPlayerConnection = this.multiPlayerService.startMultiPlayerGame(this.config.game, this.players);
+      // Set MultiPlayerGame to local variable and handle all player's response
+      this.setMultiPlayerGame(multiPlayerConnection);
+    } else {
+      this.dialogRef.close(this.players);
+    }
+  }
+
+  setMultiPlayerGame(multiPlayerConnection?: IGameMultiPlayerConnection) {
+    this.multiPlayerConnection = multiPlayerConnection;
+    if (!multiPlayerConnection) return;
+
+    this.multiUserState.clear();
+
+
+    // Handle all player's response
+    this.playersResponse$ = multiPlayerConnection.players
+      .filter(p => !p.isMe && p.hasUser)
+      .map(p => this.multiPlayerService.incomingGameRequestResponse$.pipe(filter(message => message?.sourceUserId === p.player.userId)));
+
+    merge(...this.playersResponse$)
+      .pipe(take(this.playersResponse$.length), takeUntil(this.componentIsActive))
+      .subscribe({
+        next: response => {
+          this.setPlayerResponse(multiPlayerConnection, response);
+
+          if (this.multiUserState.size === this.playersResponse$.length)
+            this.completePlayersSubmissionAndGameCreation(multiPlayerConnection);
+
+        },
+        error: error => {
+          this.loggerService.log(JSON.stringify({ error: error }));
+        }
+      });
+  }
+
+  setPlayerResponse(multiPlayerConnection: IGameMultiPlayerConnection, responseMessage: ISocketMessage | null): void {
+    if (!responseMessage) return;
+
+    this.multiUserState.set(responseMessage.sourceUserId, (responseMessage.gameRequestStatus ?? 'rejected'));
+
+    const player = multiPlayerConnection.players.find(p => p.player.userId === responseMessage.sourceUserId);
+    if (!player) {
+      this.loggerService.log(`No Player found for ${JSON.stringify(responseMessage)}`);
+      return;
+    }
+
+    player.connectionStatus = responseMessage.gameRequestStatus ?? 'rejected';
+    player.connectionResponseSocketMessage = responseMessage;
+  }
+
+  completePlayersSubmissionAndGameCreation(multiPlayerConnection: IGameMultiPlayerConnection) {
+    const acceptedPlayers = [...this.multiUserState.values()].filter((requestStatus: GameRequestStatus) => requestStatus === 'accepted')
+
+    if (acceptedPlayers.length === this.multiUserState.size)
+      this.dialogRef.close(multiPlayerConnection);
+
+    else
+      this.multiPlayerService.cancelMultiPlayerGame(this.config.game, this.players, `Some players rejected or did not respond to game request.`);
+
+    this.spinner.hide();
   }
 
   // Events from Host
-  handlePlayerUpdate(): void {
-    this.gameDashboardService.incomingGamePlayerUpdate$
-      .pipe(
-        filter(playerUpdateRequest => playerUpdateRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key),
-        takeUntil(this.componentIsActive),
-        takeUntil(this.gameStarted)
-      )
-      .subscribe(playerUpdateRequest => {
-        if (!playerUpdateRequest) return;
+  // handlePlayerUpdate(): void {
+  //   this.gameDashboardService.incomingGamePlayerUpdate$
+  //     .pipe(
+  //       filter(playerUpdateRequest => playerUpdateRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key),
+  //       takeUntil(this.componentIsActive),
+  //       takeUntil(this.gameStarted)
+  //     )
+  //     .subscribe(playerUpdateRequest => {
+  //       if (!playerUpdateRequest) return;
 
-        // this.players = 
-        // assign incoming playerUpdateRequest.gamePlayerUpdate to Players List
-        // show Me as player
-      });
-  }
+  //       // this.players = 
+  //       // assign incoming playerUpdateRequest.gamePlayerUpdate to Players List
+  //       // show Me as player
+  //     });
+  // }
 }

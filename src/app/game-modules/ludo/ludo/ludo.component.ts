@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ILudoCoin, IPlayer, IPlayerAskConfig } from '../../../interfaces';
+import { IGameMultiPlayerConnection, ILudoCoin, IPlayer, IPlayerAskConfig } from '../../../interfaces';
 import { BaseComponent } from '../../../components/base.component';
 import { COLOR_PATHS, LUDO_PATHS } from '../ludo-path';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
 import { LUDO_COLORS } from '../../../config';
 import { isLudoColor } from '../../../utils/support.utils';
 import { UserService } from '../../../services/user.service';
+import { MultiPlayerService } from '../../../services/multi-player.service';
 
 @Component({
   selector: 'app-ludo',
@@ -56,9 +57,10 @@ export class LudoComponent extends BaseComponent {
   constructor(
     gameDashboardService: GameDashboardService,
     private dialog: MatDialog, private router: Router,
-    public userService: UserService
+    public userService: UserService,
+    multiPlayerService: MultiPlayerService
   ) {
-    super(gameDashboardService);
+    super(gameDashboardService, multiPlayerService);
   }
 
   getGameState() {
@@ -86,17 +88,21 @@ export class LudoComponent extends BaseComponent {
   }
 
   loadGameState(): void {
-    if (this.isGameStart) return;
 
     // Load game state logic
     const savedState = this.gameDashboardService.loadGameState();
+
     if (savedState) {
       this.setGameState(savedState);
+
       if (this.winner || this.players.length === 0 || this.noCoinsMoved) {
         this.askForPlayers();
+
       } else if (this.isMultiPlayerGame) {
         this.listenForGameStateChange();
       }
+
+
     } else {
       this.askForPlayers();
     }
@@ -155,19 +161,16 @@ export class LudoComponent extends BaseComponent {
     const ref = this.getPlayerConfigPopup();
 
     ref?.afterClosed().pipe(take(1))
-      .subscribe((players: IPlayer[] | undefined) => {
+      .subscribe((players: IPlayer[] | IGameMultiPlayerConnection | undefined) => {
         if (!players) {
           if (this.players.length === 0)
             this.router.navigateByUrl('');
         }
         else {
-          this.playerColors = players.map(player => player.color ?? 'red');
-          this.players = players.map((player, index) => ({
-            name: player.name,
-            color: player.color ?? this.playerColors[index],
-            ludoCoins: Array(4).fill(null).map((v, i) => ({ position: 0, finished: false, id: ((index * 4) + i) + 1 })),
-            userId: player.userId
-          } as IPlayer));
+
+          if (Array.isArray(players)) this.setLocalPlayers(players);
+          else this.setOnlinePlayers(players);
+
           this.currentPlayer = 0;
           this.winner = null;
           this.saveGameState();
@@ -176,10 +179,36 @@ export class LudoComponent extends BaseComponent {
             this.listenForGameStateChange();
           }
 
-          if (this.gameDashboardService.selectedGame.value)
-            this.gameDashboardService.sendGameStartRequest(this.gameDashboardService.selectedGame.value, this.players, this.getGameState());
+          // if (this.gameDashboardService.selectedGame.value)
+          //   this.gameDashboardService.sendGameStartRequest(this.gameDashboardService.selectedGame.value, this.players, this.getGameState());
         }
       })
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    this.playerColors = players.map(player => player.color ?? 'red');
+
+    this.players = players.map((player, index) => ({
+      name: player.name,
+      color: player.color ?? this.playerColors[index],
+      ludoCoins: Array(4).fill(null).map((v, i) => ({ position: 0, finished: false, id: ((index * 4) + i) + 1 })),
+      userId: player.userId
+    } as IPlayer));
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    this.playerColors = multiPlayerGame.players.map(player => player.player.color ?? 'red');
+
+    this.players = multiPlayerGame.players.map((player, index) => {
+      if (player.player.userId && this.gameDashboardService.selectedGame.value) {
+        this.multiPlayerService.sendGameStart(this.gameDashboardService.selectedGame.value, player.player.userId)
+      }
+
+      return {
+        name: player.player.name,
+        color: player.player.color ?? this.playerColors[index],
+        ludoCoins: Array(4).fill(null).map((v, i) => ({ position: 0, finished: false, id: ((index * 4) + i) + 1 })),
+        userId: player.player.userId
+      } as IPlayer
+    });
   }
 
   getColorPlayer(color: string = 'red'): IPlayer | undefined {

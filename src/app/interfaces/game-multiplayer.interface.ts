@@ -1,27 +1,30 @@
 import { MatDialogRef } from "@angular/material/dialog";
-import { ConnectionState, GamePlayState, GameState } from "../types";
+import { GamePlayState, GameRequestStatus, GameState } from "../types";
 import { IGameInfo, IPlayer, ISocketMessage, IUser } from "./";
+import { Observable } from "rxjs";
 
 export interface IGameMultiPlayerConnection {
     gameInfo: IGameInfo;
     gameOwner: IUser;
     gamePlayState: GamePlayState;
 
-    requestSocketMessage: ISocketMessage;
     incomingRequestConfirmationDialogRef?: MatDialogRef<any>;
 
     players: IGameRemotePlayer[];
 
     gameState: GameState;
     gameStateHistory: IGameStateHistory[];
-    lastStateSentOn: Date;
-    lastStateReceivedOn: Date;
-
+    lastStateSentOn?: Date;
+    lastStateReceivedOn?: Date;
 }
 
 export interface IGameRemotePlayer {
     player: IPlayer;
-    connectionStatus?: ConnectionState;
+    isMe: boolean;
+    hasUser: boolean;
+    connectionStatus: GameRequestStatus;
+    connectionSocketMessage: ISocketMessage;
+    connectionResponseSocketMessage?: ISocketMessage;
 
     lastAcknowledgedPlayState?: GameState;
     lastAcknowledgedPlayTimestamp?: Date;

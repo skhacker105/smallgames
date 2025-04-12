@@ -15,7 +15,7 @@ import { BrowserQRCodeReader } from '@zxing/browser';
 import { MatStepper, MatStepperModule } from '@angular/material/stepper';
 import { NgxSpinnerModule, NgxSpinnerService } from 'ngx-spinner';
 import { TabType } from '../../types';
-import { ConnectedUser } from '../../classes';
+// import { ConnectedUser } from '../../classes';
 import { UserService } from '../../services/user.service';
 import { IUser } from '../../interfaces';
 import { SocketService } from '../../services/socket.service';
@@ -354,9 +354,9 @@ export class PeerConnetionComponent implements OnDestroy {
     if (!objConenction || !this.connectedUser) return;
 
 
-    const newUsr = this.userService.connectedUsers.find(u => u.connectedUser.userId === this.connectedUser?.userId)
-      ?? new ConnectedUser(this.selectedTab.type, this.connectedUser, this.socketService);
-    newUsr.setConnection(objConenction);
-    this.dialogRef.close(newUsr);
+    // const newUsr = this.userService.connectedUsers.find(u => u.connectedUser.userId === this.connectedUser?.userId)
+    //   ?? new ConnectedUser(this.selectedTab.type, this.connectedUser, this.socketService);
+    // newUsr.setConnection(objConenction);
+    // this.dialogRef.close(newUsr);
   }
 }
