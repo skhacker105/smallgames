@@ -155,7 +155,7 @@ export class LudoComponent extends BaseComponent {
   }
 
   leaveGame(): void {
-    this.askToConfirmCancelGame()
+    this.askToConfirmLeaveGame()
     .pipe(take(1), takeUntil(this.isComponentActive))
     .subscribe({
       next: confirm => {
