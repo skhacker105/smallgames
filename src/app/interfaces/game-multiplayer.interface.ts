@@ -7,6 +7,7 @@ export interface IGameMultiPlayerConnection {
     gameInfo: IGameInfo;
     gameOwner: IUser;
     gamePlayState: GamePlayState;
+    isMeTheGameOwner: boolean;
 
     incomingRequestConfirmationDialogRef?: MatDialogRef<any>;
 
@@ -22,8 +23,8 @@ export interface IGameRemotePlayer {
     player: IPlayer;
     isMe: boolean;
     hasUser: boolean;
-    connectionStatus: GameRequestStatus;
-    connectionSocketMessage: ISocketMessage;
+    connectionStatus?: GameRequestStatus;
+    connectionSocketMessage?: ISocketMessage;
     connectionResponseSocketMessage?: ISocketMessage;
 
     lastAcknowledgedPlayState?: GameState;

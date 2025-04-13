@@ -39,10 +39,10 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
   constructor(
     gameDashboardService: GameDashboardService,
     private userService: UserService,
-    private dialog: MatDialog,
+    dialog: MatDialog,
     multiPlayerService: MultiPlayerService
   ) {
-    super(gameDashboardService, multiPlayerService);
+    super(gameDashboardService, multiPlayerService, dialog);
   }
 
   override ngOnInit(): void {

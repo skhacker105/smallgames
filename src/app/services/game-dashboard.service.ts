@@ -1,11 +1,7 @@
 import { Injectable } from '@angular/core';
-import { IGameInfo, IGameWinner, IPlayer, ISocketMessage, IUser, IYesNoConfig } from '../interfaces';
-import { BehaviorSubject, Observable, filter, take } from 'rxjs';
+import { IGameInfo, IGameWinner, IPlayer } from '../interfaces';
+import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
-import { YesNoDialogComponent } from '../components/yes-no-dialog/yes-no-dialog.component';
-import { SocketService } from './socket.service';
-import { MatDialog } from '@angular/material/dialog';
-import { LoggerService } from './logger.service';
 import { UserService } from './user.service';
 
 @Injectable({

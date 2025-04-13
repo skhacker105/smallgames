@@ -3,6 +3,7 @@ import { BaseComponent } from '../../../components/base.component';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { Subject, interval, takeUntil } from 'rxjs';
 import { MultiPlayerService } from '../../../services/multi-player.service';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-image-puzzle',
@@ -34,8 +35,8 @@ export class ImagePuzzleComponent extends BaseComponent {
   gameOverSubject = new Subject<boolean>();
 
   constructor(gameDashboardService: GameDashboardService,
-    multiPlayerService: MultiPlayerService) {
-    super(gameDashboardService, multiPlayerService);
+    multiPlayerService: MultiPlayerService, dialog: MatDialog) {
+    super(gameDashboardService, multiPlayerService, dialog);
   }
 
   startTimer(): void {

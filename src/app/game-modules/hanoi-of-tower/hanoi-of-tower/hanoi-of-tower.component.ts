@@ -3,6 +3,7 @@ import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { BaseComponent } from '../../../components/base.component';
 import { Subject, interval, takeUntil } from 'rxjs';
 import { MultiPlayerService } from '../../../services/multi-player.service';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-hanoi-of-tower',
@@ -27,8 +28,8 @@ export class HanoiOfTowerComponent extends BaseComponent {
   gameOverSubject = new Subject<boolean>();
 
   constructor(gameDashboardService: GameDashboardService,
-    multiPlayerService: MultiPlayerService) {
-    super(gameDashboardService, multiPlayerService)
+    multiPlayerService: MultiPlayerService, dialog: MatDialog) {
+    super(gameDashboardService, multiPlayerService, dialog)
   }
 
   resetGame(): void {

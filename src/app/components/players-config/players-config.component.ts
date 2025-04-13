@@ -66,7 +66,7 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
   // }
 
   get isAnyPlayerOnline(): boolean {
-    return this.players.some(player => !!player.userId); // any player having user id
+    return this.players.some(player => !!player.userId && player.userId !== this.userService.me?.userId); // any player having user id
   }
 
   constructor(
@@ -392,7 +392,7 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
       this.dialogRef.close(multiPlayerConnection);
 
     else
-      this.multiPlayerService.cancelMultiPlayerGame(this.config.game, this.players, `Some players rejected or did not respond to game request.`);
+      this.multiPlayerService.cancelMultiPlayerGame(this.config.game, `Some players rejected or did not respond to game request.`);
 
     this.spinner.hide();
   }

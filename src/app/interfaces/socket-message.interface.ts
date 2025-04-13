@@ -1,4 +1,4 @@
-import { ConnectionState, GameRequestStatus } from "../types";
+import { ConnectionState, GamePlayState, GameRequestStatus } from "../types";
 import { IPlayer } from "./player.interface";
 
 export interface ISocketMessage {
@@ -11,6 +11,7 @@ export interface ISocketMessage {
     gameRequestStatus?: GameRequestStatus;
     gamePlayerUpdate?: IPlayer[];
     gameState?: any;
+    gamePlayState?: GamePlayState;
     gameWinner?: any;
     message?: string;
     error?: string;

@@ -47,12 +47,12 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
 
   constructor(
     gameDashboardService: GameDashboardService,
-    private dialog: MatDialog,
+    dialog: MatDialog,
     private router: Router,
     private userService: UserService,
     multiPlayerService: MultiPlayerService
   ) {
-    super(gameDashboardService, multiPlayerService);
+    super(gameDashboardService, multiPlayerService, dialog);
     this.chess = new Chess(); // Initialize the Chess instance
   }
 

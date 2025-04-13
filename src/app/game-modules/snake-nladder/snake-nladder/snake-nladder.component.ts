@@ -73,12 +73,12 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
 
   constructor(
     gameDashboardService: GameDashboardService,
-    private dialog: MatDialog,
+    dialog: MatDialog,
     private router: Router,
     private userService: UserService,
     multiPlayerService: MultiPlayerService
     ) {
-    super(gameDashboardService, multiPlayerService);
+    super(gameDashboardService, multiPlayerService, dialog);
   }
 
   override ngOnInit(): void {

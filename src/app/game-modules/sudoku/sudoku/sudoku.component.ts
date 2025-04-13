@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { BaseComponent } from '../../../components/base.component';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { MultiPlayerService } from '../../../services/multi-player.service';
+import { MatDialog } from '@angular/material/dialog';
 
 interface ICell {
   row: number;
@@ -24,8 +25,8 @@ export class SudokuComponent extends BaseComponent {
   winner = false;
 
   constructor(gameDashboardService: GameDashboardService,
-    multiPlayerService: MultiPlayerService) {
-    super(gameDashboardService, multiPlayerService);
+    multiPlayerService: MultiPlayerService, dialog: MatDialog) {
+    super(gameDashboardService, multiPlayerService, dialog);
   }
 
   override ngOnInit(): void {

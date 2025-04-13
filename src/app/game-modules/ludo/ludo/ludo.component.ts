@@ -5,7 +5,7 @@ import { COLOR_PATHS, LUDO_PATHS } from '../ludo-path';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
-import { take } from 'rxjs';
+import { Observable, map, take, takeUntil, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { LUDO_COLORS } from '../../../config';
 import { isLudoColor } from '../../../utils/support.utils';
@@ -56,11 +56,11 @@ export class LudoComponent extends BaseComponent {
 
   constructor(
     gameDashboardService: GameDashboardService,
-    private dialog: MatDialog, private router: Router,
+    dialog: MatDialog, private router: Router,
     public userService: UserService,
     multiPlayerService: MultiPlayerService
   ) {
-    super(gameDashboardService, multiPlayerService);
+    super(gameDashboardService, multiPlayerService, dialog);
   }
 
   getGameState() {
@@ -96,7 +96,7 @@ export class LudoComponent extends BaseComponent {
       this.setGameState(savedState);
 
       if (this.winner || this.players.length === 0 || this.noCoinsMoved) {
-        this.askForPlayers();
+        this.setPlayersAndStartGame();
 
       } else if (this.isMultiPlayerGame) {
         this.listenForGameStateChange();
@@ -104,29 +104,67 @@ export class LudoComponent extends BaseComponent {
 
 
     } else {
-      this.askForPlayers();
+      this.setPlayersAndStartGame();
     }
-  }
-
-  resetGame(): void {
-    this.currentPlayer = 0;
-    this.lastDiceRoll = 1;
-    this.rolling = false;
-    this.totalDiceRoll = 0;
-    this.winner = null;
-    this.players.forEach(player => {
-      player.ludoCoins?.forEach(coin => {
-        coin.position = 0;
-        coin.finished = false;
-      })
-    })
-    this.playableCoins.clear();
-    this.saveGameState();
   }
 
   saveGameState(): void {
     const state = this.getGameState();
     this.gameDashboardService.saveGameState(state);
+    const mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value?.key ?? '');
+    if (mpg) mpg.gameState = state;
+  }
+
+  resetGame(): void {
+    this.askToConfirmResetGame()
+      .pipe(take(1), takeUntil(this.isComponentActive))
+      .subscribe({
+        next: confirm => {
+          if (!confirm) return;
+
+          this.currentPlayer = 0;
+          this.lastDiceRoll = 1;
+          this.rolling = false;
+          this.totalDiceRoll = 0;
+          this.winner = null;
+          this.players.forEach(player => {
+            player.ludoCoins?.forEach(coin => {
+              coin.position = 0;
+              coin.finished = false;
+            })
+          })
+          this.playableCoins.clear();
+          this.saveGameState();
+          this.sendGameStateUpdate();
+        }
+      });
+
+  }
+
+  cancelGame(): void {
+    this.askToConfirmCancelGame()
+    .pipe(take(1), takeUntil(this.isComponentActive))
+    .subscribe({
+      next: confirm => {
+        if (!confirm || !this.gameDashboardService.selectedGame.value) return;
+
+        this.players = [];
+        this.multiPlayerService.cancelMultiPlayerGame(this.gameDashboardService.selectedGame.value, 'Gmae owner cancelled this game');
+      }
+    });
+  }
+
+  leaveGame(): void {
+    this.askToConfirmCancelGame()
+    .pipe(take(1), takeUntil(this.isComponentActive))
+    .subscribe({
+      next: confirm => {
+        if (!confirm || !this.mpg) return;
+
+        this.players = [];
+        this.multiPlayerService.sendLeaveGameMessage(this.mpg, '');
+      }
+    });
   }
 
   getPathPosition(cellIndex: number, type: 'col' | 'row' = 'row'): string {
@@ -154,14 +192,16 @@ export class LudoComponent extends BaseComponent {
     })
   }
 
-  askForPlayers(): void {
+  setPlayers(): Observable<IPlayer[]> | undefined {
     const curGame = this.gameDashboardService.selectedGame.value;
     if (!curGame) return;
 
     const ref = this.getPlayerConfigPopup();
 
-    ref?.afterClosed().pipe(take(1))
-      .subscribe((players: IPlayer[] | IGameMultiPlayerConnection | undefined) => {
+    return ref?.afterClosed().pipe(
+      take(1),
+      map((players: IPlayer[] | IGameMultiPlayerConnection | undefined) => {
+
         if (!players) {
           if (this.players.length === 0)
             this.router.navigateByUrl('');
@@ -170,19 +210,11 @@ export class LudoComponent extends BaseComponent {
 
           if (Array.isArray(players)) this.setLocalPlayers(players);
           else this.setOnlinePlayers(players);
-
-          this.currentPlayer = 0;
-          this.winner = null;
-          this.saveGameState();
-          const otherPlayers = this.players.find(p => p.userId !== undefined && p.userId === this.userService.me?.userId) !== undefined;
-          if (otherPlayers) {
-            this.listenForGameStateChange();
-          }
-
-          // if (this.gameDashboardService.selectedGame.value)
-          //   this.gameDashboardService.sendGameStartRequest(this.gameDashboardService.selectedGame.value, this.players, this.getGameState());
         }
+
+        return this.players;
       })
+    )
   }
   setLocalPlayers(players: IPlayer[]): void {
     this.playerColors = players.map(player => player.color ?? 'red');
@@ -198,10 +230,6 @@ export class LudoComponent extends BaseComponent {
     this.playerColors = multiPlayerGame.players.map(player => player.player.color ?? 'red');
 
     this.players = multiPlayerGame.players.map((player, index) => {
-      if (player.player.userId && this.gameDashboardService.selectedGame.value) {
-        this.multiPlayerService.sendGameStart(this.gameDashboardService.selectedGame.value, player.player.userId)
-      }
-
       return {
         name: player.player.name,
         color: player.player.color ?? this.playerColors[index],
@@ -209,6 +237,41 @@ export class LudoComponent extends BaseComponent {
         userId: player.player.userId
       } as IPlayer
     });
+
+  }
+
+  setPlayersAndStartGame(): void {
+    this.setPlayers()?.subscribe({
+      next: players => {
+
+        this.currentPlayer = 0;
+        this.winner = null;
+        this.saveGameState();
+
+        const otherPlayers = this.players.find(p => p.userId !== undefined && p.userId === this.userService.me?.userId) !== undefined;
+        if (otherPlayers) {
+          this.startMultiPlayerGame();
+          this.listenForGameStateChange();
+        }
+      }
+    })
+  }
+  startMultiPlayerGame(): void {
+
+    if (this.gameDashboardService.selectedGame.value) {
+      this.mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value.key)
+      if (!this.mpg) return;
+
+      this.mpg.gameState = this.getGameState();
+      this.mpg.gamePlayState = 'gameInProgress';
+
+      // Send Game start signal to all players
+      this.players.forEach(player => {
+        if (player.userId && this.gameDashboardService.selectedGame.value && this.mpg) {
+          this.multiPlayerService.sendGameStart(this.mpg, player.userId)
+        }
+      });
+    }
   }
 
   getColorPlayer(color: string = 'red'): IPlayer | undefined {
@@ -389,8 +452,6 @@ export class LudoComponent extends BaseComponent {
 
     this.totalDiceRoll = 0;
     this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
-    this.playableCoins.clear();
-    this.saveGameState();
     this.playableCoins.clear();
     this.saveGameState();
   }

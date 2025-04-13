@@ -84,10 +84,18 @@
     <div class="controls" *ngIf="!winner">
         <div [style.borderColor]="player.color">
 
-            <button (click)="askForPlayers()">
-                <mat-icon>manage_accounts</mat-icon>
+            <!-- Leave Game -->
+            <button (click)="leaveGame()" *ngIf="mpg && !mpg.isMeTheGameOwner">
+                <mat-icon>exit_to_app</mat-icon>
             </button>
-            <button (click)="resetGame()">
+
+            <!-- Cancel Game -->
+            <button (click)="cancelGame()" *ngIf="mpg && mpg.isMeTheGameOwner">
+                <mat-icon>close</mat-icon>
+            </button>
+
+            <!-- Reset Game -->
+            <button (click)="resetGame()" *ngIf="!mpg || mpg.isMeTheGameOwner">
                 <mat-icon>restart_alt</mat-icon>
             </button>
 
