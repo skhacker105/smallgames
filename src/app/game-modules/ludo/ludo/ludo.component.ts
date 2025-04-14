@@ -8,7 +8,7 @@ import { PlayersConfigComponent } from '../../../components/players-config/playe
 import { Observable, map, take, takeUntil, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { LUDO_COLORS } from '../../../config';
-import { isLudoColor } from '../../../utils/support.utils';
+import { generateHexId, isLudoColor } from '../../../utils/support.utils';
 import { UserService } from '../../../services/user.service';
 import { MultiPlayerService } from '../../../services/multi-player.service';
 
@@ -72,7 +72,8 @@ export class LudoComponent extends BaseComponent {
       winner: this.winner,
       playerColors: this.playerColors,
       playableCoins: [...this.playableCoins.values()],
-      rolling: this.rolling
+      rolling: this.rolling,
+      gameId: this.gameId
     };
   }
 
@@ -85,6 +86,7 @@ export class LudoComponent extends BaseComponent {
     this.playerColors = savedState.playerColors ?? this.colors;
     this.playableCoins = new Set<number>(savedState.playableCoins ?? []);
     this.rolling = savedState.rolling;
+    this.gameId = savedState.gameId ?? generateHexId(16);
   }
 
   loadGameState(): void {
@@ -111,6 +113,7 @@ export class LudoComponent extends BaseComponent {
   saveGameState(): void {
     const state = this.getGameState();
     this.gameDashboardService.saveGameState(state);
+    
     const mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value?.key ?? '');
     if (mpg) mpg.gameState = state;
   }
@@ -122,6 +125,7 @@ export class LudoComponent extends BaseComponent {
         next: confirm => {
           if (!confirm) return;
 
+          this.gameId = generateHexId(16);
           this.currentPlayer = 0;
           this.lastDiceRoll = 1;
           this.rolling = false;
@@ -149,7 +153,8 @@ export class LudoComponent extends BaseComponent {
         if (!confirm || !this.gameDashboardService.selectedGame.value) return;
 
         this.players = [];
-        this.multiPlayerService.cancelMultiPlayerGame(this.gameDashboardService.selectedGame.value, 'Gmae owner cancelled this game');
+        this.multiPlayerService.cancelMultiPlayerGame(this.gameId, this.gameDashboardService.selectedGame.value, 'Gmae owner cancelled this game');
+        this.router.navigateByUrl('');
       }
     });
   }
@@ -162,7 +167,7 @@ export class LudoComponent extends BaseComponent {
         if (!confirm || !this.mpg) return;
 
         this.players = [];
-        this.multiPlayerService.sendLeaveGameMessage(this.mpg, '');
+        this.multiPlayerService.sendLeaveGameMessage(this.gameId, this.mpg, '');
       }
     });
   }
@@ -186,7 +191,8 @@ export class LudoComponent extends BaseComponent {
         minPlayerCount: 2,
         maxPlayerCount: 4,
         preFillPlayers: this.players.length > 0 ? this.players : undefined,
-        colorOptions: LUDO_COLORS
+        colorOptions: LUDO_COLORS,
+        gameId: this.gameId
       } as IPlayerAskConfig,
       disableClose: true
     })
@@ -268,11 +274,13 @@ export class LudoComponent extends BaseComponent {
       // Send Game start signal to all players
       this.players.forEach(player => {
         if (player.userId && this.gameDashboardService.selectedGame.value && this.mpg) {
-          this.multiPlayerService.sendGameStart(this.mpg, player.userId)
+          this.multiPlayerService.sendGameStart(this.gameId, this.mpg, player.userId)
         }
       });
     }
   }
+
+  
 
   getColorPlayer(color: string = 'red'): IPlayer | undefined {
     const colorIndex = this.playerColors.findIndex(pc => pc === color);

@@ -1,0 +1,2 @@
+ 
+handle other incoming messages ---> owner cancel game, player left

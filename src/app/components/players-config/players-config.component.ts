@@ -334,7 +334,7 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
       this.spinner.show();
 
       // Create multiplayer game and send requestes to all players
-      const multiPlayerConnection = this.multiPlayerService.startMultiPlayerGame(this.config.game, this.players);
+      const multiPlayerConnection = this.multiPlayerService.startMultiPlayerGame(this.config.gameId, this.config.game, this.players);
       // Set MultiPlayerGame to local variable and handle all player's response
       this.setMultiPlayerGame(multiPlayerConnection);
     } else {
@@ -392,7 +392,7 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
       this.dialogRef.close(multiPlayerConnection);
 
     else
-      this.multiPlayerService.cancelMultiPlayerGame(this.config.game, `Some players rejected or did not respond to game request.`);
+      this.multiPlayerService.cancelMultiPlayerGame(this.config.gameId, this.config.game, `Some players rejected or did not respond to game request.`);
 
     this.spinner.hide();
   }

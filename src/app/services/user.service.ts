@@ -173,7 +173,8 @@ export class UserService {
       sourceUserName: this.me.userName,
       type: 'status',
       connectionStatus: state,
-      gameKey: 'user-status'
+      gameKey: 'user-status',
+      gameId: ''
     };
     this.connectedUsers.forEach(cu => {
       this.socketService.sendMessage(cu.userId, message);

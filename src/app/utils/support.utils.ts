@@ -25,20 +25,13 @@ export function isChessColor(color?: PLAYER_COLOR): color is CHESS_COLOR {
     return color != undefined && CHESS_COLORS.indexOf(color as CHESS_COLOR) > -1
 }
 
-export function generateRandomNumbers(n: number, useCrypto = false): number[] {
-    const randomNumbers: number[] = [];
-
-    for (let i = 0; i < n; i++) {
-        if (useCrypto && window.crypto && window.crypto.getRandomValues) {
-            // Use Web Crypto API for true randomness
-            const array = new Uint32Array(1);
-            window.crypto.getRandomValues(array);
-            randomNumbers.push(array[0] / 4294967295); // Normalize to 0-1
-        } else {
-            // Fallback to Math.random()
-            randomNumbers.push(Math.random());
-        }
+export function generateHexId(length = 16): string {
+    let result = '';
+    const characters = '0123456789abcdef';
+    
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
-
-    return randomNumbers;
+    
+    return result;
 }

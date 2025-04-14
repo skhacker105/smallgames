@@ -111,16 +111,19 @@ export class GameDashboardService {
     });
   }
 
-  saveGameState(state: any): void {
+  saveGameState(state: any, gameKey?: string): void {
     if (!this.selectedGame.value) return;
 
-    localStorage.setItem(this.selectedGame.value.key, JSON.stringify(state));
+    if (state)
+      localStorage.setItem((gameKey ?? this.selectedGame.value.key), JSON.stringify(state));
+    else
+      localStorage.removeItem((gameKey ?? this.selectedGame.value.key));
   }
 
-  loadGameState(): any {
+  loadGameState(gameKey?: string): any {
     if (!this.selectedGame.value) return null;
 
-    const state = localStorage.getItem(this.selectedGame.value.key);
+    const state = localStorage.getItem(gameKey ?? this.selectedGame.value.key);
     return state ? JSON.parse(state) : null;
   }
 

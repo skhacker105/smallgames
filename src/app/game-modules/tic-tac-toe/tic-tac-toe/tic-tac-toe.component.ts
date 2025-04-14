@@ -3,6 +3,7 @@ import { BaseComponent } from '../../../components/base.component';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { MultiPlayerService } from '../../../services/multi-player.service';
 import { MatDialog } from '@angular/material/dialog';
+import { generateHexId } from '../../../utils/support.utils';
 
 type PlayerType = 'X' | 'O' | '';
 type Cuts = 'horizontal' | 'vertical' | 'diagonal_left' | 'diagonal_right'
@@ -33,14 +34,16 @@ export class TicTacToeComponent extends BaseComponent {
     return {
       board: this.board,
       currentPlayer: this.currentPlayer,
-      winnerResult: this.winnerResult
+      winnerResult: this.winnerResult,
+      gameId: this.gameId
     };
   }
 
   setGameState(savedState: any): void {
     this.board = savedState.board;
       this.currentPlayer = savedState.currentPlayer;
-      this.winnerResult = savedState.winnerResult
+      this.winnerResult = savedState.winnerResult;
+      this.gameId = savedState.gameId ?? generateHexId(16);
   }
 
   loadGameState(): void {
@@ -112,6 +115,7 @@ export class TicTacToeComponent extends BaseComponent {
   }
 
   resetGame(): void {
+    this.gameId = generateHexId(16);
     this.board = Array(3).fill(null).map(() => Array(3).fill(''));
     this.currentPlayer = 'X';
     this.winnerResult = undefined;

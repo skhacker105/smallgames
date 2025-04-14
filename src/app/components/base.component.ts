@@ -5,10 +5,12 @@ import { MatDialog, MatDialogRef } from "@angular/material/dialog";
 import { IGameMultiPlayerConnection, IPlayer, IUser, IYesNoConfig } from "../interfaces";
 import { MultiPlayerService } from "../services/multi-player.service";
 import { YesNoDialogComponent } from "./yes-no-dialog/yes-no-dialog.component";
+import { generateHexId } from "../utils/support.utils";
 
 @Directive()
 export abstract class BaseComponent implements OnInit, OnDestroy {
 
+    gameId: string;
     mpg?: IGameMultiPlayerConnection;
     players: IPlayer[] = [];
 
@@ -40,6 +42,8 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         protected gameDashboardService: GameDashboardService,
         protected multiPlayerService: MultiPlayerService,
         protected dialog: MatDialog) {
+
+        this.gameId = generateHexId(16);
         // this.gameOwner = this.gameDashboardService.selectedGame.value?.gameOwner;
     }
 
@@ -51,21 +55,15 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
 
         else {
             this.mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value.key);
+            if (this.mpg && this.mpg.gameState) this.setGameState(this.mpg.gameState);
 
             if (this.mpg?.gamePlayState === 'playerSetting')
                 this.waitForGameStart();
 
-            else {
-                if (this.mpg?.gameOwner) {
-                    if (!this.mpg.isMeTheGameOwner)
-                        this.multiPlayerService.requestForGameUpdate(this.mpg, this.mpg.gameOwner.userId);
-                    else
-                        this.setGameState(this.mpg.gameState);
-                }
+            else if (this.mpg?.gameOwner && !this.mpg.isMeTheGameOwner)
+                this.multiPlayerService.requestForGameUpdate(this.gameId, this.mpg, this.mpg.gameOwner.userId);
 
-
-                this.listenForGameStateChange();
-            }
+            this.listenForGameStateChange();
         }
     }
 
@@ -94,7 +92,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
                     this.mpg.gameState = gameStartRequest.gameState;
                     this.mpg.gamePlayState = 'gameInProgress'
                     this.setGameState(gameStartRequest.gameState);
-                    this.listenForGameStateChange();
+                    // this.listenForGameStateChange();
                 }
                 this.playerConfigPopupRef?.close();
             });
@@ -121,7 +119,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         this.mpg.players.forEach(player => {
             if (player.isMe || !player.player.userId || !this.mpg) return;
 
-            this.multiPlayerService.sendGameUpdate(this.mpg, player.player.userId)
+            this.multiPlayerService.sendGameUpdate(this.gameId, this.mpg, player.player.userId)
         });
     }
 

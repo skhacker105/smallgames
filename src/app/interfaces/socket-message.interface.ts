@@ -5,6 +5,7 @@ export interface ISocketMessage {
     sourceUserId: string;
     sourceUserName: string;
     gameKey: string;
+    gameId: string;
     sentOn: Date;
     type: 'status' | 'gameRequest' | 'gamePlayerUpdate' | 'gameState' | 'gameStateAcknowledgment' | 'gameWinner'; //  | 'gameKey'
     connectionStatus?: ConnectionState;

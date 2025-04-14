@@ -70,7 +70,7 @@ export class SocketService {
   sendMessage(toUserId: string, message: ISocketMessage): void {
     if (this.socket) {
       this.socket.emit('send_message', { toUserId, message });
-      this.loggerService.log(`Message sent to ${toUserId}: ${message}`);
+      this.loggerService.log(`Message sent to ${toUserId}: ${JSON.stringify(message)}`);
     } else {
       this.loggerService.log('Socket is not connected');
     }

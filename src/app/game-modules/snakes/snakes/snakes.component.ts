@@ -7,6 +7,7 @@ import { IInfo } from '../../../interfaces';
 import { take } from 'rxjs';
 import { UserService } from '../../../services/user.service';
 import { MultiPlayerService } from '../../../services/multi-player.service';
+import { generateHexId } from '../../../utils/support.utils';
 
 interface SnakeGameState {
   snake: { x: number; y: number }[];
@@ -61,6 +62,7 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
       direction: this.direction,
       food: this.food,
       score: this.score,
+      gameId: this.gameId
     };
   }
 
@@ -69,6 +71,7 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
     this.direction = savedState.direction;
     this.food = savedState.food;
     this.score = savedState.score;
+    this.gameId = savedState.gameId ?? generateHexId(16);
   }
 
   loadGameState(): void {
@@ -99,6 +102,7 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
   }
 
   resetGame(): void {
+    this.gameId = generateHexId(16);
     this.stopGame();
     this.snake = [{ x: 10, y: 10 }];
     this.direction = 'RIGHT';

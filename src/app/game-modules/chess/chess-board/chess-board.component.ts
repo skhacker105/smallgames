@@ -8,7 +8,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { CHESS_COLORS } from '../../../config';
 import { take } from 'rxjs';
 import { Router } from '@angular/router';
-import { isChessColor } from '../../../utils/support.utils';
+import { generateHexId, isChessColor } from '../../../utils/support.utils';
 import { UserService } from '../../../services/user.service';
 import { MultiPlayerService } from '../../../services/multi-player.service';
 
@@ -70,7 +70,8 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
       isWhiteTurn: this.isWhiteTurn,
       gameOver: this.gameOver,
       selectedSquare: this.selectedSquare,
-      possibleMoves: this.possibleMoves
+      possibleMoves: this.possibleMoves,
+      gameId: this.gameId
     };
   }
 
@@ -82,6 +83,7 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     this.gameOver = savedState.gameOver;
     this.selectedSquare = savedState.selectedSquare;
     this.possibleMoves = savedState.possibleMoves;
+    this.gameId = savedState.gameId ?? generateHexId(16);
     this.updateBoard();
   }
 
@@ -109,6 +111,7 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   }
 
   resetGame(): void {
+    this.gameId = generateHexId(16);
     this.chess.reset(); // Reset the game
     this.gameOver = false;
     this.winner = null;
@@ -131,7 +134,8 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
         minPlayerCount: 2,
         maxPlayerCount: 2,
         preFillPlayers: this.players.length > 0 ? this.players : undefined,
-        colorOptions: CHESS_COLORS
+        colorOptions: CHESS_COLORS,
+        gameId: this.gameId
       } as IPlayerAskConfig,
       disableClose: true
     })

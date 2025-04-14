@@ -15,6 +15,7 @@ export interface IPlayer {
 }
 
 export interface IPlayerAskConfig {
+    gameId: string;
     game: IGameInfo;
     minPlayerCount: number;
     maxPlayerCount: number;

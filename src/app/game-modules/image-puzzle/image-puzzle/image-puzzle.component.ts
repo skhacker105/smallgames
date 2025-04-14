@@ -4,6 +4,7 @@ import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { Subject, interval, takeUntil } from 'rxjs';
 import { MultiPlayerService } from '../../../services/multi-player.service';
 import { MatDialog } from '@angular/material/dialog';
+import { generateHexId } from '../../../utils/support.utils';
 
 @Component({
   selector: 'app-image-puzzle',
@@ -55,7 +56,8 @@ export class ImagePuzzleComponent extends BaseComponent {
       isGameOver: this.isGameOver,
       selectedLevel: this.selectedLevel,
       timeSpent: this.timeSpent,
-      currentImage: this.currentImage
+      currentImage: this.currentImage,
+      gameId: this.gameId
     };
   }
 
@@ -67,6 +69,7 @@ export class ImagePuzzleComponent extends BaseComponent {
     this.selectedLevel = gameState.selectedLevel;
     this.timeSpent = gameState.timeSpent ?? 0;
     this.currentImage = gameState.currentImage;
+    this.gameId = gameState.gameId ?? generateHexId(16);
   }
 
   saveGameState(): void {
@@ -86,6 +89,7 @@ export class ImagePuzzleComponent extends BaseComponent {
 
   // Initialize the game
   initializeGame(): void {
+    this.gameId = generateHexId(16);
     this.gameOverSubject.next(true);
     this.timeSpent = 0;
     this.currentImage = this.images[Math.floor(Math.random() * this.images.length)];

@@ -9,6 +9,7 @@ import { take } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserService } from '../../../services/user.service';
 import { MultiPlayerService } from '../../../services/multi-player.service';
+import { generateHexId } from '../../../utils/support.utils';
 
 export interface IGameBoard {
   name: string;
@@ -105,7 +106,8 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
       selectedBoard: this.selectedBoard,
       lastDiceRoll: this.lastDiceRoll,
       totalDiceRoll: this.totalDiceRoll,
-      rolling: this.rolling
+      rolling: this.rolling,
+      gameId: this.gameId
     };
   }
 
@@ -120,7 +122,8 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
     this.selectedBoard = savedState.selectedBoard;
     this.lastDiceRoll = savedState.lastDiceRoll;
     this.totalDiceRoll = savedState.totalDiceRoll;
-    this.rolling = savedState.rolling
+    this.rolling = savedState.rolling;
+    this.gameId = savedState.gameId ?? generateHexId(16);
   }
 
   loadGameState(): void {
@@ -165,6 +168,7 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
   }
 
   resetGame(): void {
+    this.gameId = generateHexId(16);
     this.totalDiceRoll = 0;
     this.lastDiceRoll = 1;
     this.winner = null;
@@ -184,7 +188,8 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
         askForName: true,
         minPlayerCount: 2,
         maxPlayerCount: 6,
-        preFillPlayers: this.players.length > 0 ? this.players : undefined
+        preFillPlayers: this.players.length > 0 ? this.players : undefined,
+        gameId: this.gameId
       } as IPlayerAskConfig,
       disableClose: true
     })

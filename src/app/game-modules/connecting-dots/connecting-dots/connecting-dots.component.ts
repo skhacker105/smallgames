@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, HostListener, Renderer2 } fro
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { BaseComponent } from '../../../components/base.component';
 import { Subject, interval, takeUntil } from 'rxjs';
-import { generateRandomNumbers } from '../../../utils/support.utils';
+import { generateHexId } from '../../../utils/support.utils';
 import { MultiPlayerService } from '../../../services/multi-player.service';
 import { MatDialog } from '@angular/material/dialog';
 
@@ -46,6 +46,7 @@ export class ConnectingDotsComponent extends BaseComponent {
   }
 
   resetGame(): void {
+    this.gameId = generateHexId(16);
     this.board = this.generateBoard();
     this.timeSpent = 0;
     this.gameOver = false;
@@ -211,7 +212,8 @@ export class ConnectingDotsComponent extends BaseComponent {
       selectedLevel: this.selectedLevel,
       timeSpent: this.timeSpent,
       gameOver: this.gameOver,
-      undoStack: this.undoStack
+      undoStack: this.undoStack,
+      gameId: this.gameId
     };
   }
 
@@ -221,6 +223,7 @@ export class ConnectingDotsComponent extends BaseComponent {
     this.timeSpent = gameState.timeSpent;
     this.gameOver = gameState.gameOver;
     this.undoStack = gameState.undoStack;
+    this.gameId = gameState.gameId ?? generateHexId(16);
     if (!this.gameOver) this.startTimer();
   }
 

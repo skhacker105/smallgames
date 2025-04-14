@@ -3,6 +3,7 @@ import { BaseComponent } from '../../../components/base.component';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { MultiPlayerService } from '../../../services/multi-player.service';
 import { MatDialog } from '@angular/material/dialog';
+import { generateHexId } from '../../../utils/support.utils';
 
 interface ICell {
   row: number;
@@ -40,18 +41,20 @@ export class SudokuComponent extends BaseComponent {
       level: this.level,
       size: this.size,
       prefilledCells: this.prefilledCells,
-      winner: this.winner
+      winner: this.winner,
+      gameId: this.gameId
     };
   }
 
   setGameState(savedState: any): void {
-    const { board, solution, level, size, prefilledCells, winner } = savedState;
+    const { board, solution, level, size, prefilledCells, winner, gameId } = savedState;
       this.board = board;
       this.solution = solution;
       this.level = level;
       this.size = size;
       this.prefilledCells = prefilledCells;
       this.winner = winner;
+      this.gameId = gameId ?? generateHexId(16);
   }
 
   loadGameState(): void {
@@ -68,6 +71,7 @@ export class SudokuComponent extends BaseComponent {
   }
 
   resetGame(): void {
+    this.gameId = generateHexId(16);
     this.winner = false;
     this.board.forEach((row, i) => {
       row.forEach((cell, j) => {

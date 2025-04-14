@@ -4,6 +4,7 @@ import { BaseComponent } from '../../../components/base.component';
 import { Subject, interval, takeUntil } from 'rxjs';
 import { MultiPlayerService } from '../../../services/multi-player.service';
 import { MatDialog } from '@angular/material/dialog';
+import { generateHexId } from '../../../utils/support.utils';
 
 @Component({
   selector: 'app-pattern-puzzle',
@@ -41,7 +42,8 @@ export class PatternPuzzleComponent extends BaseComponent {
       gridSize: this.gridSize,
       isGameOver: this.isGameOver,
       selectedLevel: this.selectedLevel,
-      timeSpent: this.timeSpent
+      timeSpent: this.timeSpent,
+      gameId: this.gameId
     };
   }
 
@@ -52,6 +54,7 @@ export class PatternPuzzleComponent extends BaseComponent {
     this.isGameOver = gameState.isGameOver;
     this.selectedLevel = gameState.selectedLevel;
     this.timeSpent = gameState.timeSpent ?? 0;
+    this.gameId = gameState.gameId ?? generateHexId(16);
   }
 
   saveGameState(): void {
@@ -71,6 +74,7 @@ export class PatternPuzzleComponent extends BaseComponent {
 
   // Initialize the game
   initializeGame(): void {
+    this.gameId = generateHexId(16);
     this.gameOverSubject.next(true);
     this.timeSpent = 0;
     this.board = this.createPuzzleBoard();
