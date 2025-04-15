@@ -2,7 +2,7 @@ import { Directive, OnDestroy, OnInit } from "@angular/core";
 import { Observable, Subject, filter, merge, take, takeUntil, timeout } from "rxjs";
 import { GameDashboardService } from "../services/game-dashboard.service";
 import { MatDialog, MatDialogRef } from "@angular/material/dialog";
-import { IGameMultiPlayerConnection, IInfo, IPlayer, IUser, IYesNoConfig } from "../interfaces";
+import { IGameMultiPlayerConnection, IInfo, IPlayer, ISocketMessage, IUser, IYesNoConfig } from "../interfaces";
 import { MultiPlayerService } from "../services/multi-player.service";
 import { YesNoDialogComponent } from "./yes-no-dialog/yes-no-dialog.component";
 import { generateHexId } from "../utils/support.utils";
@@ -71,11 +71,19 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             if (this.mpg?.gamePlayState === 'playerSetting')
                 this.waitForGameStart(this.mpg);
 
-            else if (this.mpg.gameOwner && !this.mpg.isMeTheGameOwner) {
-                this.waitForGameUpdateOrNoUpdate();
+            else if (!this.mpg.isMeTheGameOwner && this.mpg.gameOwner) {
                 this.multiPlayerService.requestForGameUpdate(this.gameId, this.mpg, this.mpg.gameOwner.userId);
+                this.waitForGameUpdateOrNoUpdate();
             }
 
+            if (this.mpg.isMeTheGameOwner) {
+                // listen for player left
+                this.listenForPlayerLeft();
+            } else {
+                // listen for cancel
+                this.listenForPlayerUpdate();
+                this.listenForGameCancelled();
+            }
             this.listenForGameStateChange();
         }
     }
@@ -90,7 +98,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         return undefined;
     }
 
-    private waitMoreForGameStartConfirmation() {
+    private waitMoreForGameStartConfirmation(): Observable<any> {
         const yesNoConfig: IYesNoConfig = {
             title: 'Time Out',
             message: `Timed-out while waiting for the game to start. Will you wait longer for the game to start?`,
@@ -131,14 +139,17 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
                         next: confirm => {
                             if (!this.mpg) return;
 
-                            if (!confirm) this.multiPlayerService.sendLeaveGameMessage(this.gameId, this.mpg, this.mpg.gameOwner.userId)
+                            if (!confirm) {
+                                this.multiPlayerService.sendLeaveGameMessage(this.gameId, this.mpg, this.mpg.gameOwner.userId)
+                                this.multiPlayerService.removeGameAndGotoHomePage(this.mpg.gameInfo.key, this.gameId);
+                            }
                             else this.waitForGameStart(this.mpg);
                         }
                     })
             });
     }
 
-    private askNewGameAsNoUpdate() {
+    private askNewGameAsNoUpdate(): Observable<any> {
         const yesNoConfig: IYesNoConfig = {
             title: 'No Game Update',
             message: `Failed to aquire latest game update. It may have been cancelled or concluded. Would you like to start new game?`,
@@ -151,7 +162,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             data: yesNoConfig
         }).afterClosed()
     }
-    waitForGameUpdateOrNoUpdate() {
+    waitForGameUpdateOrNoUpdate(): void {
         // start loading circle
         merge(this.multiPlayerService.incomingGameStateChanged$, this.multiPlayerService.incomingGameNotFound$)
             .pipe(
@@ -166,25 +177,25 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
                 error: () => { // timeout error occured ad nothing was received
 
                     this.askNewGameAsNoUpdate().pipe(take(1))
-                    .subscribe(confirm => {
-                        
-                        if (!confirm) this.multiPlayerService.gotoHomePage();
+                        .subscribe(confirm => {
 
-                        else {
-                            if (!this.gameDashboardService.selectedGame.value) return;
+                            if (!confirm) this.multiPlayerService.gotoHomePage();
 
-                            this.gameDashboardService.removeGameFromLocalStorageByGameId(this.gameDashboardService.selectedGame.value.key, this.gameId);
-                            this.multiPlayerService.removeMPGFromLocalStorageByGameId(this.gameDashboardService.selectedGame.value.key, this.gameId);
-                            this.resetGame();
-                            this.players=[];
-                            this.setPlayersAndStartGame();
-                        }
-                    })
+                            else {
+                                if (!this.gameDashboardService.selectedGame.value) return;
+
+                                this.gameDashboardService.removeGameFromLocalStorageByGameId(this.gameDashboardService.selectedGame.value.key, this.gameId);
+                                this.multiPlayerService.removeMPGFromLocalStorageByGameId(this.gameDashboardService.selectedGame.value.key, this.gameId);
+                                this.resetGame();
+                                this.players = [];
+                                this.setPlayersAndStartGame();
+                            }
+                        })
                 }
             });
     }
 
-    listenForGameStateChange() {
+    listenForGameStateChange(): void {
         this.multiPlayerService.incomingGameStateChanged$
             .pipe(
                 filter(gameStartRequest => gameStartRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key),
@@ -198,7 +209,96 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             });
     }
 
-    sendGameStateUpdate() {
+    private informGameCancelled(gameCancelRequest: ISocketMessage): Observable<any> {
+        const infoConfig: IInfo = {
+            message: 'Game Cancelled. ' + (gameCancelRequest.error ?? '')
+        }
+
+        return this.dialog.open(InfoComponent, {
+            data: infoConfig
+        }).afterClosed()
+    }
+    listenForGameCancelled(): void {
+        this.multiPlayerService.incomingGameRequestCancel$
+            .pipe(
+                filter(socketMessage => socketMessage?.gameKey === this.gameDashboardService.selectedGame.value?.key),
+                take(1), takeUntil(this.isComponentActive)
+            )
+            .subscribe({
+                next: gameCancelRequest => {
+                    if (!gameCancelRequest) return;
+
+                    this.informGameCancelled(gameCancelRequest).pipe(take(1))
+                        .subscribe(() => this.multiPlayerService.removeGameAndGotoHomePage(gameCancelRequest.gameKey, gameCancelRequest.gameId))
+                }
+            });
+    }
+
+    private informGamePlayerLeft(incomingGameLeftMessage: ISocketMessage): Observable<any> {
+        const infoConfig: IInfo = {
+            message: `${incomingGameLeftMessage.sourceUserName} has left the game.`
+        }
+
+        return this.dialog.open(InfoComponent, {
+            data: infoConfig
+        }).afterClosed()
+    }
+    listenForPlayerLeft(): void {
+        this.multiPlayerService.incomingGameLeft$
+            .pipe(
+                filter(socketMessage => socketMessage?.gameKey === this.gameDashboardService.selectedGame.value?.key),
+                takeUntil(this.isComponentActive)
+            )
+            .subscribe({
+                next: incomingGameLeftMessage => {
+                    if (!incomingGameLeftMessage) return;
+
+                    this.informGamePlayerLeft(incomingGameLeftMessage).pipe(take(1))
+                        .subscribe(() => {
+                            this.multiPlayerService.removePlayerForMPG(incomingGameLeftMessage.gameKey, incomingGameLeftMessage.sourceUserId);
+                            this.gameDashboardService.removeGamePlayer(incomingGameLeftMessage.gameKey, incomingGameLeftMessage.sourceUserId);
+                            const newState = this.gameDashboardService.loadGameState(incomingGameLeftMessage.gameKey);
+                            if (newState) this.setGameState(newState);
+                            const mpg = this.multiPlayerService.getMultiPlayerGame(incomingGameLeftMessage.gameKey)
+                            if (mpg) {
+                                mpg.players.forEach(p => {
+                                    if (!p.player.userId) return;
+
+                                    this.multiPlayerService.sendPlayerUpdate(incomingGameLeftMessage.gameId, mpg, p.player.userId);
+                                });
+                            }
+                        })
+                }
+            });
+    }
+
+    listenForPlayerUpdate(): void {
+        this.multiPlayerService.incomingGamePlayerUpdate$
+            .pipe(
+                filter(socketMessage => socketMessage?.gameKey === this.gameDashboardService.selectedGame.value?.key),
+                takeUntil(this.isComponentActive)
+            )
+            .subscribe({
+                next: playerUpdateMessage => {
+                    if (!playerUpdateMessage || !playerUpdateMessage.gamePlayerUpdate) return;
+
+                    const newPlayers = playerUpdateMessage.gamePlayerUpdate.map(p => p.userId).filter(userId => !!userId);
+                    const mpg = this.multiPlayerService.getMultiPlayerGame(playerUpdateMessage.gameKey);
+                    if (mpg) {
+                        const removedPlayerUserIds = mpg.players.filter(p => p.player.userId && !newPlayers.includes(p.player.userId)).map(p => p.player.userId);
+                        removedPlayerUserIds.forEach(userId => {
+                            if (!userId) return;
+
+                            this.multiPlayerService.removePlayerForMPG(playerUpdateMessage.gameKey, userId);
+                            this.gameDashboardService.removeGamePlayer(playerUpdateMessage.gameKey, userId);
+                            this.setGameState(mpg.gameState);
+                        });
+                    }
+                }
+            });
+    }
+
+    sendGameStateUpdate(): void {
         if (!this.mpg) return;
 
         this.multiPlayerService.saveMultiPlayersToStorage();

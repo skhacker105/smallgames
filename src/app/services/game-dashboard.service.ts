@@ -131,6 +131,14 @@ export class GameDashboardService {
       this.saveGameState(undefined, gameKey);
   }
 
+  removeGamePlayer(gameKey: string, playerUserId: string): void {
+    const game = this.loadGameState(gameKey);
+    if (!game || !game.players) return;
+
+    game.players = game.players.filter((p: any) => p.userId !== playerUserId);
+    this.saveGameState(game, gameKey);
+  }
+
   saveGameWinner(winnerPlayer: IPlayer | IPlayer[], isDraw: boolean = false): void {
     if (!this.selectedGame.value) return;
 

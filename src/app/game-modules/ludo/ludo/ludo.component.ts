@@ -116,6 +116,7 @@ export class LudoComponent extends BaseComponent {
 
     const mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value?.key ?? '');
     if (mpg) mpg.gameState = state;
+    this.multiPlayerService.saveMultiPlayersToStorage();
   }
 
   resetGame(): void {
@@ -152,9 +153,9 @@ export class LudoComponent extends BaseComponent {
         next: confirm => {
           if (!confirm || !this.gameDashboardService.selectedGame.value) return;
 
-          this.players = [];
-          this.multiPlayerService.cancelMultiPlayerGame(this.gameId, this.gameDashboardService.selectedGame.value, 'Gmae owner cancelled this game');
-          this.router.navigateByUrl('');
+          this.multiPlayerService.cancelMultiPlayerGame(this.gameId, this.gameDashboardService.selectedGame.value, 'Game owner cancelled this game');
+          if (this.gameDashboardService.selectedGame.value)
+            this.multiPlayerService.removeGameAndGotoHomePage(this.gameDashboardService.selectedGame.value.key, this.gameId);
         }
       });
   }
@@ -167,7 +168,10 @@ export class LudoComponent extends BaseComponent {
           if (!confirm || !this.mpg) return;
 
           this.players = [];
-          this.multiPlayerService.sendLeaveGameMessage(this.gameId, this.mpg, '');
+          this.multiPlayerService.sendLeaveGameMessage(this.gameId, this.mpg, this.mpg.gameOwner.userId);
+          if (this.gameDashboardService.selectedGame.value)
+            this.multiPlayerService.removeGameAndGotoHomePage(this.gameDashboardService.selectedGame.value.key, this.gameId);
+
         }
       });
   }
@@ -258,6 +262,8 @@ export class LudoComponent extends BaseComponent {
         if (otherPlayers) {
           this.startMultiPlayerGame();
           this.listenForGameStateChange();
+          this.listenForPlayerLeft();
+          this.listenForPlayerUpdate()
         }
       }
     })

@@ -295,8 +295,9 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
     if (acceptedPlayers.length === this.multiUserState.size)
       this.dialogRef.close(multiPlayerConnection);
 
-    else
+    else {
       this.multiPlayerService.cancelMultiPlayerGame(this.config.gameId, this.config.game, `Some players rejected or did not respond to game request.`);
+    }
 
     this.spinner.hide();
   }
