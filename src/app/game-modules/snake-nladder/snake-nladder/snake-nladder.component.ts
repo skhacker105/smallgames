@@ -2,10 +2,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BaseComponent } from '../../../components/base.component';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
-import { IPlayer, IPlayerAskConfig } from '../../../interfaces';
+import { IGameMultiPlayerConnection, IPlayer, IPlayerAskConfig } from '../../../interfaces';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
-import { take } from 'rxjs';
+import { Observable, take } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserService } from '../../../services/user.service';
 import { MultiPlayerService } from '../../../services/multi-player.service';
@@ -176,6 +176,19 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
     this.currentPlayer = 0;
     this.rolling = false;
     this.saveGameState();
+  }
+  
+  setPlayers(): Observable<IPlayer[]> | undefined {
+    throw new Error('Method not implemented.');
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    throw new Error('Method not implemented.');
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    throw new Error('Method not implemented.');
+  }
+  setPlayersAndStartGame(): void {
+    throw new Error('Method not implemented.');
   }
 
   override getPlayerConfigPopup(): MatDialogRef<PlayersConfigComponent, any> | undefined {

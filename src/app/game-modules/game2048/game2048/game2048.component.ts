@@ -4,6 +4,8 @@ import { BaseComponent } from '../../../components/base.component';
 import { MultiPlayerService } from '../../../services/multi-player.service';
 import { MatDialog } from '@angular/material/dialog';
 import { generateHexId } from '../../../utils/support.utils';
+import { Observable } from 'rxjs';
+import { IGameMultiPlayerConnection, IPlayer } from '../../../interfaces';
 
 @Component({
   selector: 'app-game2048',
@@ -238,6 +240,19 @@ export class Game2048Component extends BaseComponent {
   // Reset the game
   resetGame(): void {
     this.initializeGame();
+  }
+  
+  setPlayers(): Observable<IPlayer[]> | undefined {
+    throw new Error('Method not implemented.');
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    throw new Error('Method not implemented.');
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    throw new Error('Method not implemented.');
+  }
+  setPlayersAndStartGame(): void {
+    throw new Error('Method not implemented.');
   }
 
   // Get tile color based on value

@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { BaseComponent } from '../../../components/base.component';
 import { Chess, Color, DEFAULT_POSITION, Piece, Square } from 'chess.js';
-import { IPlayer, IPlayerAskConfig } from '../../../interfaces';
+import { IGameMultiPlayerConnection, IPlayer, IPlayerAskConfig } from '../../../interfaces';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { CHESS_COLORS } from '../../../config';
-import { take } from 'rxjs';
+import { Observable, take } from 'rxjs';
 import { Router } from '@angular/router';
 import { generateHexId, isChessColor } from '../../../utils/support.utils';
 import { UserService } from '../../../services/user.service';
@@ -139,6 +139,19 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
       } as IPlayerAskConfig,
       disableClose: true
     })
+  }
+  
+  setPlayers(): Observable<IPlayer[]> | undefined {
+    throw new Error('Method not implemented.');
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    throw new Error('Method not implemented.');
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    throw new Error('Method not implemented.');
+  }
+  setPlayersAndStartGame(): void {
+    throw new Error('Method not implemented.');
   }
 
   askForPlayers(): void {

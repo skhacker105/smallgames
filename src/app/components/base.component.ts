@@ -1,11 +1,12 @@
 import { Directive, OnDestroy, OnInit } from "@angular/core";
-import { Observable, Subject, filter, take, takeUntil } from "rxjs";
+import { Observable, Subject, filter, merge, take, takeUntil, timeout } from "rxjs";
 import { GameDashboardService } from "../services/game-dashboard.service";
 import { MatDialog, MatDialogRef } from "@angular/material/dialog";
-import { IGameMultiPlayerConnection, IPlayer, IUser, IYesNoConfig } from "../interfaces";
+import { IGameMultiPlayerConnection, IInfo, IPlayer, IUser, IYesNoConfig } from "../interfaces";
 import { MultiPlayerService } from "../services/multi-player.service";
 import { YesNoDialogComponent } from "./yes-no-dialog/yes-no-dialog.component";
 import { generateHexId } from "../utils/support.utils";
+import { InfoComponent } from "./info/info.component";
 
 @Directive()
 export abstract class BaseComponent implements OnInit, OnDestroy {
@@ -20,6 +21,11 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         return undefined;
     }
 
+    abstract setLocalPlayers(players: IPlayer[]): void;
+    abstract setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void;
+    abstract setPlayers(): Observable<IPlayer[]> | undefined;
+    abstract setPlayersAndStartGame(): void;
+
     abstract getGameState(): any;
     abstract setGameState(state: any): void;
 
@@ -27,7 +33,6 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
     abstract resetGame(): void;
     abstract saveGameState(): void;
 
-    private playerConfigPopupRef?: MatDialogRef<any, any>;
 
     // get isGameStart(): boolean {
     //     return false;
@@ -55,13 +60,21 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
 
         else {
             this.mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value.key);
-            if (this.mpg && this.mpg.gameState) this.setGameState(this.mpg.gameState);
+            if (!this.mpg) {
+                this.loadGameState();
+                return;
+            }
+
+            if (this.mpg.gameState)
+                this.setGameState(this.mpg.gameState);
 
             if (this.mpg?.gamePlayState === 'playerSetting')
-                this.waitForGameStart();
+                this.waitForGameStart(this.mpg);
 
-            else if (this.mpg?.gameOwner && !this.mpg.isMeTheGameOwner)
+            else if (this.mpg.gameOwner && !this.mpg.isMeTheGameOwner) {
+                this.waitForGameUpdateOrNoUpdate();
                 this.multiPlayerService.requestForGameUpdate(this.gameId, this.mpg, this.mpg.gameOwner.userId);
+            }
 
             this.listenForGameStateChange();
         }
@@ -77,24 +90,97 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         return undefined;
     }
 
-    waitForGameStart() {
-        this.multiPlayerService.incomingGameStart$.pipe(
-            filter(gameStartRequest => gameStartRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key),
-            takeUntil(this.isComponentActive),
-            take(1)
-        )
-            .subscribe(gameStartRequest => {
-                if (gameStartRequest && gameStartRequest.gameState) {
+    private waitMoreForGameStartConfirmation() {
+        const yesNoConfig: IYesNoConfig = {
+            title: 'Time Out',
+            message: `Timed-out while waiting for the game to start. Will you wait longer for the game to start?`,
+            countDown: this.multiPlayerService.gameRequestWaitTime * 2,
+            noButtonText: 'Cancel',
+            yesButtonText: 'Wait'
+        };
 
-                    this.mpg = this.multiPlayerService.getMultiPlayerGame(gameStartRequest.gameKey);
-                    if (!this.mpg) return;
+        return this.dialog.open(YesNoDialogComponent, {
+            data: yesNoConfig
+        }).afterClosed()
+    }
+    waitForGameStart(mpg: IGameMultiPlayerConnection) {
+        this.multiPlayerService.incomingGameStart$
+            .pipe(
+                filter(gameStartRequest => gameStartRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key),
+                takeUntil(this.isComponentActive),
+                take(1),
+                timeout((this.multiPlayerService.gameRequestWaitTime * 2) * 1000) // wait for 1 min for all players to accept and start game
+            )
+            .subscribe({
+                next: gameStartRequest => {
+                    if (gameStartRequest && gameStartRequest.gameState) {
 
-                    this.mpg.gameState = gameStartRequest.gameState;
-                    this.mpg.gamePlayState = 'gameInProgress'
-                    this.setGameState(gameStartRequest.gameState);
-                    // this.listenForGameStateChange();
+                        this.mpg = this.multiPlayerService.getMultiPlayerGame(gameStartRequest.gameKey);
+                        if (!this.mpg) return;
+
+                        this.mpg.gameState = gameStartRequest.gameState;
+                        this.mpg.gamePlayState = 'gameInProgress'
+                        this.setGameState(gameStartRequest.gameState);
+                        // this.listenForGameStateChange();
+                    }
+                },
+
+                error: () => this.waitMoreForGameStartConfirmation()
+                    .pipe(take(1), takeUntil(this.isComponentActive))
+                    .subscribe({
+                        next: confirm => {
+                            if (!this.mpg) return;
+
+                            if (!confirm) this.multiPlayerService.sendLeaveGameMessage(this.gameId, this.mpg, this.mpg.gameOwner.userId)
+                            else this.waitForGameStart(this.mpg);
+                        }
+                    })
+            });
+    }
+
+    private askNewGameAsNoUpdate() {
+        const yesNoConfig: IYesNoConfig = {
+            title: 'No Game Update',
+            message: `Failed to aquire latest game update. It may have been cancelled or concluded. Would you like to start new game?`,
+            countDown: this.multiPlayerService.gameRequestWaitTime * 2,
+            noButtonText: 'No',
+            yesButtonText: 'Yes'
+        };
+
+        return this.dialog.open(YesNoDialogComponent, {
+            data: yesNoConfig
+        }).afterClosed()
+    }
+    waitForGameUpdateOrNoUpdate() {
+        // start loading circle
+        merge(this.multiPlayerService.incomingGameStateChanged$, this.multiPlayerService.incomingGameNotFound$)
+            .pipe(
+                filter(socketMessage => socketMessage?.gameKey === this.gameDashboardService.selectedGame.value?.key),
+                take(1), takeUntil(this.isComponentActive),
+                timeout(this.multiPlayerService.gameRequestWaitTime * 1000)
+            )
+            .subscribe({
+                next: () => {
+                    // do nothing as game state update was received
+                },
+                error: () => { // timeout error occured ad nothing was received
+
+                    this.askNewGameAsNoUpdate().pipe(take(1))
+                    .subscribe(confirm => {
+                        
+                        if (!confirm) this.multiPlayerService.gotoHomePage();
+
+                        else {
+                            if (!this.gameDashboardService.selectedGame.value) return;
+
+                            this.gameDashboardService.removeGameFromLocalStorageByGameId(this.gameDashboardService.selectedGame.value.key, this.gameId);
+                            this.multiPlayerService.removeMPGFromLocalStorageByGameId(this.gameDashboardService.selectedGame.value.key, this.gameId);
+                            this.resetGame();
+                            this.players=[];
+                            this.setPlayersAndStartGame();
+                        }
+                    })
                 }
-                this.playerConfigPopupRef?.close();
             });
     }
 

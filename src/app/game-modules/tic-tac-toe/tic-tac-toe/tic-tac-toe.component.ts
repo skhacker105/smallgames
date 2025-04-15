@@ -4,6 +4,8 @@ import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { MultiPlayerService } from '../../../services/multi-player.service';
 import { MatDialog } from '@angular/material/dialog';
 import { generateHexId } from '../../../utils/support.utils';
+import { Observable } from 'rxjs';
+import { IGameMultiPlayerConnection, IPlayer } from '../../../interfaces';
 
 type PlayerType = 'X' | 'O' | '';
 type Cuts = 'horizontal' | 'vertical' | 'diagonal_left' | 'diagonal_right'
@@ -120,6 +122,19 @@ export class TicTacToeComponent extends BaseComponent {
     this.currentPlayer = 'X';
     this.winnerResult = undefined;
     this.saveGameState();
+  }
+  
+  setPlayers(): Observable<IPlayer[]> | undefined {
+    throw new Error('Method not implemented.');
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    throw new Error('Method not implemented.');
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    throw new Error('Method not implemented.');
+  }
+  setPlayersAndStartGame(): void {
+    throw new Error('Method not implemented.');
   }
 
   saveGameState(): void {

@@ -80,6 +80,32 @@ export class MultiPlayerService {
     localStorage.setItem(this.multiPlayerGamesStorageKey, JSON.stringify(this.multiPlayerGames));
   }
 
+  gotoHomePage(): void {
+    this.router.navigateByUrl('');
+  }
+
+  removeMPGFromLocalStorageByGameId(gameKey: string, gameId: string): void {
+    const mpg = this.getMultiPlayerGame(gameKey);
+    if (mpg?.gameState?.gameId === gameId)
+      this.removeMultiPlayerGame(gameKey);
+  }
+
+  removeGameAndGotoHomePage(gameKey: string, gameId: string): void {
+    // if selected game is same as Game Not Found game then navigate to home page
+    if (this.gameDashboardService.selectedGame.value?.key === gameKey)
+      this.gotoHomePage();
+
+    setTimeout(() => {
+
+      // Remove Multiplayer Game
+      this.removeMPGFromLocalStorageByGameId(gameKey, gameId);
+
+      // Remove from Local Storage
+      this.gameDashboardService.removeGameFromLocalStorageByGameId(gameKey, gameId);
+
+    }, 100);
+  }
+
   anyGameInProgressStatus(gameKey: string): boolean {
     const multiPGame = this.multiPlayerGames.find(game => game.gameInfo.key === gameKey);
     if (!multiPGame) return false;
@@ -91,13 +117,15 @@ export class MultiPlayerService {
     return this.multiPlayerGames.find(mpg => mpg.gameInfo.key === gameKey);
   }
 
+
+  
+
   // Multi Player Game (MPG) CRUD Operation
   addMultiPlayerGame(mpg: IGameMultiPlayerConnection): void {
     this.multiPlayerGames.push(mpg);
   }
 
   removeMultiPlayerGame(gameKey: string) {
-    console.log('removeMultiPlayerGame ', gameKey)
     const multiPlayerGameIndex = this.multiPlayerGames.findIndex(g => g.gameInfo.key === gameKey);
     if (multiPlayerGameIndex < 0) return;
 
@@ -181,6 +209,8 @@ export class MultiPlayerService {
     multiPlayerGame.players = gameRemoteCancelledPlayers;
     return multiPlayerGame;
   }
+
+
 
 
   // Game Requests
@@ -354,6 +384,8 @@ export class MultiPlayerService {
   }
 
 
+
+
   // Handling Incoming
   private askPlayerForGameRequestConfirmation(sentByUserName: string, gameInfo: IGameInfo): Observable<any> {
     const yesNoConfig: IYesNoConfig = {
@@ -430,30 +462,7 @@ export class MultiPlayerService {
         if (!gameNotFoundMessage) return;
 
         this.informNoGameAvailable().pipe(take(1))
-          .subscribe(() => {
-
-            // if selected game is same as Game Not Found game then navigate to home page
-            if (this.gameDashboardService.selectedGame.value?.key === gameNotFoundMessage.gameKey)
-              this.router.navigateByUrl('');
-
-            setTimeout(() => {
-
-              // Remove Multiplayer Game
-              const mpg = this.getMultiPlayerGame(gameNotFoundMessage.gameKey);
-              if (mpg?.gameState?.gameId === gameNotFoundMessage.gameId) {
-                this.removeMultiPlayerGame(gameNotFoundMessage.gameKey);
-              }
-
-              // Remove from Local Storage
-              const state: any = localStorage.getItem(gameNotFoundMessage.gameKey);
-              const savedState: any = state ? JSON.parse(state) : {};
-              if (savedState?.gameId === gameNotFoundMessage.gameId) {
-                localStorage.removeItem(gameNotFoundMessage.gameKey);
-              }
-
-            }, 100);
-
-          })
+          .subscribe(() => this.removeGameAndGotoHomePage(gameNotFoundMessage.gameKey, gameNotFoundMessage.gameId))
 
       });
   }

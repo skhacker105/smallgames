@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { BaseComponent } from '../../../components/base.component';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
-import { Subject, interval, takeUntil } from 'rxjs';
+import { Observable, Subject, interval, takeUntil } from 'rxjs';
 import { MultiPlayerService } from '../../../services/multi-player.service';
 import { MatDialog } from '@angular/material/dialog';
 import { generateHexId } from '../../../utils/support.utils';
+import { IGameMultiPlayerConnection, IPlayer } from '../../../interfaces';
 
 @Component({
   selector: 'app-image-puzzle',
@@ -187,6 +188,19 @@ export class ImagePuzzleComponent extends BaseComponent {
   // Reset the game
   resetGame(): void {
     this.initializeGame();
+  }
+  
+  setPlayers(): Observable<IPlayer[]> | undefined {
+    throw new Error('Method not implemented.');
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    throw new Error('Method not implemented.');
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    throw new Error('Method not implemented.');
+  }
+  setPlayersAndStartGame(): void {
+    throw new Error('Method not implemented.');
   }
 
   // Handle level change

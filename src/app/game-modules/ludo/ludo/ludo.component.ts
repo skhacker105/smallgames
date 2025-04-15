@@ -113,7 +113,7 @@ export class LudoComponent extends BaseComponent {
   saveGameState(): void {
     const state = this.getGameState();
     this.gameDashboardService.saveGameState(state);
-    
+
     const mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value?.key ?? '');
     if (mpg) mpg.gameState = state;
   }
@@ -147,29 +147,29 @@ export class LudoComponent extends BaseComponent {
 
   cancelGame(): void {
     this.askToConfirmCancelGame()
-    .pipe(take(1), takeUntil(this.isComponentActive))
-    .subscribe({
-      next: confirm => {
-        if (!confirm || !this.gameDashboardService.selectedGame.value) return;
+      .pipe(take(1), takeUntil(this.isComponentActive))
+      .subscribe({
+        next: confirm => {
+          if (!confirm || !this.gameDashboardService.selectedGame.value) return;
 
-        this.players = [];
-        this.multiPlayerService.cancelMultiPlayerGame(this.gameId, this.gameDashboardService.selectedGame.value, 'Gmae owner cancelled this game');
-        this.router.navigateByUrl('');
-      }
-    });
+          this.players = [];
+          this.multiPlayerService.cancelMultiPlayerGame(this.gameId, this.gameDashboardService.selectedGame.value, 'Gmae owner cancelled this game');
+          this.router.navigateByUrl('');
+        }
+      });
   }
 
   leaveGame(): void {
     this.askToConfirmLeaveGame()
-    .pipe(take(1), takeUntil(this.isComponentActive))
-    .subscribe({
-      next: confirm => {
-        if (!confirm || !this.mpg) return;
+      .pipe(take(1), takeUntil(this.isComponentActive))
+      .subscribe({
+        next: confirm => {
+          if (!confirm || !this.mpg) return;
 
-        this.players = [];
-        this.multiPlayerService.sendLeaveGameMessage(this.gameId, this.mpg, '');
-      }
-    });
+          this.players = [];
+          this.multiPlayerService.sendLeaveGameMessage(this.gameId, this.mpg, '');
+        }
+      });
   }
 
   getPathPosition(cellIndex: number, type: 'col' | 'row' = 'row'): string {
@@ -205,7 +205,7 @@ export class LudoComponent extends BaseComponent {
     const ref = this.getPlayerConfigPopup();
 
     return ref?.afterClosed().pipe(
-      take(1),
+      take(1), takeUntil(this.isComponentActive),
       map((players: IPlayer[] | IGameMultiPlayerConnection | undefined) => {
 
         if (!players) {
@@ -263,24 +263,23 @@ export class LudoComponent extends BaseComponent {
     })
   }
   startMultiPlayerGame(): void {
+    if (!this.gameDashboardService.selectedGame.value) return;
 
-    if (this.gameDashboardService.selectedGame.value) {
-      this.mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value.key)
-      if (!this.mpg) return;
+    this.mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value.key)
+    if (!this.mpg) return;
 
-      this.mpg.gameState = this.getGameState();
-      this.mpg.gamePlayState = 'gameInProgress';
+    this.mpg.gameState = this.getGameState();
+    this.mpg.gamePlayState = 'gameInProgress';
 
-      // Send Game start signal to all players
-      this.players.forEach(player => {
-        if (player.userId && this.gameDashboardService.selectedGame.value && this.mpg) {
-          this.multiPlayerService.sendGameStart(this.gameId, this.mpg, player.userId)
-        }
-      });
-    }
+    // Send Game start signal to all players
+    this.players.forEach(player => {
+      if (player.userId && this.gameDashboardService.selectedGame.value && this.mpg) {
+        this.multiPlayerService.sendGameStart(this.gameId, this.mpg, player.userId)
+      }
+    });
   }
 
-  
+
 
   getColorPlayer(color: string = 'red'): IPlayer | undefined {
     const colorIndex = this.playerColors.findIndex(pc => pc === color);

@@ -1,2 +1,7 @@
  
 handle other incoming messages ---> owner cancel game, player left
+
+if game owner landing on game page or already on game page   AND  one or more players have left game then inform all players and cancel game if required
+
+saving of state is not happening when new state is received
+if player not on game page and state update comes then update the states in local storage

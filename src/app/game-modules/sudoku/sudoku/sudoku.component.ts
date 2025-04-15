@@ -4,6 +4,8 @@ import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { MultiPlayerService } from '../../../services/multi-player.service';
 import { MatDialog } from '@angular/material/dialog';
 import { generateHexId } from '../../../utils/support.utils';
+import { Observable } from 'rxjs';
+import { IGameMultiPlayerConnection, IPlayer } from '../../../interfaces';
 
 interface ICell {
   row: number;
@@ -80,6 +82,19 @@ export class SudokuComponent extends BaseComponent {
       })
     });
     this.saveGameState();
+  }
+  
+  setPlayers(): Observable<IPlayer[]> | undefined {
+    throw new Error('Method not implemented.');
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    throw new Error('Method not implemented.');
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    throw new Error('Method not implemented.');
+  }
+  setPlayersAndStartGame(): void {
+    throw new Error('Method not implemented.');
   }
 
   generateNewGame(): void {
