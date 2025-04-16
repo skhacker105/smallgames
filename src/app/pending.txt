@@ -1,6 +1,5 @@
  
 
-game player update by accepting or rejecting game offer having bugs
 game winner not showing to all
 loading circle while game starts is needed
 for game owner if all players do not respond within time then cancel waiting

@@ -89,7 +89,7 @@ export class MultiPlayerService {
 
   removeMPGFromLocalStorageByGameId(gameKey: string, gameId: string): void {
     const mpg = this.getMultiPlayerGame(gameKey);
-    if (mpg?.gameState?.gameId === gameId)
+    if (mpg?.gameId === gameId)
       this.removeMultiPlayerGame(gameKey);
   }
 
@@ -173,6 +173,7 @@ export class MultiPlayerService {
     }, [] as IGameRemotePlayer[]);
 
     const newMultiPlayerGame: IGameMultiPlayerConnection = {
+      gameId,
       gameInfo,
       gameOwner: gameOwner ?? this.userService.me,
       gamePlayState: 'playerSetting',

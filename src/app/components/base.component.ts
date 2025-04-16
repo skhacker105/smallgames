@@ -229,7 +229,10 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
                     if (!gameCancelRequest) return;
 
                     this.informGameCancelled(gameCancelRequest).pipe(take(1))
-                        .subscribe(() => this.multiPlayerService.removeGameAndGotoHomePage(gameCancelRequest.gameKey, gameCancelRequest.gameId))
+                        .subscribe(() => {
+                            debugger;
+                            this.multiPlayerService.removeGameAndGotoHomePage(gameCancelRequest.gameKey, gameCancelRequest.gameId);
+                        })
                 }
             });
     }

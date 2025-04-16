@@ -4,6 +4,7 @@ import { IGameInfo, IPlayer, ISocketMessage, IUser } from "./";
 import { Observable } from "rxjs";
 
 export interface IGameMultiPlayerConnection {
+    gameId: string;
     gameInfo: IGameInfo;
     gameOwner: IUser;
     gamePlayState: GamePlayState;
