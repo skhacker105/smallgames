@@ -12,15 +12,15 @@ import { GameRequestStatus } from '../../types';
 import { GameDashboardService } from '../../services/game-dashboard.service';
 import { PlayerNamePipe } from '../../pipe/player-name.pipe';
 import { Router } from '@angular/router';
-import { NgxSpinnerModule, NgxSpinnerService } from 'ngx-spinner';
 import { MultiPlayerService } from '../../services/multi-player.service';
 import { LoggerService } from '../../services/logger.service';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { SpinnerComponent } from '../spinner/spinner.component';
 
 @Component({
   selector: 'app-players-config',
   standalone: true,
-  imports: [MatDialogModule, CommonModule, FormsModule, MatIconModule, MatMenuModule, PlayerNamePipe, NgxSpinnerModule, MatProgressSpinnerModule],
+  imports: [MatDialogModule, CommonModule, FormsModule, MatIconModule, MatMenuModule,
+    PlayerNamePipe, SpinnerComponent],
   templateUrl: './players-config.component.html',
   styleUrl: './players-config.component.scss'
 })
@@ -31,6 +31,9 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
   activeColorPickerIndex: number | null = null;
 
   componentIsActive = new Subject<boolean>();
+
+  multiPlayerOnlineWaitStatus: string | undefined;
+  multiPlayerRequestError: string | undefined;
 
   multiPlayerConnection?: IGameMultiPlayerConnection;
   multiUserState = new Map<string, GameRequestStatus>();
@@ -75,7 +78,6 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
     public userService: UserService,
     public gameDashboardService: GameDashboardService,
     private router: Router,
-    private spinner: NgxSpinnerService,
     private multiPlayerService: MultiPlayerService,
     private loggerService: LoggerService
   ) {
@@ -235,7 +237,7 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
     }
 
     if (this.isAnyPlayerOnline) {
-      this.spinner.show();
+      this.multiPlayerOnlineWaitStatus = 'Waiting for confirmation from all players.'
 
       // Create multiplayer game and send requestes to all players
       const multiPlayerConnection = this.multiPlayerService.startMultiPlayerGame(this.config.gameId, this.config.game, this.players);
@@ -259,7 +261,10 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
       .map(p => this.multiPlayerService.incomingGameRequestResponse$.pipe(filter(message => message?.sourceUserId === p.player.userId)));
 
     merge(...this.playersResponse$)
-      .pipe(take(this.playersResponse$.length), takeUntil(this.componentIsActive))
+      .pipe(
+        take(this.playersResponse$.length), takeUntil(this.componentIsActive),
+        timeout(this.multiPlayerService.gameRequestWaitTime * 1000)
+      )
       .subscribe({
         next: response => {
           this.setPlayerResponse(multiPlayerConnection, response);
@@ -270,6 +275,7 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
         },
         error: error => {
           this.loggerService.log(JSON.stringify({ error: error }));
+          this.completePlayersSubmissionAndGameCreation(multiPlayerConnection, 'One or more player did not respond to the game request.');
         }
       });
   }
@@ -289,18 +295,24 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
     player.connectionResponseSocketMessage = responseMessage;
   }
 
-  completePlayersSubmissionAndGameCreation(multiPlayerConnection: IGameMultiPlayerConnection) {
+  completePlayersSubmissionAndGameCreation(multiPlayerConnection: IGameMultiPlayerConnection, error?: string) {
     const acceptedPlayers = [...this.multiUserState.values()].filter((requestStatus: GameRequestStatus) => requestStatus === 'accepted')
 
-    if (acceptedPlayers.length === this.multiUserState.size)
+    if (!error && acceptedPlayers.length === this.multiUserState.size)
       this.dialogRef.close(multiPlayerConnection);
 
     else {
-      this.multiPlayerService.removeGameAndGotoHomePage(this.config.game.key, this.config.gameId);
-      this.multiPlayerService.cancelMultiPlayerGame(this.config.gameId, this.config.game, `Some players rejected or did not respond to game request.`);
+      this.multiPlayerRequestError = error ?? `Some players rejected or did not respond to game request.`;
+      this.multiPlayerService.cancelMultiPlayerGame(multiPlayerConnection.gameId, this.config.game, this.multiPlayerRequestError);
+      this.multiPlayerService.removeGameAndGotoHomePage(this.config.game.key, multiPlayerConnection.gameId);
     }
 
-    this.spinner.hide();
+    this.multiPlayerOnlineWaitStatus = undefined;
+  }
+
+  resetErrorMessages(): void {
+    this.errorMessage = '';
+    this.multiPlayerRequestError = '';
   }
 
   // Events from Host

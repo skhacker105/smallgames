@@ -1,9 +1,7 @@
 <div class="player-ask-wrapper">
   <h1 class="title">Configure Players</h1>
 
-  <ngx-spinner size="medium" type="ball-scale-multiple">
-    <mat-spinner color="accent"></mat-spinner>
-  </ngx-spinner>
+  <app-spinner [message]="multiPlayerOnlineWaitStatus"></app-spinner>
 
   <!-- Player's List -->
   <div class="player-list">
@@ -22,8 +20,6 @@
             'request-accepted': multiUserState.get(player.userId) === 'accepted',
             'request-rejected': multiUserState.get(player.userId) === 'rejected'
           }" [disabled]="true" placeholder="Enter player name" />
-        <!-- <input matInput type="text" id="playerName{{ i }}" *ngIf="player.userId" [ngModel]="players[i] | playerName"
-          class="player-name" [disabled]="true" placeholder="Enter player name" /> -->
 
         <!-- Offline Local Player -->
         <input matInput type="text" id="playerName{{ i }}" *ngIf="!player.userId" [(ngModel)]="players[i].name"
@@ -82,6 +78,7 @@
     </div>
   </div>
   <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+  <p *ngIf="multiPlayerRequestError" class="error">{{ multiPlayerRequestError }}</p>
   <div class="controls">
     <button mat-icon-button class="add-button" (click)="addPlayer()"
       [disabled]="players.length >= config.maxPlayerCount">

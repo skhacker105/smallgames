@@ -1,8 +1,8 @@
 import { Directive, OnDestroy, OnInit } from "@angular/core";
-import { Observable, Subject, filter, merge, take, takeUntil, timeout } from "rxjs";
+import { BehaviorSubject, Observable, Subject, filter, merge, take, takeUntil, timeout } from "rxjs";
 import { GameDashboardService } from "../services/game-dashboard.service";
 import { MatDialog, MatDialogRef } from "@angular/material/dialog";
-import { IGameMultiPlayerConnection, IInfo, IPlayer, ISocketMessage, IUser, IYesNoConfig } from "../interfaces";
+import { IGameInfo, IGameMultiPlayerConnection, IInfo, IPlayer, ISocketMessage, IUser, IYesNoConfig } from "../interfaces";
 import { MultiPlayerService } from "../services/multi-player.service";
 import { YesNoDialogComponent } from "./yes-no-dialog/yes-no-dialog.component";
 import { generateHexId } from "../utils/support.utils";
@@ -11,9 +11,12 @@ import { InfoComponent } from "./info/info.component";
 @Directive()
 export abstract class BaseComponent implements OnInit, OnDestroy {
 
+    gameInfo?: IGameInfo;
     gameId: string;
     mpg?: IGameMultiPlayerConnection;
     players: IPlayer[] = [];
+
+    isWaitingForGameToStart = new BehaviorSubject<string | undefined>(undefined);
 
     protected isComponentActive = new Subject<boolean>();
 
@@ -55,6 +58,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         if (!this.gameDashboardService.selectedGame.value) return;
 
+        this.gameInfo = {...this.gameDashboardService.selectedGame.value};
         if (!this.multiPlayerService.anyGameInProgressStatus(this.gameDashboardService.selectedGame.value.key))
             this.loadGameState();
 
@@ -65,14 +69,18 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
                 return;
             }
 
+            this.gameId = this.mpg.gameId;
+            this.saveGameState();
+
             if (this.mpg.gameState)
                 this.setGameState(this.mpg.gameState);
 
-            if (this.mpg?.gamePlayState === 'playerSetting')
+            if (this.mpg?.gamePlayState === 'playerSetting') {
                 this.waitForGameStart(this.mpg);
+            }
 
             else if (!this.mpg.isMeTheGameOwner && this.mpg.gameOwner) {
-                this.multiPlayerService.requestForGameUpdate(this.gameId, this.mpg, this.mpg.gameOwner.userId);
+                this.multiPlayerService.requestForGameUpdate(this.mpg.gameId, this.mpg, this.mpg.gameOwner.userId);
                 this.waitForGameUpdateOrNoUpdate();
             }
 
@@ -101,8 +109,8 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
     private waitMoreForGameStartConfirmation(): Observable<any> {
         const yesNoConfig: IYesNoConfig = {
             title: 'Time Out',
-            message: `Timed-out while waiting for the game to start. Will you wait longer for the game to start?`,
-            countDown: this.multiPlayerService.gameRequestWaitTime * 2,
+            message: `Timeout occurred while waiting for the game to begin. Would you like to wait a little longer?`,
+            countDown: this.multiPlayerService.gameRequestWaitTime,
             noButtonText: 'Cancel',
             yesButtonText: 'Wait'
         };
@@ -112,15 +120,17 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         }).afterClosed()
     }
     waitForGameStart(mpg: IGameMultiPlayerConnection) {
+        this.isWaitingForGameToStart.next('Waiting for game to start...');
         this.multiPlayerService.incomingGameStart$
             .pipe(
                 filter(gameStartRequest => gameStartRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key),
                 takeUntil(this.isComponentActive),
                 take(1),
-                timeout((this.multiPlayerService.gameRequestWaitTime * 2) * 1000) // wait for 1 min for all players to accept and start game
+                timeout(this.multiPlayerService.gameRequestWaitTime * 1000) // wait for 1 min for all players to accept and start game
             )
             .subscribe({
                 next: gameStartRequest => {
+                    this.isWaitingForGameToStart.next(undefined);
                     if (gameStartRequest && gameStartRequest.gameState) {
 
                         this.mpg = this.multiPlayerService.getMultiPlayerGame(gameStartRequest.gameKey);
@@ -133,19 +143,21 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
                     }
                 },
 
-                error: () => this.waitMoreForGameStartConfirmation()
-                    .pipe(take(1), takeUntil(this.isComponentActive))
-                    .subscribe({
-                        next: confirm => {
-                            if (!this.mpg) return;
+                error: () => {
+                    this.isWaitingForGameToStart.next(undefined);
+                    this.waitMoreForGameStartConfirmation()
+                        .pipe(take(1), takeUntil(this.isComponentActive))
+                        .subscribe({
+                            next: confirm => {
 
-                            if (!confirm) {
-                                this.multiPlayerService.sendLeaveGameMessage(this.gameId, this.mpg, this.mpg.gameOwner.userId)
-                                this.multiPlayerService.removeGameAndGotoHomePage(this.mpg.gameInfo.key, this.gameId);
+                                if (!confirm) {
+                                    this.multiPlayerService.sendLeaveGameMessage(mpg.gameId, mpg, mpg.gameOwner.userId)
+                                    this.multiPlayerService.removeGameAndGotoHomePage(mpg.gameInfo.key, mpg.gameId);
+                                }
+                                else this.waitForGameStart(mpg);
                             }
-                            else this.waitForGameStart(this.mpg);
-                        }
-                    })
+                        })
+                }
             });
     }
 
@@ -153,14 +165,14 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         const yesNoConfig: IYesNoConfig = {
             title: 'No Game Update',
             message: `Failed to aquire latest game update. It may have been cancelled or concluded. Would you like to start new game?`,
-            countDown: this.multiPlayerService.gameRequestWaitTime * 2,
+            countDown: this.multiPlayerService.gameRequestWaitTime,
             noButtonText: 'No',
             yesButtonText: 'Yes'
         };
 
         return this.dialog.open(YesNoDialogComponent, {
             data: yesNoConfig
-        }).afterClosed()
+        }).afterClosed();
     }
     waitForGameUpdateOrNoUpdate(): void {
         // start loading circle
@@ -211,7 +223,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
 
     private informGameCancelled(gameCancelRequest: ISocketMessage): Observable<any> {
         const infoConfig: IInfo = {
-            message: 'Game Cancelled. ' + (gameCancelRequest.error ?? '')
+            message: (gameCancelRequest.error ?? '')
         }
 
         return this.dialog.open(InfoComponent, {
@@ -226,11 +238,11 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             )
             .subscribe({
                 next: gameCancelRequest => {
+                    this.isWaitingForGameToStart.next(undefined);
                     if (!gameCancelRequest) return;
 
                     this.informGameCancelled(gameCancelRequest).pipe(take(1))
                         .subscribe(() => {
-                            debugger;
                             this.multiPlayerService.removeGameAndGotoHomePage(gameCancelRequest.gameKey, gameCancelRequest.gameId);
                         })
                 }

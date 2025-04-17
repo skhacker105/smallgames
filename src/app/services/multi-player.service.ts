@@ -2,12 +2,12 @@ import { Injectable } from '@angular/core';
 import { Observable, filter, take } from 'rxjs';
 import { IGameInfo, IGameMultiPlayerConnection, IGameRemotePlayer, IInfo, IPlayer, ISocketMessage, IUser, IYesNoConfig } from '../interfaces';
 import { SocketService } from './socket.service';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, } from '@angular/material/dialog';
 import { LoggerService } from './logger.service';
 import { GameDashboardService } from './game-dashboard.service';
 import { YesNoDialogComponent } from '../components/yes-no-dialog/yes-no-dialog.component';
 import { UserService } from './user.service';
-import { GamePlayState, GameRequestStatus } from '../types';
+import {  GameRequestStatus } from '../types';
 import { Router } from '@angular/router';
 import { InfoComponent } from '../components/info/info.component';
 
@@ -16,7 +16,7 @@ import { InfoComponent } from '../components/info/info.component';
 })
 export class MultiPlayerService {
 
-  gameRequestWaitTime = 30; // in seconds
+  gameRequestWaitTime = 300; // in seconds
   multiPlayerGamesStorageKey = 'multiPlayerGames';
   multiPlayerGames: IGameMultiPlayerConnection[] = [];
 
@@ -40,7 +40,8 @@ export class MultiPlayerService {
     private userService: UserService,
     private router: Router
   ) {
-    this.loadMultiPlayersToStorage();
+    this.loadMultiPlayersFromStorage();
+    this.removeGarbageMPG();
 
     this.incomingGameRequestResponse$ = this.getGameRequestOverserver(['accepted', 'rejected']);
     this.incomingGameStart$ = this.getGameRequestOverserver('gameStart');
@@ -72,9 +73,20 @@ export class MultiPlayerService {
     return this.socketService.message$.pipe(filter(message => !!message && message?.type === 'gameRequest' && message.gameRequestStatus === status));
   }
 
-  private loadMultiPlayersToStorage(): void {
+  private loadMultiPlayersFromStorage(): void {
     const state = localStorage.getItem(this.multiPlayerGamesStorageKey);
     if (state) this.multiPlayerGames = JSON.parse(state);
+  }
+
+  private removeGarbageMPG(): void {
+    this.multiPlayerGames = this.multiPlayerGames.filter(mpg => {
+      if (mpg.gamePlayState !== 'playerSetting') return true;
+      else {
+        this.gameDashboardService.removeGameFromLocalStorageByGameId(mpg.gameInfo.key, mpg.gameId);
+        return false
+      }
+    });
+    this.saveMultiPlayersToStorage();
   }
 
 

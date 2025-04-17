@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { IGameMultiPlayerConnection, ILudoCoin, IPlayer, IPlayerAskConfig } from '../../../interfaces';
+import { IGameInfo, IGameMultiPlayerConnection, ILudoCoin, IPlayer, IPlayerAskConfig } from '../../../interfaces';
 import { BaseComponent } from '../../../components/base.component';
 import { COLOR_PATHS, LUDO_PATHS } from '../ludo-path';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
-import { Observable, map, take, takeUntil, tap } from 'rxjs';
+import { Observable, map, pipe, take, takeUntil, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { LUDO_COLORS } from '../../../config';
 import { generateHexId, isLudoColor } from '../../../utils/support.utils';
@@ -18,6 +18,7 @@ import { MultiPlayerService } from '../../../services/multi-player.service';
   styleUrl: './ludo.component.scss'
 })
 export class LudoComponent extends BaseComponent {
+
   playerColors: string[] = [];
   currentPlayer: number = 0;
   lastDiceRoll: number = 1;
@@ -112,9 +113,9 @@ export class LudoComponent extends BaseComponent {
 
   saveGameState(): void {
     const state = this.getGameState();
-    this.gameDashboardService.saveGameState(state);
+    this.gameDashboardService.saveGameState(state, (this.gameInfo?.key ?? undefined));
 
-    const mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value?.key ?? '');
+    const mpg = this.multiPlayerService.getMultiPlayerGame(this.gameInfo?.key ?? '');
     if (mpg) mpg.gameState = state;
     this.multiPlayerService.saveMultiPlayersToStorage();
   }
@@ -250,6 +251,7 @@ export class LudoComponent extends BaseComponent {
 
   }
 
+  // This function will only run for Game Owner
   setPlayersAndStartGame(): void {
     this.setPlayers()?.subscribe({
       next: players => {
