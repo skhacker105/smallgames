@@ -196,4 +196,6 @@ export class PatternPuzzleComponent extends BaseComponent {
     this.emptyPosition.col = this.gridSize - 1;
     this.checkGameOver();
   }
+
+  checkWinner() {}
 }

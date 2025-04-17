@@ -36,6 +36,8 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
     abstract resetGame(): void;
     abstract saveGameState(): void;
 
+    abstract checkWinner(): any;
+
 
     // get isGameStart(): boolean {
     //     return false;
@@ -218,6 +220,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
                     this.setGameState(gameStateRequest.gameState);
                 if (this.selectedPlayer && gameStateRequest?.gameState.winner) this.gameDashboardService.saveGameWinner(this.selectedPlayer);
                 this.saveGameState();
+                this.checkWinner();
             });
     }
 

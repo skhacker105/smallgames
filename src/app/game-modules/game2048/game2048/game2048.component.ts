@@ -279,4 +279,6 @@ export class Game2048Component extends BaseComponent {
     if (value < 1000) return '1.2em';
     return '1em';
   }
+
+  checkWinner() {}
 }

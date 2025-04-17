@@ -330,4 +330,6 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
   isWhiteSquare(square: Piece): boolean {
     return square.color === 'w';
   }
+
+  checkWinner() {}
 }

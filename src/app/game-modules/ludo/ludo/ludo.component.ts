@@ -383,23 +383,28 @@ export class LudoComponent extends BaseComponent {
       this.getCoinOutOfBase(coin);
       this.playableCoins.clear();
       this.saveGameState();
+      this.sendGameStateUpdate();
       if (this.checkWinner()) return;
     }
     else if (coin.position !== 0) {
       this.moveCoin(coin, this.lastDiceRoll)
         .then(() => {
+
           const otherCoins = this.otherPlayerCoinsAtDestination(coin);
           if (otherCoins.length > 0) {
             otherCoins[0].position = 0;
             this.coinsToReverse.push({ ...otherCoins[0] });
           }
+
           if (6 !== this.lastDiceRoll && otherCoins.length === 0 && !coin.finished)
             this.moveToNextPlayer();
           else
             this.playableCoins.clear();
+
           this.saveGameState();
-          if (this.checkWinner()) return;
           this.sendGameStateUpdate();
+          if (this.checkWinner()) return;
+          
         });
     }
     else this.moveToNextPlayer();

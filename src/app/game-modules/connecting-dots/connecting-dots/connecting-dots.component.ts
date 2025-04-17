@@ -254,4 +254,6 @@ export class ConnectingDotsComponent extends BaseComponent {
       this.resetGame();
     }
   }
+
+  checkWinner() {}
 }

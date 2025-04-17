@@ -219,4 +219,6 @@ export class HanoiOfTowerComponent extends BaseComponent {
       this.resetGame();
     }
   }
+
+  checkWinner() {}
 }

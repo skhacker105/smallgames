@@ -16,7 +16,7 @@ import { InfoComponent } from '../components/info/info.component';
 })
 export class MultiPlayerService {
 
-  gameRequestWaitTime = 300; // in seconds
+  gameRequestWaitTime = 30; // in seconds
   multiPlayerGamesStorageKey = 'multiPlayerGames';
   multiPlayerGames: IGameMultiPlayerConnection[] = [];
 
