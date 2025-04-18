@@ -183,6 +183,8 @@ select {
 
 .game-actions {
     display: flex;
+    gap: 1px;
+    margin: 20px 15.750px;
 
     >button {
         padding: 12px 20px;

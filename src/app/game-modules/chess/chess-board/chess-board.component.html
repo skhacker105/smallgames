@@ -31,10 +31,26 @@
 </div>
 
 <div class="game-actions">
-  <button mat-icon-button (click)="askForPlayers()">
+  <!-- <button mat-icon-button (click)="askForPlayers()">
     <mat-icon>manage_accounts</mat-icon>
+  </button> -->
+
+  <!-- Leave Game -->
+  <button (click)="leaveGame()" *ngIf="mpg && !mpg.isMeTheGameOwner">
+    <mat-icon>exit_to_app</mat-icon>
   </button>
-  <button (click)="resetGame()">Reset Game</button>
+
+  <!-- Cancel Game -->
+  <button (click)="cancelGame()" *ngIf="mpg && mpg.isMeTheGameOwner">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <!-- Reset Game -->
+  <button (click)="resetGame()" *ngIf="!mpg || mpg.isMeTheGameOwner">
+    <mat-icon>restart_alt</mat-icon>
+  </button>
+
+  <div class="spacer"></div>
 </div>
 
 <div *ngIf="gameOver" class="game-over">

@@ -105,7 +105,6 @@ export class LudoComponent extends BaseComponent {
         this.listenForGameStateChange();
       }
 
-
     } else {
       this.setPlayersAndStartGame();
     }
@@ -248,7 +247,6 @@ export class LudoComponent extends BaseComponent {
         userId: player.player.userId
       } as IPlayer
     });
-
   }
 
   // This function will only run for Game Owner
@@ -268,7 +266,7 @@ export class LudoComponent extends BaseComponent {
           this.listenForPlayerUpdate()
         }
       }
-    })
+    });
   }
   startMultiPlayerGame(): void {
     if (!this.gameDashboardService.selectedGame.value) return;
@@ -286,8 +284,6 @@ export class LudoComponent extends BaseComponent {
       }
     });
   }
-
-
 
   getColorPlayer(color: string = 'red'): IPlayer | undefined {
     const colorIndex = this.playerColors.findIndex(pc => pc === color);

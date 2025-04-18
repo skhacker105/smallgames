@@ -5,6 +5,7 @@ import { SnakeNLadderRoutingModule } from './snake-nladder-routing.module';
 import { SnakeNLadderComponent } from './snake-nladder/snake-nladder.component';
 import { ShortNamePipe } from '../../pipe/short-name.pipe';
 import { MatIconModule } from '@angular/material/icon';
+import { SpinnerComponent } from '../../components/spinner/spinner.component';
 
 
 @NgModule({
@@ -15,7 +16,8 @@ import { MatIconModule } from '@angular/material/icon';
     CommonModule,
     SnakeNLadderRoutingModule,
     ShortNamePipe,
-    MatIconModule
+    MatIconModule,
+    SpinnerComponent
   ]
 })
 export class SnakeNLadderModule { }

@@ -1,11 +1,11 @@
 // snake-ladder.component.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { BaseComponent } from '../../../components/base.component';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { IGameMultiPlayerConnection, IPlayer, IPlayerAskConfig } from '../../../interfaces';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
-import { Observable, take } from 'rxjs';
+import { Observable, map, take, takeUntil } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserService } from '../../../services/user.service';
 import { MultiPlayerService } from '../../../services/multi-player.service';
@@ -23,7 +23,7 @@ export interface IGameBoard {
   templateUrl: './snake-nladder.component.html',
   styleUrls: ['./snake-nladder.component.scss']
 })
-export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDestroy {
+export class SnakeNLadderComponent extends BaseComponent {
 
   allBoards: IGameBoard[] = [
     {
@@ -78,16 +78,8 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
     private router: Router,
     private userService: UserService,
     multiPlayerService: MultiPlayerService
-    ) {
+  ) {
     super(gameDashboardService, multiPlayerService, dialog);
-  }
-
-  override ngOnInit(): void {
-    super.ngOnInit();
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
   }
 
   isRowLeftToRight(row: number): boolean {
@@ -130,65 +122,77 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
 
     const savedState = this.gameDashboardService.loadGameState();
     if (savedState) {
-
       this.setGameState(savedState);
+
       if (this.winner || this.players.length === 0 || this.playerPositions.every(pos => pos === 0)) {
-        this.askForPlayers();
-        this.restartGame();
+        this.setPlayersAndStartGame();
 
       } else if (this.isMultiPlayerGame) {
         this.listenForGameStateChange();
       }
 
     } else {
-      this.askForPlayers();
-      this.restartGame();
+      this.setPlayersAndStartGame();
     }
   }
 
   saveGameState(): void {
     const state = this.getGameState();
-    this.gameDashboardService.saveGameState(state);
-  }
+    this.gameDashboardService.saveGameState(state, (this.gameInfo?.key ?? undefined));
 
-  checkWinner(): boolean {
-    return this.playerPositions.some((pos, index) => {
-      if (pos >= 100) {
-        this.winner = this.players[index];
-        return true;
-      }
-      return false;
-    });
-  }
-
-  restartGame(): void {
-    this.resetGame();
-    this.generateNewGame();
-    this.sendGameStateUpdate();
+    const mpg = this.multiPlayerService.getMultiPlayerGame(this.gameInfo?.key ?? '');
+    if (mpg) mpg.gameState = state;
+    this.multiPlayerService.saveMultiPlayersToStorage();
   }
 
   resetGame(): void {
-    this.gameId = generateHexId(16);
-    this.totalDiceRoll = 0;
-    this.lastDiceRoll = 1;
-    this.winner = null;
-    this.playerPositions = Array(this.players.length).fill(0);
-    this.currentPlayer = 0;
-    this.rolling = false;
-    this.saveGameState();
+    this.askToConfirmResetGame()
+      .pipe(take(1), takeUntil(this.isComponentActive))
+      .subscribe({
+        next: confirm => {
+          if (!confirm) return;
+
+          this.gameId = generateHexId(16);
+          this.totalDiceRoll = 0;
+          this.lastDiceRoll = 1;
+          this.winner = null;
+          this.playerPositions = Array(this.players.length).fill(0);
+          this.currentPlayer = 0;
+          this.rolling = false;
+          this.saveGameState();
+          this.sendGameStateUpdate();
+        }
+      });
   }
-  
-  setPlayers(): Observable<IPlayer[]> | undefined {
-    throw new Error('Method not implemented.');
+
+  cancelGame(): void {
+    this.askToConfirmCancelGame()
+      .pipe(take(1), takeUntil(this.isComponentActive))
+      .subscribe({
+        next: confirm => {
+          if (!confirm || !this.gameDashboardService.selectedGame.value) return;
+
+          this.multiPlayerService.cancelMultiPlayerGame(this.gameId, this.gameDashboardService.selectedGame.value, 'Game owner cancelled this game');
+          if (this.gameDashboardService.selectedGame.value)
+            this.multiPlayerService.removeGameAndGotoHomePage(this.gameDashboardService.selectedGame.value.key, this.gameId);
+        }
+      });
   }
-  setLocalPlayers(players: IPlayer[]): void {
-    throw new Error('Method not implemented.');
-  }
-  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
-    throw new Error('Method not implemented.');
-  }
-  setPlayersAndStartGame(): void {
-    throw new Error('Method not implemented.');
+
+  leaveGame(): void {
+    this.askToConfirmLeaveGame()
+      .pipe(take(1), takeUntil(this.isComponentActive))
+      .subscribe({
+        next: confirm => {
+          if (!confirm || !this.mpg) return;
+
+          this.players = [];
+          this.multiPlayerService.sendLeaveGameMessage(this.gameId, this.mpg, this.mpg.gameOwner.userId);
+          if (this.gameDashboardService.selectedGame.value)
+            this.multiPlayerService.removeGameAndGotoHomePage(this.gameDashboardService.selectedGame.value.key, this.gameId);
+
+        }
+      });
   }
 
   override getPlayerConfigPopup(): MatDialogRef<PlayersConfigComponent, any> | undefined {
@@ -208,39 +212,78 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
     })
   }
 
-  askForPlayers(): void {
+  setPlayers(): Observable<IPlayer[]> | undefined {
+    const curGame = this.gameDashboardService.selectedGame.value;
+    if (!curGame) return;
+
     const ref = this.getPlayerConfigPopup();
 
-    ref?.afterClosed().pipe(take(1))
-      .subscribe((players: IPlayer[] | undefined) => {
+    return ref?.afterClosed().pipe(
+      take(1), takeUntil(this.isComponentActive),
+      map((players: IPlayer[] | IGameMultiPlayerConnection | undefined) => {
+
         if (!players) {
-          if (this.playerPositions.every(position => position === 0))
+          if (this.players.length === 0)
             this.router.navigateByUrl('');
         }
-        else this.startGameWithPlayers(players);
+        else {
 
-        // if (this.gameDashboardService.selectedGame.value)
-        //   this.gameDashboardService.sendGameStartRequest(this.gameDashboardService.selectedGame.value, this.players, this.getGameState());
-      });
+          if (Array.isArray(players)) this.setLocalPlayers(players);
+          else this.setOnlinePlayers(players);
+        }
+
+        return this.players;
+      })
+    )
   }
-
-  startGameWithPlayers(players: IPlayer[]): void {
+  setLocalPlayers(players: IPlayer[]): void {
     this.players = players;
-    this.playerPositions = Array(players.length).fill(0);
-    this.currentPlayer = 0;
-    this.winner = null;
-    this.saveGameState();
-    const otherPlayers = this.players.find(p => p.userId !== undefined && p.userId === this.userService.me?.userId) !== undefined;
-    if (otherPlayers) {
-      this.listenForGameStateChange();
-    }
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    this.players = multiPlayerGame.players.map(player => player.player);
+  }
+  setPlayersAndStartGame(): void {
+    this.setPlayers()?.subscribe({
+      next: players => {
+
+        this.players = players;
+        this.playerPositions = Array(players.length).fill(0);
+        this.currentPlayer = 0;
+        this.winner = null;
+        this.generateNewGame();
+        this.saveGameState();
+
+        const otherPlayers = this.players.find(p => p.userId !== undefined && p.userId === this.userService.me?.userId) !== undefined;
+        if (otherPlayers) {
+          this.startMultiPlayerGame();
+          this.listenForGameStateChange();
+          this.listenForPlayerLeft();
+          this.listenForPlayerUpdate()
+        }
+      }
+    });
+  }
+  startMultiPlayerGame(): void {
+    if (!this.gameDashboardService.selectedGame.value) return;
+
+    this.mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value.key)
+    if (!this.mpg) return;
+
+    this.mpg.gameState = this.getGameState();
+    this.mpg.gamePlayState = 'gameInProgress';
+
+    // Send Game start signal to all players
+    this.players.forEach(player => {
+      if (player.userId && this.gameDashboardService.selectedGame.value && this.mpg) {
+        this.multiPlayerService.sendGameStart(this.gameId, this.mpg, player.userId)
+      }
+    });
   }
 
   generateNewGame(): void {
     this.selectedBoard = this.allBoards[Math.floor(Math.random() * this.allBoards.length)];
     this.snakes = this.selectedBoard.snakes //this.generateRandomPositions('snake');
     this.ladders = this.selectedBoard.ladders //this.generateRandomPositions('ladder');
-    this.saveGameState();
   }
 
   generateRandomPositions(type: 'snake' | 'ladder'): Record<number, number> {
@@ -330,6 +373,16 @@ export class SnakeNLadderComponent extends BaseComponent implements OnInit, OnDe
 
   pause(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  checkWinner(): boolean {
+    return this.playerPositions.some((pos, index) => {
+      if (pos >= 100) {
+        this.winner = this.players[index];
+        return true;
+      }
+      return false;
+    });
   }
 
 }

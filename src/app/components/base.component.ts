@@ -60,7 +60,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         if (!this.gameDashboardService.selectedGame.value) return;
 
-        this.gameInfo = {...this.gameDashboardService.selectedGame.value};
+        this.gameInfo = { ...this.gameDashboardService.selectedGame.value };
         if (!this.multiPlayerService.anyGameInProgressStatus(this.gameDashboardService.selectedGame.value.key))
             this.loadGameState();
 
@@ -72,10 +72,15 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             }
 
             this.gameId = this.mpg.gameId;
-            this.saveGameState();
-
-            if (this.mpg.gameState)
+            if (this.mpg.gameState) {
                 this.setGameState(this.mpg.gameState);
+
+                if (this.mpg.gameState.players)
+                    this.players = this.mpg.gameState.players;
+            }
+
+
+            this.saveGameState();
 
             if (this.mpg?.gamePlayState === 'playerSetting') {
                 this.waitForGameStart(this.mpg);
@@ -108,7 +113,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         return undefined;
     }
 
-    private waitMoreForGameStartConfirmation(): Observable<any> {
+    private askForMoreWait(): Observable<any> {
         const yesNoConfig: IYesNoConfig = {
             title: 'Time Out',
             message: `Timeout occurred while waiting for the game to begin. Would you like to wait a little longer?`,
@@ -141,13 +146,12 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
                         this.mpg.gameState = gameStartRequest.gameState;
                         this.mpg.gamePlayState = 'gameInProgress'
                         this.setGameState(gameStartRequest.gameState);
-                        // this.listenForGameStateChange();
                     }
                 },
 
                 error: () => {
                     this.isWaitingForGameToStart.next(undefined);
-                    this.waitMoreForGameStartConfirmation()
+                    this.askForMoreWait()
                         .pipe(take(1), takeUntil(this.isComponentActive))
                         .subscribe({
                             next: confirm => {

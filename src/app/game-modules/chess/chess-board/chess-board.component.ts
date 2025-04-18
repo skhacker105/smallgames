@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { BaseComponent } from '../../../components/base.component';
 import { Chess, Color, DEFAULT_POSITION, Piece, Square } from 'chess.js';
 import { IGameMultiPlayerConnection, IPlayer, IPlayerAskConfig } from '../../../interfaces';
@@ -6,7 +6,7 @@ import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { CHESS_COLORS } from '../../../config';
-import { Observable, take } from 'rxjs';
+import { Observable, map, take, takeUntil } from 'rxjs';
 import { Router } from '@angular/router';
 import { generateHexId, isChessColor } from '../../../utils/support.utils';
 import { UserService } from '../../../services/user.service';
@@ -17,7 +17,7 @@ import { MultiPlayerService } from '../../../services/multi-player.service';
   templateUrl: './chess-board.component.html',
   styleUrls: ['./chess-board.component.scss'],
 })
-export class ChessBoardComponent extends BaseComponent implements OnInit {
+export class ChessBoardComponent extends BaseComponent {
   chess: Chess; // Instance of the Chess class
   board: (Piece | undefined)[][] = [];
   gameMode: 'humanVsHuman' | 'humanVsComputer' | 'computerVsComputer' = 'humanVsHuman';
@@ -56,12 +56,6 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     this.chess = new Chess(); // Initialize the Chess instance
   }
 
-  override ngOnInit(): void {
-    super.ngOnInit();
-    // this.updateBoard();
-    this.sendGameStateUpdate();
-  }
-
   getGameState() {
     return {
       chess: this.chess.fen(),
@@ -95,32 +89,75 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
 
       if (!savedState.winner) {
         if (this.winner || this.players.length === 0 || this.chess.fen() === DEFAULT_POSITION) {
-          this.askForPlayers();
+          this.setPlayersAndStartGame();
+
         } else if (this.isMultiPlayerGame) {
           this.listenForGameStateChange();
         }
       }
     } else {
-      this.askForPlayers();
+      this.setPlayersAndStartGame();
     }
   }
 
   saveGameState(): void {
     const state = this.getGameState();
-    this.gameDashboardService.saveGameState(state);
+    this.gameDashboardService.saveGameState(state, (this.gameInfo?.key ?? undefined));
+
+    const mpg = this.multiPlayerService.getMultiPlayerGame(this.gameInfo?.key ?? '');
+    if (mpg) mpg.gameState = state;
+    this.multiPlayerService.saveMultiPlayersToStorage();
   }
 
   resetGame(): void {
-    this.gameId = generateHexId(16);
-    this.chess.reset(); // Reset the game
-    this.gameOver = false;
-    this.winner = null;
-    this.selectedSquare = null;
-    this.possibleMoves = [];
-    this.isWhiteTurn = true;
-    this.updateBoard();
-    this.saveGameState();
-    this.sendGameStateUpdate();
+    this.askToConfirmResetGame()
+      .pipe(take(1), takeUntil(this.isComponentActive))
+      .subscribe({
+        next: confirm => {
+          if (!confirm) return;
+
+          this.gameId = generateHexId(16);
+          this.chess.reset(); // Reset the game
+          this.gameOver = false;
+          this.winner = null;
+          this.selectedSquare = null;
+          this.possibleMoves = [];
+          this.isWhiteTurn = true;
+          this.updateBoard();
+          this.saveGameState();
+          this.sendGameStateUpdate();
+        }
+      });
+  }
+
+  cancelGame(): void {
+    this.askToConfirmCancelGame()
+      .pipe(take(1), takeUntil(this.isComponentActive))
+      .subscribe({
+        next: confirm => {
+          if (!confirm || !this.gameDashboardService.selectedGame.value) return;
+
+          this.multiPlayerService.cancelMultiPlayerGame(this.gameId, this.gameDashboardService.selectedGame.value, 'Game owner cancelled this game');
+          if (this.gameDashboardService.selectedGame.value)
+            this.multiPlayerService.removeGameAndGotoHomePage(this.gameDashboardService.selectedGame.value.key, this.gameId);
+        }
+      });
+  }
+
+  leaveGame(): void {
+    this.askToConfirmLeaveGame()
+      .pipe(take(1), takeUntil(this.isComponentActive))
+      .subscribe({
+        next: confirm => {
+          if (!confirm || !this.mpg) return;
+
+          this.players = [];
+          this.multiPlayerService.sendLeaveGameMessage(this.gameId, this.mpg, this.mpg.gameOwner.userId);
+          if (this.gameDashboardService.selectedGame.value)
+            this.multiPlayerService.removeGameAndGotoHomePage(this.gameDashboardService.selectedGame.value.key, this.gameId);
+
+        }
+      });
   }
 
   override getPlayerConfigPopup(): MatDialogRef<PlayersConfigComponent, any> | undefined {
@@ -140,43 +177,70 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
       disableClose: true
     })
   }
-  
-  setPlayers(): Observable<IPlayer[]> | undefined {
-    throw new Error('Method not implemented.');
-  }
-  setLocalPlayers(players: IPlayer[]): void {
-    throw new Error('Method not implemented.');
-  }
-  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
-    throw new Error('Method not implemented.');
-  }
-  setPlayersAndStartGame(): void {
-    throw new Error('Method not implemented.');
-  }
 
-  askForPlayers(): void {
+  setPlayers(): Observable<IPlayer[]> | undefined {
     const curGame = this.gameDashboardService.selectedGame.value;
     if (!curGame) return;
 
     const ref = this.getPlayerConfigPopup();
-    ref?.afterClosed().pipe(take(1))
-      .subscribe((players: IPlayer[] | undefined) => {
+
+    return ref?.afterClosed().pipe(
+      take(1), takeUntil(this.isComponentActive),
+      map((players: IPlayer[] | IGameMultiPlayerConnection | undefined) => {
+
         if (!players) {
           if (this.players.length === 0)
             this.router.navigateByUrl('');
         }
         else {
-          this.players = players;
-          this.resetGame();
-          const otherPlayers = this.players.find(p => p.userId !== undefined && p.userId === this.userService.me?.userId) !== undefined;
-          if (otherPlayers) {
-            this.listenForGameStateChange();
-          }
 
-          // if (this.gameDashboardService.selectedGame.value)
-          //   this.gameDashboardService.sendGameStartRequest(this.gameDashboardService.selectedGame.value, this.players, this.getGameState());
+          if (Array.isArray(players)) this.setLocalPlayers(players);
+          else this.setOnlinePlayers(players);
         }
+
+        return this.players;
       })
+    )
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    this.players = players;
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    this.players = multiPlayerGame.players.map(player => player.player);
+  }
+  setPlayersAndStartGame(): void {
+    this.setPlayers()?.subscribe({
+      next: players => {
+
+        this.winner = null;
+        this.saveGameState();
+
+        const otherPlayers = this.players.find(p => p.userId !== undefined && p.userId === this.userService.me?.userId) !== undefined;
+        if (otherPlayers) {
+          this.startMultiPlayerGame();
+          this.listenForGameStateChange();
+          this.listenForPlayerLeft();
+          this.listenForPlayerUpdate()
+        }
+      }
+    });
+  }
+
+  startMultiPlayerGame(): void {
+    if (!this.gameDashboardService.selectedGame.value) return;
+
+    this.mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value.key)
+    if (!this.mpg) return;
+
+    this.mpg.gameState = this.getGameState();
+    this.mpg.gamePlayState = 'gameInProgress';
+
+    // Send Game start signal to all players
+    this.players.forEach(player => {
+      if (player.userId && this.gameDashboardService.selectedGame.value && this.mpg) {
+        this.multiPlayerService.sendGameStart(this.gameId, this.mpg, player.userId)
+      }
+    });
   }
 
   isWhitePlayer(player: IPlayer): boolean {
@@ -202,7 +266,7 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
       }
     }
     if (!this.winner)
-      this.checkGameOver();
+      this.checkWinner();
   }
 
   indicesToSquare(i: number, j: number): Square {
@@ -238,18 +302,6 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     this.updateBoard();
     this.isWhiteTurn = !this.isWhiteTurn;
     this.saveGameState(); // Save the updated game state
-  }
-
-  checkGameOver(): void {
-    if (this.chess.isCheckmate()) {
-      this.gameOver = true;
-      this.winner = this.getPlayer(this.chess.turn() === 'w' ? 'b' : 'w'); // Opposite turn indicates the winner
-      this.gameDashboardService.saveGameWinner(this.winner);
-    } else if (this.chess.isStalemate() || this.chess.isDraw()) {
-      this.gameOver = true;
-      this.winner = null;
-      this.gameDashboardService.saveGameWinner(this.players, true);
-    }
   }
 
   selectGameMode(mode: 'humanVsHuman' | 'humanVsComputer' | 'computerVsComputer'): void {
@@ -331,5 +383,15 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     return square.color === 'w';
   }
 
-  checkWinner() {}
+  checkWinner() {
+    if (this.chess.isCheckmate()) {
+      this.gameOver = true;
+      this.winner = this.getPlayer(this.chess.turn() === 'w' ? 'b' : 'w'); // Opposite turn indicates the winner
+      this.gameDashboardService.saveGameWinner(this.winner);
+    } else if (this.chess.isStalemate() || this.chess.isDraw()) {
+      this.gameOver = true;
+      this.winner = null;
+      this.gameDashboardService.saveGameWinner(this.players, true);
+    }
+  }
 }

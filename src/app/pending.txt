@@ -1,3 +1,4 @@
  
 
-game winner not showing to all
+Chess, Ludo, Snake and aldder - if game is not multiplayer then give option to restart game by player selection
+After winnig give appropriate buttons for reset with same or other players

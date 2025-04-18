@@ -20,12 +20,25 @@
     <div class="controls" *ngIf="!winner">
         <div>
 
-            <button (click)="askForPlayers()">
+            <!-- <button (click)="askForPlayers()">
                 <mat-icon>manage_accounts</mat-icon>
+            </button> -->
+
+            <!-- Leave Game -->
+            <button (click)="leaveGame()" *ngIf="mpg && !mpg.isMeTheGameOwner">
+                <mat-icon>exit_to_app</mat-icon>
             </button>
-            <button (click)="resetGame()">
+
+            <!-- Cancel Game -->
+            <button (click)="cancelGame()" *ngIf="mpg && mpg.isMeTheGameOwner">
+                <mat-icon>close</mat-icon>
+            </button>
+
+            <!-- Reset Game -->
+            <button (click)="resetGame()" *ngIf="!mpg || mpg.isMeTheGameOwner">
                 <mat-icon>restart_alt</mat-icon>
             </button>
+
 
             <div class="current-player">
                 <div class="player-display">
