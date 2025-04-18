@@ -1,16 +1,10 @@
 <!-- Spinner -->
 <app-spinner [message]="isWaitingForGameToStart.value" *ngIf="mpg"></app-spinner>
 
-<div class="ludo-game" *ngIf="players.length > 0">
-
-    <!-- Winner Announcement -->
-    <div *ngIf="winner" class="winner">
-        <h2>{{ winner }} Wins!</h2>
-        <button (click)="resetGame()">Play Again</button>
-    </div>
+<div class="ludo-game" *ngIf="players.length > 0 && !winner">
 
     <!-- Game Board -->
-    <div class="board-container" *ngIf="!winner">
+    <div class="board-container">
         <div class="board">
             <!-- Base Areas -->
             <div class="base-area red">
@@ -84,7 +78,7 @@
     </div>
 
     <!-- Dice and Controls -->
-    <div class="controls" *ngIf="!winner">
+    <div class="controls">
         <div [style.borderColor]="player.color">
 
             <!-- Leave Game -->
@@ -127,6 +121,11 @@
         </div>
     </div>
 </div>
+
+<ng-container *ngIf="winner">
+    <app-winner [winnerName]="winnerName" winnerMessage="Winner">
+    </app-winner>
+</ng-container>
 
 <ng-template #baseAreaCoin let-player="player" let-position="position" let-finished="finished" let-inPath="inPath">
     <ng-container *ngFor="let coin of (player?.ludoCoins ?? []); let i = index">

@@ -98,7 +98,7 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
   saveGameScore(score: number): void {
     if (!this.userService.me) return;
 
-    this.gameDashboardService.saveGameScore(score.toString());
+    this.gameDashboardService.saveGameScore(this.gameId, score.toString());
   }
 
   resetGame(): void {

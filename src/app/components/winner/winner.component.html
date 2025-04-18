@@ -1,0 +1,33 @@
+<div class="winner-container">
+
+    <div class="star-container">
+        <img src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png" alt="Winner Star">
+    </div>
+
+    <div class="winner-declaration">
+
+        <!-- winnerMessage -->
+        <div *ngIf="winnerMessage" class="winnerMessage-container">
+            {{ winnerMessage }}
+        </div>
+
+        <!-- isDraw -->
+        <div *ngIf="isDraw" class="draw-container">
+            It's a draw.
+        </div>
+
+        <!-- winnerName -->
+        <div *ngIf="winnerName" class="winnerName-container">
+            <div class="">{{ winnerName }}</div>
+        </div>
+
+    </div>
+
+    <div class="actions-container">
+        <div class="action-box">
+            <button (click)="resetGame.emit()">Reset Game</button>
+            <button (click)="rematch.emit()">Rematch</button>
+        </div>
+    </div>
+
+</div>

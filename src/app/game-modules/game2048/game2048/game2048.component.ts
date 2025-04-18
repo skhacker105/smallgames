@@ -233,7 +233,7 @@ export class Game2048Component extends BaseComponent {
         }
       }
       this.isGameOver = true;
-      this.gameDashboardService.saveGameScore(this.score.toString())
+      this.gameDashboardService.saveGameScore(this.gameId, this.score.toString())
     }
   }
 

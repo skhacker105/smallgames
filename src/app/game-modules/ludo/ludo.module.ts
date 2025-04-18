@@ -5,6 +5,7 @@ import { LudoRoutingModule } from './ludo-routing.module';
 import { LudoComponent } from './ludo/ludo.component';
 import { MatIconModule } from '@angular/material/icon';
 import { SpinnerComponent } from '../../components/spinner/spinner.component';
+import { WinnerComponent } from '../../components/winner/winner.component';
 
 
 @NgModule({
@@ -15,7 +16,8 @@ import { SpinnerComponent } from '../../components/spinner/spinner.component';
     CommonModule,
     LudoRoutingModule,
     MatIconModule,
-    SpinnerComponent
+    SpinnerComponent,
+    WinnerComponent
   ]
 })
 export class LudoModule { }

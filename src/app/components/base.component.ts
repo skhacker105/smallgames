@@ -74,6 +74,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             this.gameId = this.mpg.gameId;
             if (this.mpg.gameState) {
                 this.setGameState(this.mpg.gameState);
+                this.checkWinner();
 
                 if (this.mpg.gameState.players)
                     this.players = this.mpg.gameState.players;
@@ -82,22 +83,25 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
 
             this.saveGameState();
 
+            // Player Setting - Wait for Game Start
             if (this.mpg?.gamePlayState === 'playerSetting') {
                 this.waitForGameStart(this.mpg);
             }
 
+            // For Player/s when not in Player Setting means Game Started and player needs gameState update
             else if (!this.mpg.isMeTheGameOwner && this.mpg.gameOwner) {
                 this.multiPlayerService.requestForGameUpdate(this.mpg.gameId, this.mpg, this.mpg.gameOwner.userId);
                 this.waitForGameUpdateOrNoUpdate();
             }
 
+            // Listeners for Game Owner
             if (this.mpg.isMeTheGameOwner) {
-                // listen for player left
                 this.listenForPlayerLeft();
-            } else {
-                // listen for cancel
+
+            } else { // Listeners for Players
                 this.listenForPlayerUpdate();
                 this.listenForGameCancelled();
+
             }
             this.listenForGameStateChange();
         }
@@ -222,7 +226,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             .subscribe(gameStateRequest => {
                 if (gameStateRequest && gameStateRequest.gameState)
                     this.setGameState(gameStateRequest.gameState);
-                if (this.selectedPlayer && gameStateRequest?.gameState.winner) this.gameDashboardService.saveGameWinner(this.selectedPlayer);
+                if (this.selectedPlayer && gameStateRequest?.gameState.winner) this.gameDashboardService.saveGameWinner(this.gameId, this.selectedPlayer);
                 this.saveGameState();
                 this.checkWinner();
             });

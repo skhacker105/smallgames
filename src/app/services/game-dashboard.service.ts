@@ -139,11 +139,14 @@ export class GameDashboardService {
     this.saveGameState(game, gameKey);
   }
 
-  saveGameWinner(winnerPlayer: IPlayer | IPlayer[], isDraw: boolean = false): void {
+  saveGameWinner(gameId: string, winnerPlayer: IPlayer | IPlayer[], isDraw: boolean = false): void {
     if (!this.selectedGame.value) return;
 
     const allSavedWinners = this.getAllWinners();
+    if (allSavedWinners.some(winner => winner.gameId === gameId)) return;
+
     allSavedWinners.push({
+      gameId,
       key: this.selectedGame.value?.key,
       winner: !Array.isArray(winnerPlayer) ? winnerPlayer : undefined,
       winners: Array.isArray(winnerPlayer) ? winnerPlayer : undefined,
@@ -153,11 +156,14 @@ export class GameDashboardService {
     localStorage.setItem(this.allWinnersKey, JSON.stringify(allSavedWinners));
   }
 
-  saveGameScore(score: string, gameLevel?: string): void {
+  saveGameScore(gameId: string, score: string, gameLevel?: string): void {
     if (!this.selectedGame.value || !this.userService.me) return;
 
     const allSavedWinners = this.getAllWinners();
+    if (allSavedWinners.some(winner => winner.gameId === gameId)) return;
+
     allSavedWinners.push({
+      gameId,
       key: this.selectedGame.value?.key,
       score,
       gameLevel,
@@ -166,11 +172,14 @@ export class GameDashboardService {
     localStorage.setItem(this.allWinnersKey, JSON.stringify(allSavedWinners));
   }
 
-  saveGameDuration(gameDuration: number, gameLevel?: string): void {
+  saveGameDuration(gameId: string, gameDuration: number, gameLevel?: string): void {
     if (!this.selectedGame.value || !this.userService.me) return;
 
     const allSavedWinners = this.getAllWinners();
+    if (allSavedWinners.some(winner => winner.gameId === gameId)) return;
+    
     allSavedWinners.push({
+      gameId, 
       key: this.selectedGame.value?.key,
       gameDuration,
       gameLevel,

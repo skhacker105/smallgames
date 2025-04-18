@@ -153,7 +153,7 @@ export class PatternPuzzleComponent extends BaseComponent {
     }
     this.isGameOver = true;
     this.saveGameState();
-    this.gameDashboardService.saveGameDuration(this.timeSpent, this.selectedLevel.toString());
+    this.gameDashboardService.saveGameDuration(this.gameId, this.timeSpent, this.selectedLevel.toString());
   }
 
   // Reset the game

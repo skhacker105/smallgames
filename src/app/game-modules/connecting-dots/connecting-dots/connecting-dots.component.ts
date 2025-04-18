@@ -161,7 +161,7 @@ export class ConnectingDotsComponent extends BaseComponent {
     if (allConnected) {
       this.gameOver = true;
       this.gameOverSubject.next(true);
-      this.gameDashboardService.saveGameDuration(this.timeSpent, this.selectedLevel.toString());
+      this.gameDashboardService.saveGameDuration(this.gameId, this.timeSpent, this.selectedLevel.toString());
     }
   }
 

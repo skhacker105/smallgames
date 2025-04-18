@@ -51,6 +51,10 @@ export class LudoComponent extends BaseComponent {
     } else return true;
   }
 
+  get winnerName(): string {
+    return this.winner ?? ''
+  }
+
   override get selectedPlayer(): IPlayer | undefined {
     return this.players[this.currentPlayer]
   }
@@ -475,7 +479,7 @@ export class LudoComponent extends BaseComponent {
   checkWinner(): boolean {
     if (this.player.ludoCoins?.every(coin => coin.finished)) {
       this.winner = this.player.name;
-      this.gameDashboardService.saveGameWinner(this.player);
+      this.gameDashboardService.saveGameWinner(this.gameId, this.player);
       return true;
     }
     return false;

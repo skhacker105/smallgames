@@ -6,6 +6,7 @@ import { SnakeNLadderComponent } from './snake-nladder/snake-nladder.component';
 import { ShortNamePipe } from '../../pipe/short-name.pipe';
 import { MatIconModule } from '@angular/material/icon';
 import { SpinnerComponent } from '../../components/spinner/spinner.component';
+import { WinnerComponent } from '../../components/winner/winner.component';
 
 
 @NgModule({
@@ -17,7 +18,8 @@ import { SpinnerComponent } from '../../components/spinner/spinner.component';
     SnakeNLadderRoutingModule,
     ShortNamePipe,
     MatIconModule,
-    SpinnerComponent
+    SpinnerComponent,
+    WinnerComponent
   ]
 })
 export class SnakeNLadderModule { }

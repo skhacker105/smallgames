@@ -1,0 +1,95 @@
+.winner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 96px);
+    background: linear-gradient(145deg, #606191, #1e293b);
+    color: white;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    padding: 2rem;
+    box-sizing: border-box;
+
+    .star-container {
+        margin-bottom: 1.5rem;
+        
+        img {
+            width: 80px;
+            height: 80px;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.7));
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.9; }
+            100% { transform: scale(1.1); opacity: 1; }
+        }
+    }
+
+    .winner-declaration {
+        margin-bottom: 2rem;
+
+        .winnerName-container {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .winnerMessage-container {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .draw-container {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #f0f0f0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+    }
+
+    .actions-container {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+
+        .action-box {
+            display: flex;
+            gap: 1rem;
+
+            button {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+                font-weight: 600;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                background: #4f46e5;
+                color: white;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+                &:hover {
+                    background: #4338ca;
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+                }
+
+                &:active {
+                    transform: translateY(0);
+                }
+
+                &:last-child {
+                    background: #10b981;
+
+                    &:hover {
+                        background: #0d9f6e;
+                    }
+                }
+            }
+        }
+    }
+}

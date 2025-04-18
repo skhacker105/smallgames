@@ -68,6 +68,10 @@ export class SnakeNLadderComponent extends BaseComponent {
     } else return true;
   }
 
+  get winnerName(): string {
+    return this.winner?.name ?? ''
+  }
+
   override get selectedPlayer(): IPlayer | undefined {
     return this.players[this.currentPlayer]
   }
@@ -358,7 +362,6 @@ export class SnakeNLadderComponent extends BaseComponent {
 
         if (this.checkWinner()) {
 
-          this.gameDashboardService.saveGameWinner(this.players[this.currentPlayer]);
           this.saveGameState();
           return;
         }
@@ -376,13 +379,19 @@ export class SnakeNLadderComponent extends BaseComponent {
   }
 
   checkWinner(): boolean {
-    return this.playerPositions.some((pos, index) => {
+
+    const hasWinner = this.playerPositions.some((pos, index) => {
       if (pos >= 100) {
         this.winner = this.players[index];
         return true;
       }
       return false;
     });
+
+    if (hasWinner)
+      this.gameDashboardService.saveGameWinner(this.gameId, this.players[this.currentPlayer]);
+
+    return hasWinner;
   }
 
 }

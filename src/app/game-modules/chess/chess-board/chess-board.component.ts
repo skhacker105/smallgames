@@ -41,6 +41,14 @@ export class ChessBoardComponent extends BaseComponent {
     } else return true;
   }
 
+  get winnerName(): string {
+    return !this.gameOver ? '' : (this.winner?.name ?? '')
+  }
+
+  get winnerMessage(): string {
+    return !this.gameOver ? '' : (this.winner ? 'Winner' : `It's a draw`);
+  }
+
   override get selectedPlayer(): IPlayer | undefined {
     return this.players[this.currentPlayer]
   }
@@ -387,11 +395,11 @@ export class ChessBoardComponent extends BaseComponent {
     if (this.chess.isCheckmate()) {
       this.gameOver = true;
       this.winner = this.getPlayer(this.chess.turn() === 'w' ? 'b' : 'w'); // Opposite turn indicates the winner
-      this.gameDashboardService.saveGameWinner(this.winner);
+      this.gameDashboardService.saveGameWinner(this.gameId, this.winner);
     } else if (this.chess.isStalemate() || this.chess.isDraw()) {
       this.gameOver = true;
       this.winner = null;
-      this.gameDashboardService.saveGameWinner(this.players, true);
+      this.gameDashboardService.saveGameWinner(this.gameId, this.players, true);
     }
   }
 }

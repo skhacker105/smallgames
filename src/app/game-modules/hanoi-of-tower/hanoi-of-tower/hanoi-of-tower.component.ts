@@ -144,7 +144,7 @@ export class HanoiOfTowerComponent extends BaseComponent {
     if (this.towers[this.endTower].length === this.numberOfDisks) {
       this.gameOver = true;
       this.gameOverSubject.next(true);
-      this.gameDashboardService.saveGameDuration(this.timeSpent, this.selectedLevel.toString());
+      this.gameDashboardService.saveGameDuration(this.gameId, this.timeSpent, this.selectedLevel.toString());
     }
   }
 
