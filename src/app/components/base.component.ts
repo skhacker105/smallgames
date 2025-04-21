@@ -40,11 +40,6 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
     abstract checkWinner(): any;
 
 
-    // get isGameStart(): boolean {
-    //     return false;
-    //     // return this.gameDashboardService.selectedGame.value?.isGameStart ?? false;
-    // }
-
     get isMultiPlayerGame(): boolean {
         return this.players.filter(p => p.userId !== undefined).length > 1
     }
@@ -60,6 +55,9 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         if (!this.gameDashboardService.selectedGame.value) return;
+
+        // If player is playing or setting any current game then all incoming requests will be rejected
+        this.listenForIncomingGameRematchRequest();
 
         this.gameInfo = { ...this.gameDashboardService.selectedGame.value };
         if (!this.multiPlayerService.anyGameInProgressStatus(this.gameDashboardService.selectedGame.value.key)) {
@@ -131,6 +129,12 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         return undefined;
     }
 
+
+
+
+    // ------------------ Game ------------------ //
+
+    // Game Start wait
     private askForMoreWait(): Observable<any> {
         const yesNoConfig: IYesNoConfig = {
             title: 'Time Out',
@@ -185,6 +189,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             });
     }
 
+    // Game state not received after request sent
     private askNewGameAsNoUpdate(): Observable<any> {
         const yesNoConfig: IYesNoConfig = {
             title: 'No Game Update',
@@ -231,6 +236,11 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             });
     }
 
+
+
+    // ------------------ Listeners ------------------ //
+
+    // Game Updated
     listenForGameStateChange(): void {
         this.multiPlayerService.incomingGameStateChanged$
             .pipe(
@@ -245,6 +255,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             });
     }
 
+    // Game Ended
     listenForGameEndMessage(): void {
         this.multiPlayerService.incomingGameEndMessage$
             .pipe(
@@ -270,6 +281,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             });
     }
 
+    // Game Cancelled
     private informGameCancelled(gameCancelRequest: ISocketMessage): Observable<any> {
         const infoConfig: IInfo = {
             message: (gameCancelRequest.error ?? '')
@@ -298,6 +310,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             });
     }
 
+    // Player Left Game
     private informGamePlayerLeft(incomingGameLeftMessage: ISocketMessage): Observable<any> {
         const infoConfig: IInfo = {
             message: `${incomingGameLeftMessage.sourceUserName} has left the game.`
@@ -336,6 +349,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             });
     }
 
+    // Player Update
     listenForPlayerUpdate(): void {
         this.multiPlayerService.incomingGamePlayerUpdate$
             .pipe(
@@ -362,6 +376,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             });
     }
 
+    // Rematch
     listenForGameRematchRequest(): void {
         this.multiPlayerService.incomingGameRematchRequest$
             .pipe(
@@ -399,6 +414,25 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             });
     }
 
+    // New Game Request
+    listenForIncomingGameRematchRequest(): void {
+        this.multiPlayerService.incomingGameRequest$
+            .pipe(
+                filter(gameRematchRequest => gameRematchRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key),
+                takeUntil(this.isComponentActive)
+            )
+            .subscribe(gameRematchRequest => {
+                if (!gameRematchRequest) return;
+
+                this.multiPlayerService.sendBusyMessage(gameRematchRequest.gameId, gameRematchRequest.gameKey, gameRematchRequest.sourceUserId);
+            });
+    }
+
+
+
+    // ------------------ Game ------------------ //
+
+    //  Game State
     sendGameStateUpdate(): void {
         if (!this.mpg) return;
 
@@ -409,6 +443,10 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             this.multiPlayerService.sendGameUpdate(this.gameId, this.mpg, player.player.userId)
         });
     }
+
+
+
+    // ------------------ Ask Confirmation ------------------ //
 
     askToConfirmResetGame(): Observable<any> {
         const yesNoConfig: IYesNoConfig = {

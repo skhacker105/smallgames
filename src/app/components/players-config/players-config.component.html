@@ -18,7 +18,7 @@
           class="player-name" [ngClass]="{
             'request-pending': multiUserState.get(player.userId) === 'pending',
             'request-accepted': multiUserState.get(player.userId) === 'accepted',
-            'request-rejected': multiUserState.get(player.userId) === 'rejected'
+            'request-rejected': multiUserState.get(player.userId) === 'rejected' || multiUserState.get(player.userId) === 'busy'
           }" [disabled]="true" placeholder="Enter player name" />
 
         <!-- Offline Local Player -->
