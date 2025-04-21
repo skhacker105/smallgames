@@ -51,6 +51,7 @@
 </div>
 
 <ng-container *ngIf="gameOver">
-  <app-winner [winnerName]="winnerName" [winnerMessage]="winnerMessage" [isDraw]="this.gameOver && !this.winner">
+  <app-winner [winnerName]="winnerName" [winnerMessage]="winnerMessage" [isDraw]="this.gameOver && !this.winner"
+    (resetGame)="restartGameFromScratch()" (rematch)="rematch()">
   </app-winner>
 </ng-container>

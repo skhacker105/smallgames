@@ -20,10 +20,6 @@
     <div class="controls">
         <div>
 
-            <!-- <button (click)="askForPlayers()">
-                <mat-icon>manage_accounts</mat-icon>
-            </button> -->
-
             <!-- Leave Game -->
             <button (click)="leaveGame()" *ngIf="mpg && !mpg.isMeTheGameOwner">
                 <mat-icon>exit_to_app</mat-icon>
@@ -68,6 +64,7 @@
 </div>
 
 <ng-container *ngIf="winner">
-    <app-winner [winnerName]="winnerName" winnerMessage="Winner">
+    <app-winner [winnerName]="winnerName" winnerMessage="Winner"
+    (resetGame)="restartGameFromScratch()" (rematch)="rematch()">
     </app-winner>
 </ng-container>

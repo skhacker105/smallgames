@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Observable, filter, take } from 'rxjs';
-import { IGameInfo, IGameMultiPlayerConnection, IGameRemotePlayer, IInfo, IPlayer, ISocketMessage, IUser, IYesNoConfig } from '../interfaces';
+import { IGameInfo, IGameMultiPlayerConnection, IGameRemotePlayer, IGameWinner, IInfo, IPlayer, ISocketMessage, IUser, IYesNoConfig } from '../interfaces';
 import { SocketService } from './socket.service';
 import { MatDialog, } from '@angular/material/dialog';
 import { LoggerService } from './logger.service';
 import { GameDashboardService } from './game-dashboard.service';
 import { YesNoDialogComponent } from '../components/yes-no-dialog/yes-no-dialog.component';
 import { UserService } from './user.service';
-import {  GameRequestStatus } from '../types';
+import { GamePlayState, GameRequestStatus } from '../types';
 import { Router } from '@angular/router';
 import { InfoComponent } from '../components/info/info.component';
 
@@ -32,6 +32,9 @@ export class MultiPlayerService {
   public incomingGameStateChanged$: Observable<ISocketMessage | null>;
   public incomingGameNotFound$: Observable<ISocketMessage | null>;
 
+  public incomingGameEndMessage$: Observable<ISocketMessage | null>;
+  public incomingGameRematchRequest$: Observable<ISocketMessage | null>;
+
   constructor(
     private socketService: SocketService,
     private dialog: MatDialog,
@@ -51,6 +54,8 @@ export class MultiPlayerService {
     this.incomingGameNotFound$ = this.getGameRequestOverserver('gameNotFound');
     this.incomingGameRequestCancel$ = this.getGameRequestOverserver('requestCancel');
     this.incomingLatestStateRequest$ = this.getGameRequestOverserver('needStateUpdate');
+    this.incomingGameEndMessage$ = this.getGameRequestOverserver('gameEnd');
+    this.incomingGameRematchRequest$ = this.getGameRequestOverserver('rematch');
 
     this.incomingGamePlayerUpdate$ = this.socketService.message$.pipe(filter(message => message?.type === 'gamePlayerUpdate'));
     this.incomingGameStateChanged$ = this.socketService.message$.pipe(filter(message => message?.type === 'gameState'));
@@ -60,10 +65,11 @@ export class MultiPlayerService {
     this.handleIncomingGameNotFound();
     this.handleIncomingGameCancelMessage();
     this.handleIncomingLatestStateRequest();
+    this.handleIncomingGameEndMessage();
 
     this.handleIncomingGamePlayerUpdate();
     this.handleIncomingGameStateUpdate();
-    // this.handleIncomingCancelGameRequest();
+    this.hanldeIncomingGameRematchRequest();
   }
 
   private getGameRequestOverserver(status: GameRequestStatus | string[]) {
@@ -80,7 +86,7 @@ export class MultiPlayerService {
 
   private removeGarbageMPG(): void {
     this.multiPlayerGames = this.multiPlayerGames.filter(mpg => {
-      if (mpg.gamePlayState !== 'playerSetting') return true;
+      if (mpg.gamePlayState !== 'playerSetting' && mpg.gamePlayState !== 'gameEnd') return true;
       else {
         this.gameDashboardService.removeGameFromLocalStorageByGameId(mpg.gameInfo.key, mpg.gameId);
         return false
@@ -99,10 +105,12 @@ export class MultiPlayerService {
     this.router.navigateByUrl('');
   }
 
-  removeMPGFromLocalStorageByGameId(gameKey: string, gameId: string): void {
+  removeMPGFromLocalStorageByGameId(gameKey: string, gameId: string): IGameMultiPlayerConnection | undefined {
     const mpg = this.getMultiPlayerGame(gameKey);
     if (mpg?.gameId === gameId)
-      this.removeMultiPlayerGame(gameKey);
+      return this.removeMultiPlayerGame(gameKey);
+
+      return;
   }
 
   removeGameAndGotoHomePage(gameKey: string, gameId: string): void {
@@ -111,14 +119,16 @@ export class MultiPlayerService {
       this.gotoHomePage();
 
     setTimeout(() => {
-
-      // Remove Multiplayer Game
-      this.removeMPGFromLocalStorageByGameId(gameKey, gameId);
-
-      // Remove from Local Storage
-      this.gameDashboardService.removeGameFromLocalStorageByGameId(gameKey, gameId);
-
+      this.removeGame(gameKey, gameId);
     }, 100);
+  }
+
+  removeGame(gameKey: string, gameId: string): void {
+    // Remove Multiplayer Game
+    this.removeMPGFromLocalStorageByGameId(gameKey, gameId);
+
+    // Remove from Local Storage
+    this.gameDashboardService.removeGameFromLocalStorageByGameId(gameKey, gameId);
   }
 
   anyGameInProgressStatus(gameKey: string): boolean {
@@ -141,7 +151,7 @@ export class MultiPlayerService {
     this.saveMultiPlayersToStorage();
   }
 
-  removeMultiPlayerGame(gameKey: string) {
+  removeMultiPlayerGame(gameKey: string): IGameMultiPlayerConnection | undefined {
     const multiPlayerGameIndex = this.multiPlayerGames.findIndex(g => g.gameInfo.key === gameKey);
     if (multiPlayerGameIndex < 0) return;
 
@@ -172,7 +182,7 @@ export class MultiPlayerService {
             connectionStatus: !gameOwner ? 'pending' : 'accepted',
             connectionSocketMessage,
             hasUser: !!player.userId,
-            isMe: player.userId && player.userId === this.userService.me?.userId ? true : false
+            isMe: false
           });
       } else { // My Player
         arr.push({
@@ -199,11 +209,61 @@ export class MultiPlayerService {
 
   }
 
+  // Start Rematch Game
+  startMultiPlayerGameRematch(gameId: string, gameInfo: IGameInfo, players: IPlayer[], gameState: any, gameOwner?: IUser): IGameMultiPlayerConnection | undefined {
+    if (!this.userService.me) return;
+
+    if (this.anyGameInProgressStatus(gameInfo.key)) this.removeMultiPlayerGame(gameInfo.key)
+
+    const gameRemotePlayers = players.reduce((arr: IGameRemotePlayer[], player) => {
+      if (!player.userId || !this.userService.me) return arr;
+
+      const isMe = player.userId === this.userService.me.userId;
+
+      // Set Game request/response
+      if (!isMe) {
+        const connectionSocketMessage = !gameOwner
+          ? this.sendRematchRequest(gameId, gameInfo.key, player.userId, players, gameState, 'playerSetting')
+          : this.sendGameRequestResponse(gameId, gameInfo, player.userId, 'accepted');
+
+        if (connectionSocketMessage)
+          arr.push({
+            player,
+            connectionStatus: !gameOwner ? 'pending' : 'accepted',
+            connectionSocketMessage,
+            hasUser: !!player.userId,
+            isMe: false
+          });
+      } else { // My Player
+        arr.push({
+          hasUser: true,
+          isMe: true,
+          player
+        });
+      }
+      return arr;
+    }, [] as IGameRemotePlayer[]);
+
+    const newMultiPlayerGame: IGameMultiPlayerConnection = {
+      gameId,
+      gameInfo,
+      gameOwner: gameOwner ?? this.userService.me,
+      gamePlayState: 'playerSetting',
+      players: gameRemotePlayers,
+      gameState: gameState,
+      gameStateHistory: [],
+      isMeTheGameOwner: (gameOwner ?? this.userService.me).userId === this.userService.me.userId
+    };
+    this.addMultiPlayerGame(newMultiPlayerGame);
+    return newMultiPlayerGame;
+
+  }
+
 
   // Cancel Game
   cancelMultiPlayerGame(gameId: string, gameInfo: IGameInfo, error: string,): IGameMultiPlayerConnection | undefined {
 
-    const multiPlayerGame = this.removeMultiPlayerGame(gameInfo.key);
+    const multiPlayerGame = this.removeMPGFromLocalStorageByGameId(gameInfo.key, gameId);
     if (!multiPlayerGame) return;
 
     // Send all players a Cancel Request
@@ -237,6 +297,30 @@ export class MultiPlayerService {
     if (mpg.gameState && mpg.gameState.players)
       mpg.gameState.players = mpg.gameState.players.filter((p: any) => p.userId !== playerUserId);
 
+    this.saveMultiPlayersToStorage();
+  }
+
+  // Update Game State
+  updateMultiPlayerGameState(gameId: string, gameKey: string, newState: any) {
+    const mpg = this.getMultiPlayerGame(gameKey);
+    if (!mpg || mpg.gameId !== gameId) {
+      this.loggerService.log(`Game ${gameKey}(${gameId}) not found in MPG storage.`)
+      return;
+    }
+
+    mpg.gameState = newState;
+    this.saveMultiPlayersToStorage();
+  }
+
+  // Update Game State
+  updateMultiPlayerGamePlayState(gameId: string, gameKey: string, playState: GamePlayState) {
+    const mpg = this.getMultiPlayerGame(gameKey);
+    if (!mpg || mpg.gameId !== gameId) {
+      this.loggerService.log(`Game ${gameKey}(${gameId}) not found in MPG storage.`)
+      return;
+    }
+
+    mpg.gamePlayState = playState;
     this.saveMultiPlayersToStorage();
   }
 
@@ -435,6 +519,51 @@ export class MultiPlayerService {
     return socketMessage;
   }
 
+  sendGameEndMessage(gameId: string, gameKey: string, userId: string, gameWinner: IGameWinner | undefined, gameState: any): ISocketMessage | undefined {
+    if (!this.userService.me) {
+      this.loggerService.log('Me user is not set');
+      return;
+    }
+
+    const socketMessage: ISocketMessage = {
+      sentOn: new Date(),
+      sourceUserId: this.userService.me.userId,
+      sourceUserName: this.userService.me.userName,
+      type: 'gameRequest',
+      gameKey: gameKey,
+      gameRequestStatus: 'gameEnd',
+      gameWinner,
+      gameState,
+      gameId
+    };
+
+    this.socketService.sendMessage(userId, socketMessage);
+    return socketMessage;
+  }
+
+  sendRematchRequest(gameId: string, gameKey: string, userId: string, players: IPlayer[], gameState: any, gamePlayState: GamePlayState): ISocketMessage | undefined {
+    if (!this.userService.me) {
+      this.loggerService.log('Me user is not set');
+      return;
+    }
+
+    const socketMessage: ISocketMessage = {
+      sentOn: new Date(),
+      sourceUserId: this.userService.me.userId,
+      sourceUserName: this.userService.me.userName,
+      type: 'gameRequest',
+      gameKey: gameKey,
+      gameRequestStatus: 'rematch',
+      gamePlayState,
+      gamePlayerUpdate: players,
+      gameState,
+      gameId
+    };
+
+    this.socketService.sendMessage(userId, socketMessage);
+    return socketMessage;
+  }
+
 
 
 
@@ -455,7 +584,7 @@ export class MultiPlayerService {
   hanldeIncomingGameRequest(): void {
     this.incomingGameRequest$
       .subscribe(gameRequest => {
-        if (!gameRequest) return;
+        if (!gameRequest || gameRequest.gameKey === this.gameDashboardService.selectedGame.value?.key) return;
 
         const requestUser: IUser = { userId: gameRequest.sourceUserId, userName: gameRequest.sourceUserName };
 
@@ -476,6 +605,47 @@ export class MultiPlayerService {
             } else {
               // this.sendCancelRequests();
               this.sendGameRequestResponse(gameRequest.gameId, gameInfo, requestUser.userId, 'rejected');
+            }
+          });
+      });
+  }
+  
+  askPlayerForGameRematchConfirmation(sentByUserName: string, gameInfo: IGameInfo): Observable<any> {
+    const yesNoConfig: IYesNoConfig = {
+      title: 'Rematch',
+      message: `${sentByUserName} requested you for a rematch in ${gameInfo.name}.`,
+      countDown: this.gameRequestWaitTime,
+      noButtonText: 'Cancel',
+      yesButtonText: 'Join'
+    };
+
+    return this.dialog.open(YesNoDialogComponent, {
+      data: yesNoConfig
+    }).afterClosed()
+  }
+  hanldeIncomingGameRematchRequest(): void {
+    this.incomingGameRematchRequest$
+      .subscribe(gameRematchRequest => {
+        if (!gameRematchRequest || gameRematchRequest.gameKey === this.gameDashboardService.selectedGame.value?.key) return;
+
+        const requestUser: IUser = { userId: gameRematchRequest.sourceUserId, userName: gameRematchRequest.sourceUserName };
+
+        const gameInfo = this.gameDashboardService.games.find(g => g.key === gameRematchRequest.gameKey);
+        if (!gameInfo) {
+          this.loggerService.log('No game found for the game rematch request');
+          return;
+        }
+
+        this.askPlayerForGameRematchConfirmation(gameRematchRequest.sourceUserName, gameInfo)
+          .pipe(take(1))
+          .subscribe(confirm => {
+
+            if (confirm && gameRematchRequest.gamePlayerUpdate && gameRematchRequest.gameState) {
+              this.startMultiPlayerGameRematch(gameRematchRequest.gameId, gameInfo, gameRematchRequest.gamePlayerUpdate, gameRematchRequest.gameState, requestUser);
+              this.gameDashboardService.selectedGame.next(gameInfo);
+
+            } else {
+              this.sendGameRequestResponse(gameRematchRequest.gameId, gameInfo, requestUser.userId, 'rejected');
             }
           });
       });
@@ -544,17 +714,10 @@ export class MultiPlayerService {
         if (!gameStateRequest || gameStateRequest.gameKey === this.gameDashboardService.selectedGame.value?.key) return;
 
         // Save Game State
-        const currentState = this.gameDashboardService.loadGameState(gameStateRequest.gameKey);
-        if (currentState && currentState.gameId === gameStateRequest.gameId) {
-          this.gameDashboardService.saveGameState(gameStateRequest.gameState, gameStateRequest.gameKey);
-        }
+        this.gameDashboardService.updateGameState(gameStateRequest.gameId, gameStateRequest.gameKey, gameStateRequest.gameState);
 
         // Save Multi Player Game (MPG)
-        const mpg = this.getMultiPlayerGame(gameStateRequest.gameKey);
-        if (mpg && mpg.gameState?.gameId === gameStateRequest.gameId) {
-          mpg.gameState = gameStateRequest.gameState;
-          this.saveMultiPlayersToStorage();
-        }
+        this.updateMultiPlayerGameState(gameStateRequest.gameId, gameStateRequest.gameKey, gameStateRequest.gameState);
       });
   }
 
@@ -586,100 +749,20 @@ export class MultiPlayerService {
       });
   }
 
-  // sendGameCancelRequest(gameInfo: IGameInfo, player: IPlayer): void {
-  //   if (!this.userService.me) {
-  //     this.loggerService.log('Me user is not set');
-  //     return;
-  //   }
-  //   if (!player.userId) {
-  //     this.loggerService.log('Player is a local user');
-  //     return;
-  //   }
+  handleIncomingGameEndMessage(): void {
+    this.incomingGameEndMessage$
+      .subscribe(incomingGameWinnerMessage => {
+        if (!incomingGameWinnerMessage || incomingGameWinnerMessage.gameKey === this.gameDashboardService.selectedGame.value?.key) return;
 
-  //   const message: ISocketMessage = {
-  //     sentOn: new Date(),
-  //     sourceUserId: this.userService.me.userId,
-  //     sourceUserName: this.userService.me.userName,
-  //     type: 'gameRequest',
-  //     gameKey: gameInfo.key,
-  //     gameRequestStatus: 'requestCancel'
-  //   };
-  //   this.socketService.sendMessage(player.userId, message);
-  // }
+        if (!incomingGameWinnerMessage.gameWinner || !incomingGameWinnerMessage.gameState) return;
 
-  // sendGameRequestResponse(gameInfo: IGameInfo, source: IUser, response: boolean): void {
-  //   if (!this.userService.me) {
-  //     this.loggerService.log('Me user is not set');
-  //     return;
-  //   }
+        this.gameDashboardService.pushWinner(incomingGameWinnerMessage.gameWinner);
 
-  //   const message: ISocketMessage = {
-  //     sentOn: new Date(),
-  //     sourceUserId: this.userService.me.userId,
-  //     sourceUserName: this.userService.me.userName,
-  //     type: 'gameRequest',
-  //     gameKey: gameInfo.key,
-  //     gameRequestStatus: response ? 'accepted' : 'rejected'
-  //   };
-  //   this.socketService.sendMessage(source.userId, message);
-  // }
+        // Update local storage game
+        this.gameDashboardService.updateGameState(incomingGameWinnerMessage.gameId, incomingGameWinnerMessage.gameKey, incomingGameWinnerMessage.gameState);
 
-  // sendGamePlayerUpdate(gameInfo: IGameInfo, players: IPlayer[]): void {
-  //   if (!this.userService.me) {
-  //     this.loggerService.log('Me user is not set');
-  //     return;
-  //   }
-
-  //   const message: ISocketMessage = {
-  //     sentOn: new Date(),
-  //     sourceUserId: this.userService.me.userId,
-  //     sourceUserName: this.userService.me.userName,
-  //     type: 'gamePlayerUpdate',
-  //     gameKey: gameInfo.key,
-  //     gamePlayerUpdate: players
-  //   };
-  //   // players.forEach(p => p.userId ? this.socketService.sendMessage(p.userId, message) : null);
-  //   this.sendMessagesToPlayer(players, message);
-  // }
-
-  // sendGameStartRequest(gameInfo: IGameInfo, players: IPlayer[], gameState: any): void {
-  //   if (!this.userService.me) {
-  //     this.loggerService.log('Me user is not set');
-  //     return;
-  //   }
-
-  //   const message: ISocketMessage = {
-  //     sentOn: new Date(),
-  //     sourceUserId: this.userService.me.userId,
-  //     sourceUserName: this.userService.me.userName,
-  //     type: 'gameRequest',
-  //     gameKey: gameInfo.key,
-  //     gameRequestStatus: 'gameStart',
-  //     gameState
-  //   };
-  //   // players.forEach(p => p.userId ? this.socketService.sendMessage(p.userId, message) : null);
-  //   this.sendMessagesToPlayer(players, message);
-  // }
-
-  // sendGameStateUpdate(gameInfo: IGameInfo, players: IPlayer[], gameState: any): void {
-  //   if (!this.userService.me) {
-  //     this.loggerService.log('Me user is not set');
-  //     return;
-  //   }
-
-  //   const message: ISocketMessage = {
-  //     sentOn: new Date(),
-  //     sourceUserId: this.userService.me.userId,
-  //     sourceUserName: this.userService.me.userName,
-  //     type: 'gameState',
-  //     gameKey: gameInfo.key,
-  //     gameState
-  //   };
-  //   // players.forEach(p => p.userId ? this.socketService.sendMessage(p.userId, message) : null);
-  //   this.sendMessagesToPlayer(players, message);
-  // }
-
-  // sendMessagesToPlayer(players: IPlayer[], message: ISocketMessage) {
-  //   players.forEach(p => p.userId && p.userId !== this.userService.me?.userId ? this.socketService.sendMessage(p.userId, message) : null);
-  // }
+        // Remove MPG Game
+        this.removeMPGFromLocalStorageByGameId(incomingGameWinnerMessage.gameKey, incomingGameWinnerMessage.gameId);
+      });
+  }
 }

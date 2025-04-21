@@ -84,16 +84,11 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // if (!this.isGameStart) {
-    const anyExistingGame = this.multiPlayerService.anyGameInProgressStatus(this.config.game.key);
+    this.config.preFillPlayers
+      ? this.initializeExistingPlayersForm(this.config.preFillPlayers)
+      : this.initializeDefaultPlayersForm();
 
-    if (!anyExistingGame) {
-      this.config.preFillPlayers
-        ? this.initializeExistingPlayersForm(this.config.preFillPlayers)
-        : this.initializeDefaultPlayersForm();
-    } else {
-      // Pending code to ask if want to continue with prev game or set new game players by cancelling previous one
-    }
+    if (this.config.repeatSamePlayer) this.submit();
   }
 
   ngOnDestroy(): void {
@@ -162,70 +157,20 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
   setPlayerConnection(player: IPlayer, usrCon: IUser) {
     player.userId = usrCon.userId;
     player.name = usrCon.userName;
-    // const connectionStatus = this.playerConenctionRequests.get(player.name);
-
-    // if (!connectionStatus || connectionStatus === 'rejected') {
-
-    //   this.gameDashboardService.sendGameRequest(this.config.game, player);
-    //   this.playerConenctionRequests.set(player.name, 'pending');
-    //   this.sendPlayerUpdates();
-    // }
   }
-
-  // fadeoutSelectedPlayer(player: IPlayer) {
-  //   setTimeout(() => {
-  //     this.playerConenctionRequests.delete(player.name);
-  //     player.name = '';
-  //     player.userId = undefined;
-  //     this.sendPlayerUpdates();
-  //   }, 1500);
-  // }
 
   resetPlayer(player: IPlayer) {
     player.name = '';
     player.userId = undefined;
-    // this.sendPlayerUpdates();
   }
-
-  // getPlayerRequestState(player: IPlayer): string {
-  //   if (!player.userId) return 'no-connection';
-
-  //   if (!this.playerConenctionRequests.has(player.name)) return 'no-connection';
-
-  //   const stat = this.playerConenctionRequests.get(player.name);
-  //   if (stat === undefined) return 'time-out';
-  //   else return stat
-  // }
-
-  // sendPlayerUpdates() {
-  //   if (!this.gameDashboardService.selectedGame.value) return
-
-  //   this.gameDashboardService.sendGamePlayerUpdate(this.gameDashboardService.selectedGame.value, this.players);
-  // }
 
   cancelGame() {
     this.dialogRef.close();
-
-    // if (!this.isGameStart) return;
-
-    // const selectedGame = this.gameDashboardService.selectedGame.value;
-    // const me = this.userService.me;
-
-    // if (selectedGame && selectedGame.gameOwner) {
-    //   const ownerPlayer = this.players.find(p => p.userId === this.gameDashboardService.selectedGame.value?.gameOwner?.userId);
-
-    //   if (!ownerPlayer) return;
-    //   this.gameDashboardService.sendGameCancelRequest(this.config.game, ownerPlayer);
-
-    // } else if (selectedGame && me) {
-    //   const otherPlayers = this.players.filter(p => p.userId && p.userId !== me.userId);
-
-    //   if (otherPlayers.length === 0) return;
-    //   otherPlayers.forEach(op => this.gameDashboardService.sendGameCancelRequest(this.config.game, op));
-    // }
   }
 
   submit(): void {
+    this.resetErrorMessages();
+    
     if (this.players.some(player => !player.name.trim())) {
       this.errorMessage = 'All players must have a name.';
       return;
@@ -239,23 +184,34 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
     if (this.isAnyPlayerOnline) {
       this.multiPlayerOnlineWaitStatus = 'Waiting for confirmation from all players.'
 
-      // Create multiplayer game and send requestes to all players
-      const multiPlayerConnection = this.multiPlayerService.startMultiPlayerGame(this.config.gameId, this.config.game, this.players);
-      // Set MultiPlayerGame to local variable and handle all player's response
-      this.setMultiPlayerGame(multiPlayerConnection);
+      // Start MultiPlayerGame and handle all player's response
+      this.startMultiPlayerGame(this.config.repeatSamePlayer);
+
     } else {
       this.dialogRef.close(this.players);
     }
   }
 
-  setMultiPlayerGame(multiPlayerConnection?: IGameMultiPlayerConnection) {
-    this.multiPlayerConnection = multiPlayerConnection;
-    if (!multiPlayerConnection) return;
+  startMultiPlayerGame(isRematch: boolean = false): void {
+
+    const currentGameState = this.gameDashboardService.loadGameState(this.config.game.key);
+
+    // Create multiplayer game and send requestes to all players
+    this.multiPlayerConnection = !isRematch
+      ? this.multiPlayerService.startMultiPlayerGame(this.config.gameId, this.config.game, this.players)
+      : this.multiPlayerService.startMultiPlayerGameRematch(this.config.gameId, this.config.game, this.players, currentGameState);
+
+    if (!this.multiPlayerConnection) return;
 
     this.multiUserState.clear();
 
 
     // Handle all player's response
+    this.handleIncomingPayersResponse(this.multiPlayerConnection);
+
+  }
+
+  handleIncomingPayersResponse(multiPlayerConnection: IGameMultiPlayerConnection): void {
     this.playersResponse$ = multiPlayerConnection.players
       .filter(p => !p.isMe && p.hasUser)
       .map(p => this.multiPlayerService.incomingGameRequestResponse$.pipe(filter(message => message?.sourceUserId === p.player.userId)));
@@ -274,8 +230,10 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
 
         },
         error: error => {
+          if (!this.multiPlayerConnection) return;
+
           this.loggerService.log(JSON.stringify({ error: error }));
-          this.completePlayersSubmissionAndGameCreation(multiPlayerConnection, 'One or more player did not respond to the game request.');
+          this.completePlayersSubmissionAndGameCreation(this.multiPlayerConnection, 'One or more player did not respond to the game request.');
         }
       });
   }
@@ -304,7 +262,6 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
     else {
       this.multiPlayerRequestError = error ?? `Some players rejected or did not respond to game request.`;
       this.multiPlayerService.cancelMultiPlayerGame(multiPlayerConnection.gameId, this.config.game, this.multiPlayerRequestError);
-      this.multiPlayerService.removeGameAndGotoHomePage(this.config.game.key, multiPlayerConnection.gameId);
     }
 
     this.multiPlayerOnlineWaitStatus = undefined;
@@ -315,20 +272,4 @@ export class PlayersConfigComponent implements OnInit, OnDestroy {
     this.multiPlayerRequestError = '';
   }
 
-  // Events from Host
-  // handlePlayerUpdate(): void {
-  //   this.gameDashboardService.incomingGamePlayerUpdate$
-  //     .pipe(
-  //       filter(playerUpdateRequest => playerUpdateRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key),
-  //       takeUntil(this.componentIsActive),
-  //       takeUntil(this.gameStarted)
-  //     )
-  //     .subscribe(playerUpdateRequest => {
-  //       if (!playerUpdateRequest) return;
-
-  //       // this.players = 
-  //       // assign incoming playerUpdateRequest.gamePlayerUpdate to Players List
-  //       // show Me as player
-  //     });
-  // }
 }

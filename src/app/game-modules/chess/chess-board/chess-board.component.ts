@@ -95,13 +95,8 @@ export class ChessBoardComponent extends BaseComponent {
     if (savedState) {
       this.setGameState(savedState);
 
-      if (!savedState.winner) {
-        if (this.winner || this.players.length === 0 || this.chess.fen() === DEFAULT_POSITION) {
-          this.setPlayersAndStartGame();
-
-        } else if (this.isMultiPlayerGame) {
-          this.listenForGameStateChange();
-        }
+      if (this.gameOver || this.players.length === 0 || this.chess.fen() === DEFAULT_POSITION) {
+        this.setPlayersAndStartGame();
       }
     } else {
       this.setPlayersAndStartGame();
@@ -124,18 +119,35 @@ export class ChessBoardComponent extends BaseComponent {
         next: confirm => {
           if (!confirm) return;
 
-          this.gameId = generateHexId(16);
-          this.chess.reset(); // Reset the game
-          this.gameOver = false;
-          this.winner = null;
-          this.selectedSquare = null;
-          this.possibleMoves = [];
-          this.isWhiteTurn = true;
-          this.updateBoard();
-          this.saveGameState();
-          this.sendGameStateUpdate();
+          this.performResetGame();
         }
       });
+  }
+  performResetGame(sendUpdates: boolean = true): void {
+    this.gameId = generateHexId(16);
+    this.chess.reset(); // Reset the game
+    this.gameOver = false;
+    this.winner = null;
+    this.selectedSquare = null;
+    this.possibleMoves = [];
+    this.isWhiteTurn = true;
+    this.updateBoard();
+    this.saveGameState();
+    if (sendUpdates) this.sendGameStateUpdate();
+  }
+
+  restartGameFromScratch(): void {
+    if (!this.gameInfo) return;
+
+    this.players = [];
+    this.multiPlayerService.removeGame(this.gameInfo.key, this.gameId);
+    this.performResetGame(false);
+    this.setPlayersAndStartGame();
+  }
+
+  rematch(): void {
+    this.performResetGame(false);
+    this.setPlayersAndStartGame(true);
   }
 
   cancelGame(): void {
@@ -163,12 +175,11 @@ export class ChessBoardComponent extends BaseComponent {
           this.multiPlayerService.sendLeaveGameMessage(this.gameId, this.mpg, this.mpg.gameOwner.userId);
           if (this.gameDashboardService.selectedGame.value)
             this.multiPlayerService.removeGameAndGotoHomePage(this.gameDashboardService.selectedGame.value.key, this.gameId);
-
         }
       });
   }
 
-  override getPlayerConfigPopup(): MatDialogRef<PlayersConfigComponent, any> | undefined {
+  override getPlayerConfigPopup(repeatSamePlayer: boolean): MatDialogRef<PlayersConfigComponent, any> | undefined {
     const curGame = this.gameDashboardService.selectedGame.value;
     if (!curGame) return;
 
@@ -180,24 +191,24 @@ export class ChessBoardComponent extends BaseComponent {
         maxPlayerCount: 2,
         preFillPlayers: this.players.length > 0 ? this.players : undefined,
         colorOptions: CHESS_COLORS,
-        gameId: this.gameId
+        gameId: this.gameId,
+        repeatSamePlayer
       } as IPlayerAskConfig,
       disableClose: true
     })
   }
 
-  setPlayers(): Observable<IPlayer[]> | undefined {
+  setPlayers(repeatSamePlayer: boolean): Observable<IPlayer[]> | undefined {
     const curGame = this.gameDashboardService.selectedGame.value;
     if (!curGame) return;
 
-    const ref = this.getPlayerConfigPopup();
+    const ref = this.getPlayerConfigPopup(repeatSamePlayer);
 
     return ref?.afterClosed().pipe(
       take(1), takeUntil(this.isComponentActive),
       map((players: IPlayer[] | IGameMultiPlayerConnection | undefined) => {
 
         if (!players) {
-          if (this.players.length === 0)
             this.router.navigateByUrl('');
         }
         else {
@@ -216,19 +227,18 @@ export class ChessBoardComponent extends BaseComponent {
   setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
     this.players = multiPlayerGame.players.map(player => player.player);
   }
-  setPlayersAndStartGame(): void {
-    this.setPlayers()?.subscribe({
+  setPlayersAndStartGame(repeatSamePlayer: boolean = false): void {
+    this.performResetGame(false);
+
+    this.setPlayers(repeatSamePlayer)?.subscribe({
       next: players => {
 
-        this.winner = null;
         this.saveGameState();
 
         const otherPlayers = this.players.find(p => p.userId !== undefined && p.userId === this.userService.me?.userId) !== undefined;
         if (otherPlayers) {
           this.startMultiPlayerGame();
-          this.listenForGameStateChange();
-          this.listenForPlayerLeft();
-          this.listenForPlayerUpdate()
+          this.startListening();
         }
       }
     });
@@ -240,8 +250,8 @@ export class ChessBoardComponent extends BaseComponent {
     this.mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value.key)
     if (!this.mpg) return;
 
-    this.mpg.gameState = this.getGameState();
-    this.mpg.gamePlayState = 'gameInProgress';
+    this.multiPlayerService.updateMultiPlayerGameState(this.mpg.gameId, this.mpg.gameInfo.key, this.getGameState());
+    this.multiPlayerService.updateMultiPlayerGamePlayState(this.mpg.gameId, this.mpg.gameInfo.key, 'gameInProgress');
 
     // Send Game start signal to all players
     this.players.forEach(player => {
@@ -273,8 +283,6 @@ export class ChessBoardComponent extends BaseComponent {
         this.board[i][j] = piece; // Add piece details to the board
       }
     }
-    if (!this.winner)
-      this.checkWinner();
   }
 
   indicesToSquare(i: number, j: number): Square {
@@ -284,21 +292,18 @@ export class ChessBoardComponent extends BaseComponent {
     return (files[j] + ranks[i]) as Square;
   }
 
-  movePiece(from: string, to: string): void {
-    if (this.gameOver) return; // Prevent moves if the game is over
+  movePiece(from: string, to: string): 'success' | 'fail' {
+    if (this.gameOver) return 'fail'; // Prevent moves if the game is over
     try {
       const move = this.chess.move({ from, to }); // Make a move
-      if (move) {
-        this.updateBoard();
-        this.isWhiteTurn = !this.isWhiteTurn;
-        this.saveGameState(); // Save the updated game state
-        this.sendGameStateUpdate();
 
-        if (this.gameMode === 'humanVsComputer' && !this.isWhiteTurn) {
-          this.computerMove();
-        }
+      if (move && this.gameMode === 'humanVsComputer' && !this.isWhiteTurn) {
+        this.computerMove();
       }
-    } catch (ex) { }
+    } catch (ex) {
+      return 'fail'
+    }
+    return 'success';
   }
 
   computerMove(): void {
@@ -361,18 +366,40 @@ export class ChessBoardComponent extends BaseComponent {
         }
       });
       this.possibleMoves = possibleMoves;
+
     } else {
       // Move the piece from the selected square to the clicked square
-      // if (this.possibleMoves.includes(square)) {
-      this.movePiece(this.selectedSquare, square);
-      // }
+      const moveState = this.movePiece(this.selectedSquare, square);
+      if (moveState === 'success') {
+        this.updateBoard();
+        this.checkWinner();
+        if (!this.winner)
+          this.moveToNextPlayer();
+      }
+
 
       // Clear the selected square and possible moves
       this.selectedSquare = null;
       this.possibleMoves = [];
     }
+
     this.saveGameState();
-    this.sendGameStateUpdate();
+    if (!this.gameOver) this.sendGameStateUpdate();
+    else {
+      this.players.forEach(player => {
+        if (!player.userId || !this.gameInfo || player.userId === this.userService.me?.userId) return;
+
+        this.multiPlayerService.updateMultiPlayerGamePlayState(this.gameId, this.gameInfo.key, 'gameEnd');
+        const winner = this.gameDashboardService.saveGameWinner(this.gameId, (this.winner ?? this.players), (this.winner ? false : true));
+        this.multiPlayerService.sendGameEndMessage(this.gameId, this.gameInfo.key, player.userId, winner, this.getGameState());
+        
+        // Remove MPG Game
+        this.multiPlayerService.removeMPGFromLocalStorageByGameId(this.gameInfo.key, this.gameId);
+
+        // Listen for Rematch
+        this.listenForGameRematchRequest();
+      });
+    }
   }
 
   isDarkCell(i: number, j: number): boolean {
@@ -391,15 +418,20 @@ export class ChessBoardComponent extends BaseComponent {
     return square.color === 'w';
   }
 
+  moveToNextPlayer(): void {
+    this.isWhiteTurn = !this.isWhiteTurn;
+  }
+
   checkWinner() {
+    if (this.winner) return;
+
     if (this.chess.isCheckmate()) {
       this.gameOver = true;
       this.winner = this.getPlayer(this.chess.turn() === 'w' ? 'b' : 'w'); // Opposite turn indicates the winner
-      this.gameDashboardService.saveGameWinner(this.gameId, this.winner);
+
     } else if (this.chess.isStalemate() || this.chess.isDraw()) {
       this.gameOver = true;
       this.winner = null;
-      this.gameDashboardService.saveGameWinner(this.gameId, this.players, true);
     }
   }
 }

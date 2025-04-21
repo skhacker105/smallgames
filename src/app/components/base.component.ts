@@ -19,6 +19,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
     isWaitingForGameToStart = new BehaviorSubject<string | undefined>(undefined);
 
     protected isComponentActive = new Subject<boolean>();
+    private gameEnded = new Subject<boolean>();
 
     get selectedPlayer(): IPlayer | undefined {
         return undefined;
@@ -26,8 +27,8 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
 
     abstract setLocalPlayers(players: IPlayer[]): void;
     abstract setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void;
-    abstract setPlayers(): Observable<IPlayer[]> | undefined;
-    abstract setPlayersAndStartGame(): void;
+    abstract setPlayers(repeatSamePlayer: boolean): Observable<IPlayer[]> | undefined;
+    abstract setPlayersAndStartGame(repeatSamePlayer: boolean): void;
 
     abstract getGameState(): any;
     abstract setGameState(state: any): void;
@@ -61,8 +62,9 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         if (!this.gameDashboardService.selectedGame.value) return;
 
         this.gameInfo = { ...this.gameDashboardService.selectedGame.value };
-        if (!this.multiPlayerService.anyGameInProgressStatus(this.gameDashboardService.selectedGame.value.key))
+        if (!this.multiPlayerService.anyGameInProgressStatus(this.gameDashboardService.selectedGame.value.key)) {
             this.loadGameState();
+        }
 
         else {
             this.mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value.key);
@@ -74,36 +76,15 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
             this.gameId = this.mpg.gameId;
             if (this.mpg.gameState) {
                 this.setGameState(this.mpg.gameState);
-                this.checkWinner();
-
-                if (this.mpg.gameState.players)
-                    this.players = this.mpg.gameState.players;
             }
 
 
             this.saveGameState();
 
-            // Player Setting - Wait for Game Start
-            if (this.mpg?.gamePlayState === 'playerSetting') {
-                this.waitForGameStart(this.mpg);
+            if (this.mpg.gamePlayState !== 'gameEnd') {
+                this.startWaiting();
+                this.startListening();
             }
-
-            // For Player/s when not in Player Setting means Game Started and player needs gameState update
-            else if (!this.mpg.isMeTheGameOwner && this.mpg.gameOwner) {
-                this.multiPlayerService.requestForGameUpdate(this.mpg.gameId, this.mpg, this.mpg.gameOwner.userId);
-                this.waitForGameUpdateOrNoUpdate();
-            }
-
-            // Listeners for Game Owner
-            if (this.mpg.isMeTheGameOwner) {
-                this.listenForPlayerLeft();
-
-            } else { // Listeners for Players
-                this.listenForPlayerUpdate();
-                this.listenForGameCancelled();
-
-            }
-            this.listenForGameStateChange();
         }
     }
 
@@ -111,9 +92,42 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         this.saveGameState();
         this.isComponentActive.next(true);
         this.isComponentActive.complete();
+        this.isWaitingForGameToStart.complete();
+        this.gameEnded.complete();
     }
 
-    getPlayerConfigPopup(): MatDialogRef<any, any> | undefined {
+    startWaiting(): void {
+        if (!this.mpg) return;
+
+        // Player Setting - Wait for Game Start
+        if (this.mpg.gamePlayState === 'playerSetting') {
+            this.waitForGameStart(this.mpg);
+        }
+
+        // For Player/s when not in Player Setting means Game Started and player needs gameState update
+        else if (!this.mpg.isMeTheGameOwner && this.mpg.gameOwner) {
+            this.multiPlayerService.requestForGameUpdate(this.mpg.gameId, this.mpg, this.mpg.gameOwner.userId);
+            this.waitForGameUpdateOrNoUpdate();
+        }
+    }
+
+    startListening(): void {
+        if (!this.mpg) return;
+
+        // Listeners for Game Owner
+        if (this.mpg.isMeTheGameOwner) {
+            this.listenForPlayerLeft();
+
+        } else { // Listeners for Players
+            this.listenForPlayerUpdate();
+            this.listenForGameCancelled();
+
+        }
+        this.listenForGameStateChange();
+        this.listenForGameEndMessage();
+    }
+
+    getPlayerConfigPopup(repeatSamePlayer: boolean): MatDialogRef<any, any> | undefined {
         return undefined;
     }
 
@@ -147,8 +161,8 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
                         this.mpg = this.multiPlayerService.getMultiPlayerGame(gameStartRequest.gameKey);
                         if (!this.mpg) return;
 
-                        this.mpg.gameState = gameStartRequest.gameState;
-                        this.mpg.gamePlayState = 'gameInProgress'
+                        this.multiPlayerService.updateMultiPlayerGameState(gameStartRequest.gameId, gameStartRequest.gameKey, gameStartRequest.gameState);
+                        this.multiPlayerService.updateMultiPlayerGamePlayState(gameStartRequest.gameId, gameStartRequest.gameKey, 'gameInProgress');
                         this.setGameState(gameStartRequest.gameState);
                     }
                 },
@@ -210,7 +224,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
                                 this.multiPlayerService.removeMPGFromLocalStorageByGameId(this.gameDashboardService.selectedGame.value.key, this.gameId);
                                 this.resetGame();
                                 this.players = [];
-                                this.setPlayersAndStartGame();
+                                this.setPlayersAndStartGame(false);
                             }
                         })
                 }
@@ -221,14 +235,38 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         this.multiPlayerService.incomingGameStateChanged$
             .pipe(
                 filter(gameStartRequest => gameStartRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key),
-                takeUntil(this.isComponentActive)
+                takeUntil(this.isComponentActive), takeUntil(this.gameEnded)
             )
             .subscribe(gameStateRequest => {
-                if (gameStateRequest && gameStateRequest.gameState)
-                    this.setGameState(gameStateRequest.gameState);
-                if (this.selectedPlayer && gameStateRequest?.gameState.winner) this.gameDashboardService.saveGameWinner(this.gameId, this.selectedPlayer);
+                if (!gameStateRequest || !gameStateRequest.gameState) return;
+
+                this.setGameState(gameStateRequest.gameState);
                 this.saveGameState();
-                this.checkWinner();
+            });
+    }
+
+    listenForGameEndMessage(): void {
+        this.multiPlayerService.incomingGameEndMessage$
+            .pipe(
+                filter(gameStartRequest => gameStartRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key),
+                takeUntil(this.isComponentActive), takeUntil(this.gameEnded)
+            )
+            .subscribe(gameEndMessage => {
+                if (!gameEndMessage || !gameEndMessage.gameWinner) return;
+
+                this.gameDashboardService.pushWinner(gameEndMessage.gameWinner);
+
+                //Set State
+                this.setGameState(gameEndMessage.gameState);
+
+                // Update local storage game
+                this.gameDashboardService.updateGameState(gameEndMessage.gameId, gameEndMessage.gameKey, gameEndMessage.gameState);
+
+                // Remove MPG Game
+                this.multiPlayerService.removeMPGFromLocalStorageByGameId(gameEndMessage.gameKey, gameEndMessage.gameId);
+
+                this.gameEnded.next(true);
+                this.listenForGameRematchRequest();
             });
     }
 
@@ -245,7 +283,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         this.multiPlayerService.incomingGameRequestCancel$
             .pipe(
                 filter(socketMessage => socketMessage?.gameKey === this.gameDashboardService.selectedGame.value?.key),
-                take(1), takeUntil(this.isComponentActive)
+                take(1), takeUntil(this.isComponentActive), takeUntil(this.gameEnded)
             )
             .subscribe({
                 next: gameCancelRequest => {
@@ -273,7 +311,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         this.multiPlayerService.incomingGameLeft$
             .pipe(
                 filter(socketMessage => socketMessage?.gameKey === this.gameDashboardService.selectedGame.value?.key),
-                takeUntil(this.isComponentActive)
+                takeUntil(this.isComponentActive), takeUntil(this.gameEnded)
             )
             .subscribe({
                 next: incomingGameLeftMessage => {
@@ -302,7 +340,7 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
         this.multiPlayerService.incomingGamePlayerUpdate$
             .pipe(
                 filter(socketMessage => socketMessage?.gameKey === this.gameDashboardService.selectedGame.value?.key),
-                takeUntil(this.isComponentActive)
+                takeUntil(this.isComponentActive), takeUntil(this.gameEnded)
             )
             .subscribe({
                 next: playerUpdateMessage => {
@@ -321,6 +359,43 @@ export abstract class BaseComponent implements OnInit, OnDestroy {
                         });
                     }
                 }
+            });
+    }
+
+    listenForGameRematchRequest(): void {
+        this.multiPlayerService.incomingGameRematchRequest$
+            .pipe(
+                filter(gameRematchRequest => gameRematchRequest?.gameKey === this.gameDashboardService.selectedGame.value?.key),
+                takeUntil(this.isComponentActive), take(1)
+            )
+            .subscribe(gameRematchRequest => {
+                if (!gameRematchRequest || !gameRematchRequest.gamePlayerUpdate) return;
+
+                const requestUser: IUser = { userId: gameRematchRequest.sourceUserId, userName: gameRematchRequest.sourceUserName };
+
+                const gameInfo = this.gameDashboardService.games.find(g => g.key === gameRematchRequest.gameKey);
+                if (!gameInfo) return;
+
+                this.multiPlayerService.askPlayerForGameRematchConfirmation(gameRematchRequest.sourceUserName, gameInfo)
+                    .pipe(take(1))
+                    .subscribe(confirm => {
+
+                        this.gameId = gameRematchRequest.gameId;
+
+                        if (confirm && gameRematchRequest.gamePlayerUpdate && gameRematchRequest.gameState) {
+                            this.setGameState(gameRematchRequest.gameState);
+                            this.saveGameState();
+                            this.mpg = this.multiPlayerService.startMultiPlayerGameRematch(gameRematchRequest.gameId, gameInfo, gameRematchRequest.gamePlayerUpdate, gameRematchRequest.gameState, requestUser);
+
+                            if (gameRematchRequest.gamePlayState === 'playerSetting')
+                                this.startWaiting();
+                            this.startListening();
+
+                        } else {
+                            this.multiPlayerService.sendGameRequestResponse(gameRematchRequest.gameId, gameInfo, requestUser.userId, 'rejected');
+                            this.listenForGameRematchRequest();
+                        }
+                    });
             });
     }
 

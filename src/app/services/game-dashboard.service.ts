@@ -3,6 +3,7 @@ import { IGameInfo, IGameWinner, IPlayer } from '../interfaces';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 import { UserService } from './user.service';
+import { LoggerService } from './logger.service';
 
 @Injectable({
   providedIn: 'root'
@@ -100,7 +101,7 @@ export class GameDashboardService {
   selectedGame = new BehaviorSubject<IGameInfo | undefined>(undefined);
 
   constructor(
-    private router: Router,
+    private router: Router, private loggerService: LoggerService,
     private userService: UserService) {
 
     this.selectedGame.subscribe({
@@ -125,6 +126,16 @@ export class GameDashboardService {
     return state ? JSON.parse(state) : null;
   }
 
+  updateGameState(gameId: string, gameKey: string, newState: any) {
+    const localGame = this.loadGameState(gameKey);
+    if (localGame?.gameId !== gameId) {
+      this.loggerService.log(`Game ${gameKey}(${gameId}) not found in local storage.`)
+      return;
+    }
+
+    this.saveGameState(newState, gameKey);
+  }
+
   removeGameFromLocalStorageByGameId(gameKey: string, gameId: string): void {
     const savedState: any = this.loadGameState(gameKey);
     if (savedState?.gameId === gameId)
@@ -139,21 +150,31 @@ export class GameDashboardService {
     this.saveGameState(game, gameKey);
   }
 
-  saveGameWinner(gameId: string, winnerPlayer: IPlayer | IPlayer[], isDraw: boolean = false): void {
+  pushWinner(winner: IGameWinner) {
+    const allSavedWinners = this.getAllWinners();
+    if (allSavedWinners.some(savedWnner => savedWnner.gameId === winner.gameId)) return;
+
+    allSavedWinners.push(winner);
+    localStorage.setItem(this.allWinnersKey, JSON.stringify(allSavedWinners));
+  }
+
+  saveGameWinner(gameId: string, winnerPlayer: IPlayer | IPlayer[], isDraw: boolean = false): IGameWinner | undefined {
     if (!this.selectedGame.value) return;
 
     const allSavedWinners = this.getAllWinners();
     if (allSavedWinners.some(winner => winner.gameId === gameId)) return;
 
-    allSavedWinners.push({
+    const winner: IGameWinner = {
       gameId,
       key: this.selectedGame.value?.key,
       winner: !Array.isArray(winnerPlayer) ? winnerPlayer : undefined,
       winners: Array.isArray(winnerPlayer) ? winnerPlayer : undefined,
       isDraw,
       winDate: new Date()
-    });
+    }
+    allSavedWinners.push(winner);
     localStorage.setItem(this.allWinnersKey, JSON.stringify(allSavedWinners));
+    return winner;
   }
 
   saveGameScore(gameId: string, score: string, gameLevel?: string): void {

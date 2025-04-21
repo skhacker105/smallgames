@@ -1,7 +1,6 @@
  
 
 Chess, Ludo, Snake and aldder - if game is not multiplayer then give option to restart game by player selection
-After winnig give appropriate buttons for reset with same or other players
 
-winners are saving twice. make it save by game id now 
-ludo is saving game winner multiple times
+start reset game functionality 
+send player busy message if game request comes in and he is busy witha game already

@@ -1,5 +1,4 @@
-import { MatDialogRef } from "@angular/material/dialog";
-import { IPlayer, IUser } from "./";
+import { IPlayer } from "./";
 
 export interface IGameInfo {
     key: string;
@@ -7,9 +6,6 @@ export interface IGameInfo {
     image: string;
     route: string;
     settingsIconNeeded: boolean;
-    // incomingRequestConfirmationDialogRef?: MatDialogRef<any>;
-    // gameOwner?: IUser;
-    // isGameStart?: boolean;
 }
 
 export interface IGameWinner {

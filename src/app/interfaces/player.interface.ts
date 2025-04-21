@@ -22,4 +22,5 @@ export interface IPlayerAskConfig {
     askForName: true;
     preFillPlayers?: IPlayer[];
     colorOptions?: PLAYER_COLOR[];
+    repeatSamePlayer: boolean;
 }

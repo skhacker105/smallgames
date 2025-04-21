@@ -1,6 +1,3 @@
-<!-- Spinner -->
-<app-spinner [message]="isWaitingForGameToStart.value" *ngIf="mpg"></app-spinner>
-
 <div class="ludo-game" *ngIf="players.length > 0 && !winner">
 
     <!-- Game Board -->
@@ -123,14 +120,15 @@
 </div>
 
 <ng-container *ngIf="winner">
-    <app-winner [winnerName]="winnerName" winnerMessage="Winner">
+    <app-winner [winnerName]="winnerName" winnerMessage="Winner"
+    (resetGame)="restartGameFromScratch()" (rematch)="rematch()">
     </app-winner>
 </ng-container>
 
 <ng-template #baseAreaCoin let-player="player" let-position="position" let-finished="finished" let-inPath="inPath">
     <ng-container *ngFor="let coin of (player?.ludoCoins ?? []); let i = index">
         <ng-container *ngIf="coin.position === position && (finished === undefined || coin.finished === finished)">
-            <div class="coin-container" (click)="playCoin(coin)" [ngClass]="{
+            <div class="coin-container" (click)="handleCoinClick(coin)" [ngClass]="{
                 'in-path': !!inPath,
                         'is-not-my-turn': !isMyTurn
             }">
