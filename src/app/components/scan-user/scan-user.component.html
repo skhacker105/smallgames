@@ -36,11 +36,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- QR Code Section -->
-        <div class="qr-section" *ngIf="localDataAsQRCodeText">
-            <qrcode [qrdata]="localDataAsQRCodeText" #qrCode [errorCorrectionLevel]="'H'"></qrcode>
-        </div>
     </div>
 
     <!-- Footer -->

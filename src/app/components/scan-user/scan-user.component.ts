@@ -22,7 +22,6 @@ export class ScanUserComponent {
 
   scannedUser: IUser | null = null;
   scanError = '';
-  localDataAsQRCodeText = '';
   @ViewChild('qrCode', { static: false }) qrCodeElement!: QRCodeComponent;
 
   constructor(
@@ -31,7 +30,6 @@ export class ScanUserComponent {
     private loggerService: LoggerService,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    this.localDataAsQRCodeText = JSON.stringify(this.userService.me);
   }
 
   async startScan() {
