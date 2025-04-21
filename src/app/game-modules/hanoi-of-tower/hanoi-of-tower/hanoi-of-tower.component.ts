@@ -32,6 +32,52 @@ export class HanoiOfTowerComponent extends BaseComponent {
     multiPlayerService: MultiPlayerService, dialog: MatDialog) {
     super(gameDashboardService, multiPlayerService, dialog)
   }
+  
+  getGameState() {
+    return {
+      towers: this.towers,
+      startTower: this.startTower,
+      endTower: this.endTower,
+      selectedDisk: this.selectedDisk,
+      selectedTower: this.selectedTower,
+      gameOver: this.gameOver,
+      numberOfDisks: this.numberOfDisks,
+      numberOfTowers: this.numberOfTowers,
+      diskSizeMultiplier: this.diskSizeMultiplier,
+      selectedLevel: this.selectedLevel,
+      timeSpent: this.timeSpent
+    };
+  }
+  setGameState(gameState: any): void {
+    this.towers = gameState.towers;
+      this.startTower = gameState.startTower;
+      this.endTower = gameState.endTower;
+      this.selectedDisk = gameState.selectedDisk;
+      this.selectedTower = gameState.selectedTower;
+      this.gameOver = gameState.gameOver;
+      this.numberOfDisks = gameState.numberOfDisks;
+      this.numberOfTowers = gameState.numberOfTowers;
+      this.errorMessage = null;
+      this.diskSizeMultiplier = gameState.diskSizeMultiplier;
+      this.selectedLevel = gameState.selectedLevel
+      this.timeSpent = gameState.timeSpent ?? 0;
+  }
+
+  loadGameState(): void {
+    const gameState = this.gameDashboardService.loadGameState();
+    if (gameState) {
+      this.setGameState(gameState);
+      if (!this.gameOver) this.startTimer();
+    } else {
+      this.setLevel(1);
+      this.resetGame();
+    }
+  }
+
+  saveGameState(): void {
+    const gameState = this.getGameState();
+    this.gameDashboardService.saveGameState(gameState, (this.gameInfo?.key ?? undefined));
+  }
 
   resetGame(): void {
     this.gameOverSubject.next(true);
@@ -174,51 +220,6 @@ export class HanoiOfTowerComponent extends BaseComponent {
   }
 
   
-  override getGameState() {
-    return {
-      towers: this.towers,
-      startTower: this.startTower,
-      endTower: this.endTower,
-      selectedDisk: this.selectedDisk,
-      selectedTower: this.selectedTower,
-      gameOver: this.gameOver,
-      numberOfDisks: this.numberOfDisks,
-      numberOfTowers: this.numberOfTowers,
-      diskSizeMultiplier: this.diskSizeMultiplier,
-      selectedLevel: this.selectedLevel,
-      timeSpent: this.timeSpent
-    };
-  }
-  override setGameState(gameState: any): void {
-    this.towers = gameState.towers;
-      this.startTower = gameState.startTower;
-      this.endTower = gameState.endTower;
-      this.selectedDisk = gameState.selectedDisk;
-      this.selectedTower = gameState.selectedTower;
-      this.gameOver = gameState.gameOver;
-      this.numberOfDisks = gameState.numberOfDisks;
-      this.numberOfTowers = gameState.numberOfTowers;
-      this.errorMessage = null;
-      this.diskSizeMultiplier = gameState.diskSizeMultiplier;
-      this.selectedLevel = gameState.selectedLevel
-      this.timeSpent = gameState.timeSpent ?? 0;
-  }
-
-  saveGameState(): void {
-    const gameState = this.getGameState();
-    this.gameDashboardService.saveGameState(gameState);
-  }
-
-  loadGameState(): void {
-    const gameState = this.gameDashboardService.loadGameState();
-    if (gameState) {
-      this.setGameState(gameState);
-      if (!this.gameOver) this.startTimer();
-    } else {
-      this.setLevel(1);
-      this.resetGame();
-    }
-  }
 
   checkWinner() {}
 }

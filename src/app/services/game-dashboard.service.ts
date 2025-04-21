@@ -74,13 +74,13 @@ export class GameDashboardService {
       route: 'game-2048',
       settingsIconNeeded: false
     },
-    {
-      key: 'play-card-memorize',
-      name: 'Memory',
-      image: 'assets/playCardMemorize.png',
-      route: 'playCardMemorize',
-      settingsIconNeeded: false
-    },
+    // {
+    //   key: 'play-card-memorize',
+    //   name: 'Memory',
+    //   image: 'assets/playCardMemorize.png',
+    //   route: 'playCardMemorize',
+    //   settingsIconNeeded: false
+    // },
     // {
     //   key: 'connectingDots',
     //   name: 'Dots',
