@@ -55,6 +55,10 @@ export class TicTacToeComponent extends BaseComponent {
     }
   }
 
+  saveGameState(): void {
+    this.gameDashboardService.saveGameState(this.getGameState(), (this.gameInfo?.key ?? undefined));
+  }
+
   makeMove(row: number, col: number): void {
     if (!this.board[row][col] && !this.winnerResult) {
       this.board[row][col] = this.currentPlayer;
@@ -135,10 +139,6 @@ export class TicTacToeComponent extends BaseComponent {
   }
   setPlayersAndStartGame(): void {
     throw new Error('Method not implemented.');
-  }
-
-  saveGameState(): void {
-    this.gameDashboardService.saveGameState(this.getGameState());
   }
 
   isWinnerCell(row: number, col: number, cell: PlayerType): boolean {

@@ -46,7 +46,7 @@ export class MultiPlayerService {
     this.loadMultiPlayersFromStorage();
     this.removeGarbageMPG();
 
-    this.incomingGameRequestResponse$ = this.getGameRequestOverserver(['accepted', 'rejected']);
+    this.incomingGameRequestResponse$ = this.getGameRequestOverserver(['accepted', 'rejected', 'busy']);
     this.incomingGameStart$ = this.getGameRequestOverserver('gameStart');
 
     this.incomingGameLeft$ = this.getGameRequestOverserver('leftGame');
@@ -557,6 +557,26 @@ export class MultiPlayerService {
       gamePlayState,
       gamePlayerUpdate: players,
       gameState,
+      gameId
+    };
+
+    this.socketService.sendMessage(userId, socketMessage);
+    return socketMessage;
+  }
+
+  sendBusyMessage(gameId: string, gameKey: string, userId: string): ISocketMessage | undefined {
+    if (!this.userService.me) {
+      this.loggerService.log('Me user is not set');
+      return;
+    }
+
+    const socketMessage: ISocketMessage = {
+      sentOn: new Date(),
+      sourceUserId: this.userService.me.userId,
+      sourceUserName: this.userService.me.userName,
+      type: 'gameRequest',
+      gameKey: gameKey,
+      gameRequestStatus: 'busy',
       gameId
     };
 

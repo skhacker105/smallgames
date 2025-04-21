@@ -75,7 +75,7 @@ export class ImagePuzzleComponent extends BaseComponent {
 
   saveGameState(): void {
     const gameState = this.getGameState();
-    this.gameDashboardService.saveGameState(gameState);
+    this.gameDashboardService.saveGameState(gameState, (this.gameInfo?.key ?? undefined));
   }
 
   loadGameState(): void {

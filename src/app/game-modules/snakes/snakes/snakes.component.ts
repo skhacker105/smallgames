@@ -83,7 +83,7 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
 
   saveGameState(): void {
     const state: SnakeGameState = this.getGameState();
-    this.gameDashboardService.saveGameState(state);
+    this.gameDashboardService.saveGameState(state, (this.gameInfo?.key ?? undefined));
   }
 
   startGame(): void {

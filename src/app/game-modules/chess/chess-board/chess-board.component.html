@@ -38,7 +38,7 @@
   </button>
 
   <!-- Cancel Game -->
-  <button (click)="cancelGame()" *ngIf="mpg && mpg.isMeTheGameOwner">
+  <button (click)="cancelGame()" *ngIf="!mpg || mpg.isMeTheGameOwner">
     <mat-icon>close</mat-icon>
   </button>
 

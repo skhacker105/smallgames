@@ -69,7 +69,7 @@ export class SudokuComponent extends BaseComponent {
 
   saveGameState(): void {
     const state = this.getGameState();
-    this.gameDashboardService.saveGameState(state);
+    this.gameDashboardService.saveGameState(state, (this.gameInfo?.key ?? undefined));
   }
 
   resetGame(): void {

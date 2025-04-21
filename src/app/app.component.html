@@ -38,22 +38,26 @@
   <!-- Footer -->
   <div class="footer" *ngIf="isLogoLoadingComplete">
 
-    <div class="home-icon" *ngIf="gameDashboardService.selectedGame.value || !isHomePage">
-      <mat-icon (click)="homeClicked()">home</mat-icon>
-    </div>
 
-    <div class="home-icon" *ngIf="!gameDashboardService.selectedGame.value && isHomePage">
+    <div class="home-icon" *ngIf="!gameDashboardService.selectedGame.value">
       <mat-icon (click)="showMyQRCode()">person</mat-icon>
     </div>
 
 
     <mat-icon *ngIf="gameDashboardService.selectedGame.value?.settingsIconNeeded">settings</mat-icon>
 
-    <ng-container *ngIf="!gameDashboardService.selectedGame.value">
+    <ng-container *ngIf="!gameDashboardService.selectedGame.value && isHomePage">
       <mat-icon (click)="router.navigateByUrl('winners')">emoji_events</mat-icon>
-      <mat-icon (click)="shoAboutInfo()">info</mat-icon>
     </ng-container>
 
+    <div class="home-icon" *ngIf="gameDashboardService.selectedGame.value || !isHomePage">
+      <mat-icon (click)="homeClicked()">home</mat-icon>
+    </div>
+
+
+    <ng-container *ngIf="!gameDashboardService.selectedGame.value">
+      <mat-icon (click)="shoAboutInfo()">info</mat-icon>
+    </ng-container>
   </div>
 
   <!-- Logs -->

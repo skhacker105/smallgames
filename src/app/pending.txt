@@ -1,6 +1,1 @@
  
-
-Chess, Ludo, Snake and aldder - if game is not multiplayer then give option to restart game by player selection
-
-start reset game functionality 
-send player busy message if game request comes in and he is busy witha game already
