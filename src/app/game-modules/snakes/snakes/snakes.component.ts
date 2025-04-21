@@ -3,9 +3,11 @@ import { BaseComponent } from '../../../components/base.component';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { MatDialog } from '@angular/material/dialog';
 import { InfoComponent } from '../../../components/info/info.component';
-import { IInfo } from '../../../interfaces';
-import { take } from 'rxjs';
+import { IGameMultiPlayerConnection, IInfo, IPlayer } from '../../../interfaces';
+import { Observable, take } from 'rxjs';
 import { UserService } from '../../../services/user.service';
+import { MultiPlayerService } from '../../../services/multi-player.service';
+import { generateHexId } from '../../../utils/support.utils';
 
 interface SnakeGameState {
   snake: { x: number; y: number }[];
@@ -38,9 +40,10 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
   constructor(
     gameDashboardService: GameDashboardService,
     private userService: UserService,
-    private dialog: MatDialog
+    dialog: MatDialog,
+    multiPlayerService: MultiPlayerService
   ) {
-    super(gameDashboardService);
+    super(gameDashboardService, multiPlayerService, dialog);
   }
 
   override ngOnInit(): void {
@@ -59,6 +62,7 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
       direction: this.direction,
       food: this.food,
       score: this.score,
+      gameId: this.gameId
     };
   }
 
@@ -67,6 +71,7 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
     this.direction = savedState.direction;
     this.food = savedState.food;
     this.score = savedState.score;
+    this.gameId = savedState.gameId ?? generateHexId(16);
   }
 
   loadGameState(): void {
@@ -93,10 +98,11 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
   saveGameScore(score: number): void {
     if (!this.userService.me) return;
 
-    this.gameDashboardService.saveGameScore(score.toString());
+    this.gameDashboardService.saveGameScore(this.gameId, score.toString());
   }
 
   resetGame(): void {
+    this.gameId = generateHexId(16);
     this.stopGame();
     this.snake = [{ x: 10, y: 10 }];
     this.direction = 'RIGHT';
@@ -104,6 +110,19 @@ export class SnakesComponent extends BaseComponent implements OnInit, OnDestroy 
     this.score = 0;
     this.intervalId = undefined;
     this.saveGameState();
+  }
+  
+  setPlayers(): Observable<IPlayer[]> | undefined {
+    throw new Error('Method not implemented.');
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    throw new Error('Method not implemented.');
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    throw new Error('Method not implemented.');
+  }
+  setPlayersAndStartGame(): void {
+    throw new Error('Method not implemented.');
   }
 
   updateGame(): void {

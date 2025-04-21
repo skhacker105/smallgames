@@ -1,8 +1,11 @@
 import { Component, OnInit, ViewChild, ElementRef, HostListener, Renderer2 } from '@angular/core';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { BaseComponent } from '../../../components/base.component';
-import { Subject, interval, takeUntil } from 'rxjs';
-import { generateRandomNumbers } from '../../../utils/support.utils';
+import { Observable, Subject, interval, takeUntil } from 'rxjs';
+import { generateHexId } from '../../../utils/support.utils';
+import { MultiPlayerService } from '../../../services/multi-player.service';
+import { MatDialog } from '@angular/material/dialog';
+import { IGameMultiPlayerConnection, IPlayer } from '../../../interfaces';
 
 interface Cell {
   dot: string | null;
@@ -34,8 +37,9 @@ export class ConnectingDotsComponent extends BaseComponent {
 
   gameOverSubject = new Subject<boolean>();
 
-  constructor(gameDashboardService: GameDashboardService) {
-    super(gameDashboardService);
+  constructor(gameDashboardService: GameDashboardService,
+    multiPlayerService: MultiPlayerService, dialog: MatDialog) {
+    super(gameDashboardService, multiPlayerService, dialog);
   }
 
   get dotPairs(): number {
@@ -43,6 +47,7 @@ export class ConnectingDotsComponent extends BaseComponent {
   }
 
   resetGame(): void {
+    this.gameId = generateHexId(16);
     this.board = this.generateBoard();
     this.timeSpent = 0;
     this.gameOver = false;
@@ -156,7 +161,7 @@ export class ConnectingDotsComponent extends BaseComponent {
     if (allConnected) {
       this.gameOver = true;
       this.gameOverSubject.next(true);
-      this.gameDashboardService.saveGameDuration(this.timeSpent, this.selectedLevel.toString());
+      this.gameDashboardService.saveGameDuration(this.gameId, this.timeSpent, this.selectedLevel.toString());
     }
   }
 
@@ -201,6 +206,19 @@ export class ConnectingDotsComponent extends BaseComponent {
         this.saveGameState();
       });
   }
+  
+  setPlayers(): Observable<IPlayer[]> | undefined {
+    throw new Error('Method not implemented.');
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    throw new Error('Method not implemented.');
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    throw new Error('Method not implemented.');
+  }
+  setPlayersAndStartGame(): void {
+    throw new Error('Method not implemented.');
+  }
 
   override getGameState(): any {
     return {
@@ -208,7 +226,8 @@ export class ConnectingDotsComponent extends BaseComponent {
       selectedLevel: this.selectedLevel,
       timeSpent: this.timeSpent,
       gameOver: this.gameOver,
-      undoStack: this.undoStack
+      undoStack: this.undoStack,
+      gameId: this.gameId
     };
   }
 
@@ -218,6 +237,7 @@ export class ConnectingDotsComponent extends BaseComponent {
     this.timeSpent = gameState.timeSpent;
     this.gameOver = gameState.gameOver;
     this.undoStack = gameState.undoStack;
+    this.gameId = gameState.gameId ?? generateHexId(16);
     if (!this.gameOver) this.startTimer();
   }
 
@@ -234,4 +254,6 @@ export class ConnectingDotsComponent extends BaseComponent {
       this.resetGame();
     }
   }
+
+  checkWinner() {}
 }

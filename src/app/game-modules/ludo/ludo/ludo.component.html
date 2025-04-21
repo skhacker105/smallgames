@@ -1,13 +1,7 @@
-<div class="ludo-game" *ngIf="players.length > 0">
-
-    <!-- Winner Announcement -->
-    <div *ngIf="winner" class="winner">
-        <h2>{{ winner }} Wins!</h2>
-        <button (click)="resetGame()">Play Again</button>
-    </div>
+<div class="ludo-game" *ngIf="players.length > 0 && !winner">
 
     <!-- Game Board -->
-    <div class="board-container" *ngIf="!winner">
+    <div class="board-container">
         <div class="board">
             <!-- Base Areas -->
             <div class="base-area red">
@@ -81,13 +75,21 @@
     </div>
 
     <!-- Dice and Controls -->
-    <div class="controls" *ngIf="!winner">
+    <div class="controls">
         <div [style.borderColor]="player.color">
 
-            <button (click)="askForPlayers()">
-                <mat-icon>manage_accounts</mat-icon>
+            <!-- Leave Game -->
+            <button (click)="leaveGame()" *ngIf="mpg && !mpg.isMeTheGameOwner">
+                <mat-icon>exit_to_app</mat-icon>
             </button>
-            <button (click)="resetGame()">
+
+            <!-- Cancel Game -->
+            <button (click)="cancelGame()" *ngIf="mpg && mpg.isMeTheGameOwner">
+                <mat-icon>close</mat-icon>
+            </button>
+
+            <!-- Reset Game -->
+            <button (click)="resetGame()" *ngIf="!mpg || mpg.isMeTheGameOwner">
                 <mat-icon>restart_alt</mat-icon>
             </button>
 
@@ -117,10 +119,16 @@
     </div>
 </div>
 
+<ng-container *ngIf="winner">
+    <app-winner [winnerName]="winnerName" winnerMessage="Winner"
+    (resetGame)="restartGameFromScratch()" (rematch)="rematch()">
+    </app-winner>
+</ng-container>
+
 <ng-template #baseAreaCoin let-player="player" let-position="position" let-finished="finished" let-inPath="inPath">
     <ng-container *ngFor="let coin of (player?.ludoCoins ?? []); let i = index">
         <ng-container *ngIf="coin.position === position && (finished === undefined || coin.finished === finished)">
-            <div class="coin-container" (click)="playCoin(coin)" [ngClass]="{
+            <div class="coin-container" (click)="handleCoinClick(coin)" [ngClass]="{
                 'in-path': !!inPath,
                         'is-not-my-turn': !isMyTurn
             }">

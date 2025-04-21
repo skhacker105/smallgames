@@ -1,7 +1,11 @@
 import { Component } from '@angular/core';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { BaseComponent } from '../../../components/base.component';
-import { Subject, interval, takeUntil } from 'rxjs';
+import { Observable, Subject, interval, takeUntil } from 'rxjs';
+import { MultiPlayerService } from '../../../services/multi-player.service';
+import { MatDialog } from '@angular/material/dialog';
+import { generateHexId } from '../../../utils/support.utils';
+import { IGameMultiPlayerConnection, IPlayer } from '../../../interfaces';
 
 @Component({
   selector: 'app-pattern-puzzle',
@@ -19,8 +23,9 @@ export class PatternPuzzleComponent extends BaseComponent {
 
   gameOverSubject = new Subject<boolean>();
 
-  constructor(gameDashboardService: GameDashboardService) {
-    super(gameDashboardService);
+  constructor(gameDashboardService: GameDashboardService,
+    multiPlayerService: MultiPlayerService, dialog: MatDialog) {
+    super(gameDashboardService, multiPlayerService, dialog);
   }
 
   startTimer(): void {
@@ -38,7 +43,8 @@ export class PatternPuzzleComponent extends BaseComponent {
       gridSize: this.gridSize,
       isGameOver: this.isGameOver,
       selectedLevel: this.selectedLevel,
-      timeSpent: this.timeSpent
+      timeSpent: this.timeSpent,
+      gameId: this.gameId
     };
   }
 
@@ -49,6 +55,7 @@ export class PatternPuzzleComponent extends BaseComponent {
     this.isGameOver = gameState.isGameOver;
     this.selectedLevel = gameState.selectedLevel;
     this.timeSpent = gameState.timeSpent ?? 0;
+    this.gameId = gameState.gameId ?? generateHexId(16);
   }
 
   saveGameState(): void {
@@ -68,6 +75,7 @@ export class PatternPuzzleComponent extends BaseComponent {
 
   // Initialize the game
   initializeGame(): void {
+    this.gameId = generateHexId(16);
     this.gameOverSubject.next(true);
     this.timeSpent = 0;
     this.board = this.createPuzzleBoard();
@@ -145,12 +153,25 @@ export class PatternPuzzleComponent extends BaseComponent {
     }
     this.isGameOver = true;
     this.saveGameState();
-    this.gameDashboardService.saveGameDuration(this.timeSpent, this.selectedLevel.toString());
+    this.gameDashboardService.saveGameDuration(this.gameId, this.timeSpent, this.selectedLevel.toString());
   }
 
   // Reset the game
   resetGame(): void {
     this.initializeGame();
+  }
+  
+  setPlayers(): Observable<IPlayer[]> | undefined {
+    throw new Error('Method not implemented.');
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    throw new Error('Method not implemented.');
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    throw new Error('Method not implemented.');
+  }
+  setPlayersAndStartGame(): void {
+    throw new Error('Method not implemented.');
   }
 
   // Handle level change
@@ -175,4 +196,6 @@ export class PatternPuzzleComponent extends BaseComponent {
     this.emptyPosition.col = this.gridSize - 1;
     this.checkGameOver();
   }
+
+  checkWinner() {}
 }

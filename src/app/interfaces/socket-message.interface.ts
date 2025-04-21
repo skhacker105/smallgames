@@ -1,15 +1,19 @@
-import { ConnectionState, GameRequestStatus } from "../types";
-import { IPlayer } from "./player.interface";
+import { ConnectionState, GamePlayState, GameRequestStatus } from "../types";
+import { IGameWinner, IPlayer } from "./";
 
 export interface ISocketMessage {
     sourceUserId: string;
     sourceUserName: string;
+    gameKey: string;
+    gameId: string;
     sentOn: Date;
-    type: 'status' | 'gameKey' | 'gameRequest' | 'gamePlayerUpdate' | 'gameState' | 'gameWinner';
+    type: 'status' | 'gameRequest' | 'gamePlayerUpdate' | 'gameState' | 'gameStateAcknowledgment'; //  | 'gameKey'
     connectionStatus?: ConnectionState;
-    gameKey?: string; // Game Request
     gameRequestStatus?: GameRequestStatus;
     gamePlayerUpdate?: IPlayer[];
     gameState?: any;
-    gameWinner?: any;
+    gamePlayState?: GamePlayState;
+    gameWinner?: IGameWinner;
+    message?: string;
+    error?: string;
 }

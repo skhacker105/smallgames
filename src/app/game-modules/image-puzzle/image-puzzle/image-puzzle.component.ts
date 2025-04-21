@@ -1,7 +1,11 @@
 import { Component } from '@angular/core';
 import { BaseComponent } from '../../../components/base.component';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
-import { Subject, interval, takeUntil } from 'rxjs';
+import { Observable, Subject, interval, takeUntil } from 'rxjs';
+import { MultiPlayerService } from '../../../services/multi-player.service';
+import { MatDialog } from '@angular/material/dialog';
+import { generateHexId } from '../../../utils/support.utils';
+import { IGameMultiPlayerConnection, IPlayer } from '../../../interfaces';
 
 @Component({
   selector: 'app-image-puzzle',
@@ -32,8 +36,9 @@ export class ImagePuzzleComponent extends BaseComponent {
 
   gameOverSubject = new Subject<boolean>();
 
-  constructor(gameDashboardService: GameDashboardService) {
-    super(gameDashboardService);
+  constructor(gameDashboardService: GameDashboardService,
+    multiPlayerService: MultiPlayerService, dialog: MatDialog) {
+    super(gameDashboardService, multiPlayerService, dialog);
   }
 
   startTimer(): void {
@@ -52,7 +57,8 @@ export class ImagePuzzleComponent extends BaseComponent {
       isGameOver: this.isGameOver,
       selectedLevel: this.selectedLevel,
       timeSpent: this.timeSpent,
-      currentImage: this.currentImage
+      currentImage: this.currentImage,
+      gameId: this.gameId
     };
   }
 
@@ -64,6 +70,7 @@ export class ImagePuzzleComponent extends BaseComponent {
     this.selectedLevel = gameState.selectedLevel;
     this.timeSpent = gameState.timeSpent ?? 0;
     this.currentImage = gameState.currentImage;
+    this.gameId = gameState.gameId ?? generateHexId(16);
   }
 
   saveGameState(): void {
@@ -83,6 +90,7 @@ export class ImagePuzzleComponent extends BaseComponent {
 
   // Initialize the game
   initializeGame(): void {
+    this.gameId = generateHexId(16);
     this.gameOverSubject.next(true);
     this.timeSpent = 0;
     this.currentImage = this.images[Math.floor(Math.random() * this.images.length)];
@@ -174,12 +182,25 @@ export class ImagePuzzleComponent extends BaseComponent {
     }
     this.isGameOver = true;
     this.saveGameState();
-    this.gameDashboardService.saveGameDuration(this.timeSpent, this.selectedLevel.toString());
+    this.gameDashboardService.saveGameDuration(this.gameId, this.timeSpent, this.selectedLevel.toString());
   }
 
   // Reset the game
   resetGame(): void {
     this.initializeGame();
+  }
+  
+  setPlayers(): Observable<IPlayer[]> | undefined {
+    throw new Error('Method not implemented.');
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    throw new Error('Method not implemented.');
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    throw new Error('Method not implemented.');
+  }
+  setPlayersAndStartGame(): void {
+    throw new Error('Method not implemented.');
   }
 
   // Handle level change
@@ -208,4 +229,6 @@ export class ImagePuzzleComponent extends BaseComponent {
     this.emptyPosition.col = this.gridSize - 1;
     this.checkGameOver();
   }
+
+  checkWinner() {}
 }

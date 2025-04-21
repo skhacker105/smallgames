@@ -1,0 +1,16 @@
+.spinner-container {
+    .spinner-circle {
+        display: flex;
+
+        mat-spinner {
+            margin: auto;
+        }
+    }
+
+    .load-text {
+        font-size: large;
+        color: white;
+        padding-top: 25px;
+        line-height: 35px;
+    }
+}

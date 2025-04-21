@@ -1,32 +1,36 @@
 <div class="player-ask-wrapper">
   <h1 class="title">Configure Players</h1>
 
-  <ngx-spinner size="medium" type="ball-scale-multiple">
-  </ngx-spinner>
+  <app-spinner [message]="multiPlayerOnlineWaitStatus"></app-spinner>
+
+  <!-- Player's List -->
   <div class="player-list">
     <div *ngFor="let player of players; let i = index" class="player-row">
+
+      <!-- Row Index -->
       <label for="playerName{{ i }}">{{ (i + 1) }}:</label>
 
+      <!-- Player Selection -->
       <div class="input-container">
+
+        <!-- Selected Online Player -->
         <input matInput type="text" id="playerName{{ i }}" *ngIf="player.userId" [ngModel]="players[i] | playerName"
           class="player-name" [ngClass]="{
-            'request-pending': getPlayerRequestState(player) === 'pending',
-            'request-accepted': getPlayerRequestState(player) === 'accepted',
-            'request-rejected': getPlayerRequestState(player) === 'rejected',
-            'request-time-out': getPlayerRequestState(player) === 'time-out'
+            'request-pending': multiUserState.get(player.userId) === 'pending',
+            'request-accepted': multiUserState.get(player.userId) === 'accepted',
+            'request-rejected': multiUserState.get(player.userId) === 'rejected'
           }" [disabled]="true" placeholder="Enter player name" />
 
+        <!-- Offline Local Player -->
         <input matInput type="text" id="playerName{{ i }}" *ngIf="!player.userId" [(ngModel)]="players[i].name"
-          [disabled]="isGameStart" class="player-name"
-          placeholder="Enter player name" />
+          [disabled]="false" class="player-name" placeholder="Enter player name" />
 
-        <mat-icon class="clear-player" *ngIf="!!players[i].name" (click)="resetPlayer(player)">
-          close
-        </mat-icon>
+        <!-- Clear Player -->
+        <mat-icon class="clear-player" *ngIf="!!players[i].name" (click)="resetPlayer(player)">close</mat-icon>
 
-        <mat-icon [matMenuTriggerFor]="onlinePLayers" *ngIf="!players[i].name" class="online" [ngClass]="{
-          'is-online': true
-        }">
+        <!-- Select Online Player -->
+        <mat-icon [matMenuTriggerFor]="onlinePLayers" *ngIf="!players[i].name" class="online"
+          [ngClass]="{'is-online': true}">
           online_prediction
         </mat-icon>
 
@@ -68,20 +72,21 @@
       </div>
 
       <button class="remove-button" (click)="removePlayer(i)" [disabled]="players.length <= config.minPlayerCount"
-        [disabled]="isGameStart">
+        [disabled]="false">
         <mat-icon>delete</mat-icon>
       </button>
     </div>
   </div>
   <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+  <p *ngIf="multiPlayerRequestError" class="error">{{ multiPlayerRequestError }}</p>
   <div class="controls">
     <button mat-icon-button class="add-button" (click)="addPlayer()"
-      [disabled]="players.length >= config.maxPlayerCount || isGameStart">
+      [disabled]="players.length >= config.maxPlayerCount">
       <mat-icon>add</mat-icon>
     </button>
     <div class="spacer"></div>
 
-    <button class="submit-button" (click)="submit()" [disabled]="!isFormValid || isGameStart">
+    <button class="submit-button" (click)="submit()" [disabled]="!isFormValid">
       Submit
     </button>
 

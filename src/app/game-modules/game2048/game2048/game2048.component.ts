@@ -1,42 +1,52 @@
 import { Component, OnInit } from '@angular/core';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
+import { BaseComponent } from '../../../components/base.component';
+import { MultiPlayerService } from '../../../services/multi-player.service';
+import { MatDialog } from '@angular/material/dialog';
+import { generateHexId } from '../../../utils/support.utils';
+import { Observable } from 'rxjs';
+import { IGameMultiPlayerConnection, IPlayer } from '../../../interfaces';
 
 @Component({
   selector: 'app-game2048',
   templateUrl: './game2048.component.html',
   styleUrl: './game2048.component.scss'
 })
-export class Game2048Component implements OnInit {
+export class Game2048Component extends BaseComponent {
   board: number[][] = []; // Represents the 2048 game board
   gridSize: number = 6; // Default grid size (4x4)
   isGameOver: boolean = false;
   score: number = 0;
 
-  constructor(private gameDashboardService: GameDashboardService) { }
-
-  ngOnInit(): void {
-    this.loadGameState();
+  constructor(gameDashboardService: GameDashboardService, mps: MultiPlayerService, dialog: MatDialog) {
+    super(gameDashboardService, mps, dialog)
+  }
+  
+  override getGameState() {
+    return {
+      board: this.board,
+      score: this.score,
+      isGameOver: this.isGameOver,
+      gameId: this.gameId
+    }
   }
 
-  ngOnDestroy(): void {
-    this.saveGameState();
+  override setGameState(gameState: any): void {
+    this.board = gameState.board;
+    this.score = gameState.score;
+    this.isGameOver = gameState.isGameOver;
+    this.gameId = gameState.gameId ?? generateHexId(16);
   }
 
   saveGameState(): void {
-    const gameState = {
-      board: this.board,
-      score: this.score,
-      isGameOver: this.isGameOver
-    };
+    const gameState = this.getGameState();
     this.gameDashboardService.saveGameState(gameState);
   }
 
   loadGameState(): void {
     const gameState = this.gameDashboardService.loadGameState();
     if (gameState) {
-      this.board = gameState.board;
-      this.score = gameState.score;
-      this.isGameOver = gameState.isGameOver;
+     this.setGameState(gameState);
     } else {
       this.initializeGame();
     }
@@ -44,6 +54,7 @@ export class Game2048Component implements OnInit {
 
   // Initialize the game
   initializeGame(): void {
+    this.gameId = generateHexId(16);
     this.board = this.createGameBoard();
     this.addRandomTile();
     this.addRandomTile();
@@ -222,13 +233,26 @@ export class Game2048Component implements OnInit {
         }
       }
       this.isGameOver = true;
-      this.gameDashboardService.saveGameScore(this.score.toString())
+      this.gameDashboardService.saveGameScore(this.gameId, this.score.toString())
     }
   }
 
   // Reset the game
   resetGame(): void {
     this.initializeGame();
+  }
+  
+  setPlayers(): Observable<IPlayer[]> | undefined {
+    throw new Error('Method not implemented.');
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    throw new Error('Method not implemented.');
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    throw new Error('Method not implemented.');
+  }
+  setPlayersAndStartGame(): void {
+    throw new Error('Method not implemented.');
   }
 
   // Get tile color based on value
@@ -255,4 +279,6 @@ export class Game2048Component implements OnInit {
     if (value < 1000) return '1.2em';
     return '1em';
   }
+
+  checkWinner() {}
 }

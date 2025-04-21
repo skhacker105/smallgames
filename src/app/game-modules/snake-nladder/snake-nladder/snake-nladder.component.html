@@ -1,4 +1,4 @@
-<div class="game-container" *ngIf="selectedBoard && players.length > 0">
+<div class="game-container" *ngIf="selectedBoard && players.length > 0 && !winner">
     <div class="board" [style.background]="'url('+ selectedBoard.background +') 0% 0% / 100% 100% no-repeat'">
         <div *ngFor="let row of arrNumbers;" class="row" [ngClass]="{'reverse-row': isRowLeftToRight(row) }">
 
@@ -17,15 +17,24 @@
         </div>
     </div>
 
-    <div class="controls" *ngIf="!winner">
+    <div class="controls">
         <div>
 
-            <button (click)="askForPlayers()">
-                <mat-icon>manage_accounts</mat-icon>
+            <!-- Leave Game -->
+            <button (click)="leaveGame()" *ngIf="mpg && !mpg.isMeTheGameOwner">
+                <mat-icon>exit_to_app</mat-icon>
             </button>
-            <button (click)="resetGame()">
+
+            <!-- Cancel Game -->
+            <button (click)="cancelGame()" *ngIf="mpg && mpg.isMeTheGameOwner">
+                <mat-icon>close</mat-icon>
+            </button>
+
+            <!-- Reset Game -->
+            <button (click)="resetGame()" *ngIf="!mpg || mpg.isMeTheGameOwner">
                 <mat-icon>restart_alt</mat-icon>
             </button>
+
 
             <div class="current-player">
                 <div class="player-display">
@@ -52,10 +61,10 @@
         </div>
     </div>
 
-    <div *ngIf="winner" class="winner dark-theme">
-        <div class="winner-message">
-            🎉 {{ winner.name }} wins the game! 🎉
-        </div>
-    </div>
-
 </div>
+
+<ng-container *ngIf="winner">
+    <app-winner [winnerName]="winnerName" winnerMessage="Winner"
+    (resetGame)="restartGameFromScratch()" (rematch)="rematch()">
+    </app-winner>
+</ng-container>

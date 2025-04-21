@@ -6,6 +6,8 @@ import { ChessBoardComponent } from './chess-board/chess-board.component';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { SpinnerComponent } from '../../components/spinner/spinner.component';
+import { WinnerComponent } from '../../components/winner/winner.component';
 
 
 @NgModule({
@@ -17,7 +19,9 @@ import { MatButtonModule } from '@angular/material/button';
     ChessRoutingModule,
     FormsModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    SpinnerComponent,
+    WinnerComponent
   ]
 })
 export class ChessModule { }

@@ -1,6 +1,11 @@
 import { Component } from '@angular/core';
 import { BaseComponent } from '../../../components/base.component';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
+import { MultiPlayerService } from '../../../services/multi-player.service';
+import { MatDialog } from '@angular/material/dialog';
+import { generateHexId } from '../../../utils/support.utils';
+import { Observable } from 'rxjs';
+import { IGameMultiPlayerConnection, IPlayer } from '../../../interfaces';
 
 interface ICell {
   row: number;
@@ -22,8 +27,9 @@ export class SudokuComponent extends BaseComponent {
   prefilledCells: ICell[] = [];
   winner = false;
 
-  constructor(gameDashboardService: GameDashboardService) {
-    super(gameDashboardService);
+  constructor(gameDashboardService: GameDashboardService,
+    multiPlayerService: MultiPlayerService, dialog: MatDialog) {
+    super(gameDashboardService, multiPlayerService, dialog);
   }
 
   override ngOnInit(): void {
@@ -37,18 +43,20 @@ export class SudokuComponent extends BaseComponent {
       level: this.level,
       size: this.size,
       prefilledCells: this.prefilledCells,
-      winner: this.winner
+      winner: this.winner,
+      gameId: this.gameId
     };
   }
 
   setGameState(savedState: any): void {
-    const { board, solution, level, size, prefilledCells, winner } = savedState;
+    const { board, solution, level, size, prefilledCells, winner, gameId } = savedState;
       this.board = board;
       this.solution = solution;
       this.level = level;
       this.size = size;
       this.prefilledCells = prefilledCells;
       this.winner = winner;
+      this.gameId = gameId ?? generateHexId(16);
   }
 
   loadGameState(): void {
@@ -65,6 +73,7 @@ export class SudokuComponent extends BaseComponent {
   }
 
   resetGame(): void {
+    this.gameId = generateHexId(16);
     this.winner = false;
     this.board.forEach((row, i) => {
       row.forEach((cell, j) => {
@@ -73,6 +82,19 @@ export class SudokuComponent extends BaseComponent {
       })
     });
     this.saveGameState();
+  }
+  
+  setPlayers(): Observable<IPlayer[]> | undefined {
+    throw new Error('Method not implemented.');
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    throw new Error('Method not implemented.');
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    throw new Error('Method not implemented.');
+  }
+  setPlayersAndStartGame(): void {
+    throw new Error('Method not implemented.');
   }
 
   generateNewGame(): void {

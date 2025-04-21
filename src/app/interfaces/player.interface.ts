@@ -15,10 +15,12 @@ export interface IPlayer {
 }
 
 export interface IPlayerAskConfig {
+    gameId: string;
     game: IGameInfo;
     minPlayerCount: number;
     maxPlayerCount: number;
     askForName: true;
     preFillPlayers?: IPlayer[];
     colorOptions?: PLAYER_COLOR[];
+    repeatSamePlayer: boolean;
 }

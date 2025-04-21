@@ -13,6 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { UserService } from './services/user.service';
 import { SocketService } from './services/socket.service';
 import { MyQRCodeComponent } from './components/my-qrcode/my-qrcode.component';
+import { MultiPlayerService } from './services/multi-player.service';
 
 @Component({
   selector: 'app-root',
@@ -46,7 +47,8 @@ export class AppComponent implements OnInit {
     private dialog: MatDialog,
     public loggerService: LoggerService,
     public userService: UserService,
-    public socketService: SocketService) {
+    public socketService: SocketService,
+    private multiPlayerService: MultiPlayerService) {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd)) // Filter only NavigationEnd events
       .subscribe(() => {

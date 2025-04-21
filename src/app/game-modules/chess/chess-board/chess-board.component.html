@@ -11,8 +11,8 @@
   </ng-container>
 </div>
 
-<div class="chess-board-container">
-  <div class="chess-board" *ngIf="!gameOver">
+<div class="chess-board-container" *ngIf="!gameOver">
+  <div class="chess-board">
     <div *ngFor="let row of board; let i = index" class="row">
       <div *ngFor="let square of row; let j = index" class="square" [attr.indicesToSquare]="indicesToSquare(i, j)"
         [class.selected]="indicesToSquare(i, j) === selectedSquare"
@@ -30,15 +30,28 @@
   </div>
 </div>
 
-<div class="game-actions">
-  <button mat-icon-button (click)="askForPlayers()">
-    <mat-icon>manage_accounts</mat-icon>
+<div class="game-actions" *ngIf="!gameOver">
+
+  <!-- Leave Game -->
+  <button (click)="leaveGame()" *ngIf="mpg && !mpg.isMeTheGameOwner">
+    <mat-icon>exit_to_app</mat-icon>
   </button>
-  <button (click)="resetGame()">Reset Game</button>
+
+  <!-- Cancel Game -->
+  <button (click)="cancelGame()" *ngIf="mpg && mpg.isMeTheGameOwner">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <!-- Reset Game -->
+  <button (click)="resetGame()" *ngIf="!mpg || mpg.isMeTheGameOwner">
+    <mat-icon>restart_alt</mat-icon>
+  </button>
+
+  <div class="spacer"></div>
 </div>
 
-<div *ngIf="gameOver" class="game-over">
-  <p *ngIf="!winner && gameOver">It's a draw!</p>
-  <p *ngIf="winner && gameOver">Checkmate! {{ winner.name }} wins!</p>
-  <button (click)="resetGame()">Reset Game</button>
-</div>
+<ng-container *ngIf="gameOver">
+  <app-winner [winnerName]="winnerName" [winnerMessage]="winnerMessage" [isDraw]="this.gameOver && !this.winner"
+    (resetGame)="restartGameFromScratch()" (rematch)="rematch()">
+  </app-winner>
+</ng-container>

@@ -1,22 +1,23 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { BaseComponent } from '../../../components/base.component';
 import { Chess, Color, DEFAULT_POSITION, Piece, Square } from 'chess.js';
-import { IPlayer, IPlayerAskConfig } from '../../../interfaces';
+import { IGameMultiPlayerConnection, IPlayer, IPlayerAskConfig } from '../../../interfaces';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { PlayersConfigComponent } from '../../../components/players-config/players-config.component';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { CHESS_COLORS } from '../../../config';
-import { take } from 'rxjs';
+import { Observable, map, take, takeUntil } from 'rxjs';
 import { Router } from '@angular/router';
-import { isChessColor } from '../../../utils/support.utils';
+import { generateHexId, isChessColor } from '../../../utils/support.utils';
 import { UserService } from '../../../services/user.service';
+import { MultiPlayerService } from '../../../services/multi-player.service';
 
 @Component({
   selector: 'app-chess-board',
   templateUrl: './chess-board.component.html',
   styleUrls: ['./chess-board.component.scss'],
 })
-export class ChessBoardComponent extends BaseComponent implements OnInit {
+export class ChessBoardComponent extends BaseComponent {
   chess: Chess; // Instance of the Chess class
   board: (Piece | undefined)[][] = [];
   gameMode: 'humanVsHuman' | 'humanVsComputer' | 'computerVsComputer' = 'humanVsHuman';
@@ -40,24 +41,27 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     } else return true;
   }
 
+  get winnerName(): string {
+    return !this.gameOver ? '' : (this.winner?.name ?? '')
+  }
+
+  get winnerMessage(): string {
+    return !this.gameOver ? '' : (this.winner ? 'Winner' : `It's a draw`);
+  }
+
   override get selectedPlayer(): IPlayer | undefined {
     return this.players[this.currentPlayer]
   }
 
   constructor(
     gameDashboardService: GameDashboardService,
-    private dialog: MatDialog,
+    dialog: MatDialog,
     private router: Router,
-    private userService: UserService
+    private userService: UserService,
+    multiPlayerService: MultiPlayerService
   ) {
-    super(gameDashboardService);
+    super(gameDashboardService, multiPlayerService, dialog);
     this.chess = new Chess(); // Initialize the Chess instance
-  }
-
-  override ngOnInit(): void {
-    super.ngOnInit();
-    // this.updateBoard();
-    this.sendGameStateUpdate();
   }
 
   getGameState() {
@@ -68,7 +72,8 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
       isWhiteTurn: this.isWhiteTurn,
       gameOver: this.gameOver,
       selectedSquare: this.selectedSquare,
-      possibleMoves: this.possibleMoves
+      possibleMoves: this.possibleMoves,
+      gameId: this.gameId
     };
   }
 
@@ -80,34 +85,46 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     this.gameOver = savedState.gameOver;
     this.selectedSquare = savedState.selectedSquare;
     this.possibleMoves = savedState.possibleMoves;
+    this.gameId = savedState.gameId ?? generateHexId(16);
     this.updateBoard();
   }
 
   loadGameState(): void {
-    if (this.isGameStart) return;
 
     const savedState = this.gameDashboardService.loadGameState();
     if (savedState) {
       this.setGameState(savedState);
 
-      if (!savedState.winner) {
-        if (this.winner || this.players.length === 0 || this.chess.fen() === DEFAULT_POSITION) {
-          this.askForPlayers();
-        } else if (this.isMultiPlayerGame) {
-          this.listenForGameStateChange();
-        }
+      if (this.gameOver || this.players.length === 0 || this.chess.fen() === DEFAULT_POSITION) {
+        this.setPlayersAndStartGame();
       }
     } else {
-      this.askForPlayers();
+      this.setPlayersAndStartGame();
     }
   }
 
   saveGameState(): void {
     const state = this.getGameState();
-    this.gameDashboardService.saveGameState(state);
+    this.gameDashboardService.saveGameState(state, (this.gameInfo?.key ?? undefined));
+
+    const mpg = this.multiPlayerService.getMultiPlayerGame(this.gameInfo?.key ?? '');
+    if (mpg) mpg.gameState = state;
+    this.multiPlayerService.saveMultiPlayersToStorage();
   }
 
   resetGame(): void {
+    this.askToConfirmResetGame()
+      .pipe(take(1), takeUntil(this.isComponentActive))
+      .subscribe({
+        next: confirm => {
+          if (!confirm) return;
+
+          this.performResetGame();
+        }
+      });
+  }
+  performResetGame(sendUpdates: boolean = true): void {
+    this.gameId = generateHexId(16);
     this.chess.reset(); // Reset the game
     this.gameOver = false;
     this.winner = null;
@@ -116,10 +133,53 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     this.isWhiteTurn = true;
     this.updateBoard();
     this.saveGameState();
-    this.sendGameStateUpdate();
+    if (sendUpdates) this.sendGameStateUpdate();
   }
 
-  override getPlayerConfigPopup(): MatDialogRef<PlayersConfigComponent, any> | undefined {
+  restartGameFromScratch(): void {
+    if (!this.gameInfo) return;
+
+    this.players = [];
+    this.multiPlayerService.removeGame(this.gameInfo.key, this.gameId);
+    this.performResetGame(false);
+    this.setPlayersAndStartGame();
+  }
+
+  rematch(): void {
+    this.performResetGame(false);
+    this.setPlayersAndStartGame(true);
+  }
+
+  cancelGame(): void {
+    this.askToConfirmCancelGame()
+      .pipe(take(1), takeUntil(this.isComponentActive))
+      .subscribe({
+        next: confirm => {
+          if (!confirm || !this.gameDashboardService.selectedGame.value) return;
+
+          this.multiPlayerService.cancelMultiPlayerGame(this.gameId, this.gameDashboardService.selectedGame.value, 'Game owner cancelled this game');
+          if (this.gameDashboardService.selectedGame.value)
+            this.multiPlayerService.removeGameAndGotoHomePage(this.gameDashboardService.selectedGame.value.key, this.gameId);
+        }
+      });
+  }
+
+  leaveGame(): void {
+    this.askToConfirmLeaveGame()
+      .pipe(take(1), takeUntil(this.isComponentActive))
+      .subscribe({
+        next: confirm => {
+          if (!confirm || !this.mpg) return;
+
+          this.players = [];
+          this.multiPlayerService.sendLeaveGameMessage(this.gameId, this.mpg, this.mpg.gameOwner.userId);
+          if (this.gameDashboardService.selectedGame.value)
+            this.multiPlayerService.removeGameAndGotoHomePage(this.gameDashboardService.selectedGame.value.key, this.gameId);
+        }
+      });
+  }
+
+  override getPlayerConfigPopup(repeatSamePlayer: boolean): MatDialogRef<PlayersConfigComponent, any> | undefined {
     const curGame = this.gameDashboardService.selectedGame.value;
     if (!curGame) return;
 
@@ -130,35 +190,75 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
         minPlayerCount: 2,
         maxPlayerCount: 2,
         preFillPlayers: this.players.length > 0 ? this.players : undefined,
-        colorOptions: CHESS_COLORS
+        colorOptions: CHESS_COLORS,
+        gameId: this.gameId,
+        repeatSamePlayer
       } as IPlayerAskConfig,
       disableClose: true
     })
   }
 
-  askForPlayers(): void {
+  setPlayers(repeatSamePlayer: boolean): Observable<IPlayer[]> | undefined {
     const curGame = this.gameDashboardService.selectedGame.value;
     if (!curGame) return;
 
-    const ref = this.getPlayerConfigPopup();
-    ref?.afterClosed().pipe(take(1))
-      .subscribe((players: IPlayer[] | undefined) => {
+    const ref = this.getPlayerConfigPopup(repeatSamePlayer);
+
+    return ref?.afterClosed().pipe(
+      take(1), takeUntil(this.isComponentActive),
+      map((players: IPlayer[] | IGameMultiPlayerConnection | undefined) => {
+
         if (!players) {
-          if (this.players.length === 0)
             this.router.navigateByUrl('');
         }
         else {
-          this.players = players;
-          this.resetGame();
-          const otherPlayers = this.players.find(p => p.userId !== undefined && p.userId === this.userService.me?.userId) !== undefined;
-          if (otherPlayers) {
-            this.listenForGameStateChange();
-          }
 
-          if (this.gameDashboardService.selectedGame.value)
-            this.gameDashboardService.sendGameStartRequest(this.gameDashboardService.selectedGame.value, this.players, this.getGameState());
+          if (Array.isArray(players)) this.setLocalPlayers(players);
+          else this.setOnlinePlayers(players);
         }
+
+        return this.players;
       })
+    )
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    this.players = players;
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    this.players = multiPlayerGame.players.map(player => player.player);
+  }
+  setPlayersAndStartGame(repeatSamePlayer: boolean = false): void {
+    this.performResetGame(false);
+
+    this.setPlayers(repeatSamePlayer)?.subscribe({
+      next: players => {
+
+        this.saveGameState();
+
+        const otherPlayers = this.players.find(p => p.userId !== undefined && p.userId === this.userService.me?.userId) !== undefined;
+        if (otherPlayers) {
+          this.startMultiPlayerGame();
+          this.startListening();
+        }
+      }
+    });
+  }
+
+  startMultiPlayerGame(): void {
+    if (!this.gameDashboardService.selectedGame.value) return;
+
+    this.mpg = this.multiPlayerService.getMultiPlayerGame(this.gameDashboardService.selectedGame.value.key)
+    if (!this.mpg) return;
+
+    this.multiPlayerService.updateMultiPlayerGameState(this.mpg.gameId, this.mpg.gameInfo.key, this.getGameState());
+    this.multiPlayerService.updateMultiPlayerGamePlayState(this.mpg.gameId, this.mpg.gameInfo.key, 'gameInProgress');
+
+    // Send Game start signal to all players
+    this.players.forEach(player => {
+      if (player.userId && this.gameDashboardService.selectedGame.value && this.mpg) {
+        this.multiPlayerService.sendGameStart(this.gameId, this.mpg, player.userId)
+      }
+    });
   }
 
   isWhitePlayer(player: IPlayer): boolean {
@@ -183,8 +283,6 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
         this.board[i][j] = piece; // Add piece details to the board
       }
     }
-    if (!this.winner)
-      this.checkGameOver();
   }
 
   indicesToSquare(i: number, j: number): Square {
@@ -194,21 +292,18 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     return (files[j] + ranks[i]) as Square;
   }
 
-  movePiece(from: string, to: string): void {
-    if (this.gameOver) return; // Prevent moves if the game is over
+  movePiece(from: string, to: string): 'success' | 'fail' {
+    if (this.gameOver) return 'fail'; // Prevent moves if the game is over
     try {
       const move = this.chess.move({ from, to }); // Make a move
-      if (move) {
-        this.updateBoard();
-        this.isWhiteTurn = !this.isWhiteTurn;
-        this.saveGameState(); // Save the updated game state
-        this.sendGameStateUpdate();
 
-        if (this.gameMode === 'humanVsComputer' && !this.isWhiteTurn) {
-          this.computerMove();
-        }
+      if (move && this.gameMode === 'humanVsComputer' && !this.isWhiteTurn) {
+        this.computerMove();
       }
-    } catch (ex) { }
+    } catch (ex) {
+      return 'fail'
+    }
+    return 'success';
   }
 
   computerMove(): void {
@@ -220,18 +315,6 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
     this.updateBoard();
     this.isWhiteTurn = !this.isWhiteTurn;
     this.saveGameState(); // Save the updated game state
-  }
-
-  checkGameOver(): void {
-    if (this.chess.isCheckmate()) {
-      this.gameOver = true;
-      this.winner = this.getPlayer(this.chess.turn() === 'w' ? 'b' : 'w'); // Opposite turn indicates the winner
-      this.gameDashboardService.saveGameWinner(this.winner);
-    } else if (this.chess.isStalemate() || this.chess.isDraw()) {
-      this.gameOver = true;
-      this.winner = null;
-      this.gameDashboardService.saveGameWinner(this.players, true);
-    }
   }
 
   selectGameMode(mode: 'humanVsHuman' | 'humanVsComputer' | 'computerVsComputer'): void {
@@ -283,18 +366,40 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
         }
       });
       this.possibleMoves = possibleMoves;
+
     } else {
       // Move the piece from the selected square to the clicked square
-      // if (this.possibleMoves.includes(square)) {
-      this.movePiece(this.selectedSquare, square);
-      // }
+      const moveState = this.movePiece(this.selectedSquare, square);
+      if (moveState === 'success') {
+        this.updateBoard();
+        this.checkWinner();
+        if (!this.winner)
+          this.moveToNextPlayer();
+      }
+
 
       // Clear the selected square and possible moves
       this.selectedSquare = null;
       this.possibleMoves = [];
     }
+
     this.saveGameState();
-    this.sendGameStateUpdate();
+    if (!this.gameOver) this.sendGameStateUpdate();
+    else {
+      this.players.forEach(player => {
+        if (!player.userId || !this.gameInfo || player.userId === this.userService.me?.userId) return;
+
+        this.multiPlayerService.updateMultiPlayerGamePlayState(this.gameId, this.gameInfo.key, 'gameEnd');
+        const winner = this.gameDashboardService.saveGameWinner(this.gameId, (this.winner ?? this.players), (this.winner ? false : true));
+        this.multiPlayerService.sendGameEndMessage(this.gameId, this.gameInfo.key, player.userId, winner, this.getGameState());
+        
+        // Remove MPG Game
+        this.multiPlayerService.removeMPGFromLocalStorageByGameId(this.gameInfo.key, this.gameId);
+
+        // Listen for Rematch
+        this.listenForGameRematchRequest();
+      });
+    }
   }
 
   isDarkCell(i: number, j: number): boolean {
@@ -311,5 +416,22 @@ export class ChessBoardComponent extends BaseComponent implements OnInit {
 
   isWhiteSquare(square: Piece): boolean {
     return square.color === 'w';
+  }
+
+  moveToNextPlayer(): void {
+    this.isWhiteTurn = !this.isWhiteTurn;
+  }
+
+  checkWinner() {
+    if (this.winner) return;
+
+    if (this.chess.isCheckmate()) {
+      this.gameOver = true;
+      this.winner = this.getPlayer(this.chess.turn() === 'w' ? 'b' : 'w'); // Opposite turn indicates the winner
+
+    } else if (this.chess.isStalemate() || this.chess.isDraw()) {
+      this.gameOver = true;
+      this.winner = null;
+    }
   }
 }

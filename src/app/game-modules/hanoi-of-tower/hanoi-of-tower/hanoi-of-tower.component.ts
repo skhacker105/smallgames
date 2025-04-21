@@ -1,7 +1,10 @@
 import { Component } from '@angular/core';
 import { GameDashboardService } from '../../../services/game-dashboard.service';
 import { BaseComponent } from '../../../components/base.component';
-import { Subject, interval, takeUntil } from 'rxjs';
+import { Observable, Subject, interval, takeUntil } from 'rxjs';
+import { MultiPlayerService } from '../../../services/multi-player.service';
+import { MatDialog } from '@angular/material/dialog';
+import { IGameMultiPlayerConnection, IPlayer } from '../../../interfaces';
 
 @Component({
   selector: 'app-hanoi-of-tower',
@@ -25,8 +28,9 @@ export class HanoiOfTowerComponent extends BaseComponent {
 
   gameOverSubject = new Subject<boolean>();
 
-  constructor(gameDashboardService: GameDashboardService) {
-    super(gameDashboardService)
+  constructor(gameDashboardService: GameDashboardService,
+    multiPlayerService: MultiPlayerService, dialog: MatDialog) {
+    super(gameDashboardService, multiPlayerService, dialog)
   }
 
   resetGame(): void {
@@ -140,7 +144,7 @@ export class HanoiOfTowerComponent extends BaseComponent {
     if (this.towers[this.endTower].length === this.numberOfDisks) {
       this.gameOver = true;
       this.gameOverSubject.next(true);
-      this.gameDashboardService.saveGameDuration(this.timeSpent, this.selectedLevel.toString());
+      this.gameDashboardService.saveGameDuration(this.gameId, this.timeSpent, this.selectedLevel.toString());
     }
   }
 
@@ -155,7 +159,19 @@ export class HanoiOfTowerComponent extends BaseComponent {
   isSelectedDisk(disk: number): boolean {
     return this.selectedDisk === disk;
   }
-
+  
+  setPlayers(): Observable<IPlayer[]> | undefined {
+    throw new Error('Method not implemented.');
+  }
+  setLocalPlayers(players: IPlayer[]): void {
+    throw new Error('Method not implemented.');
+  }
+  setOnlinePlayers(multiPlayerGame: IGameMultiPlayerConnection): void {
+    throw new Error('Method not implemented.');
+  }
+  setPlayersAndStartGame(): void {
+    throw new Error('Method not implemented.');
+  }
 
   
   override getGameState() {
@@ -203,4 +219,6 @@ export class HanoiOfTowerComponent extends BaseComponent {
       this.resetGame();
     }
   }
+
+  checkWinner() {}
 }
