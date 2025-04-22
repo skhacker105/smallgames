@@ -2,9 +2,11 @@
     
     <!-- Header -->
     <div class="flex">
-        <h2 class="header">Scan Me</h2>
+        <button mat-icon-button class="close-button" (click)="downloadQRCode(qrCodeElement)">
+            <mat-icon>download</mat-icon>
+        </button>
+        <h2 class="header spacer">Scan Me</h2>
 
-        <div class="spacer"></div>
         <button mat-icon-button class="close-button" (click)="dialogRef.close()">
             <mat-icon>close</mat-icon>
         </button>
