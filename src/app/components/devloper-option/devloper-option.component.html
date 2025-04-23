@@ -1,0 +1,33 @@
+<div class="developer-container">
+    <div class="flex header-2">
+
+        <div class="title spacer">
+            <div class="title-text shadows">
+                Dev Ops
+            </div>
+        </div>
+
+        <div class="action" (click)="hideLogs()">
+            <mat-icon>close</mat-icon>
+        </div>
+
+    </div>
+
+
+    <!-- <button mat-icon-button class="close-console" (click)="hideLogs()">
+    <mat-icon>close</mat-icon>
+</button> -->
+
+    <mat-tab-group class="developer-option">
+
+        <mat-tab label="Local Storage">
+            <app-local-storage>
+            </app-local-storage>
+        </mat-tab>
+
+        <mat-tab label="Logs">
+            <app-logs>
+            </app-logs>
+        </mat-tab>
+    </mat-tab-group>
+</div>

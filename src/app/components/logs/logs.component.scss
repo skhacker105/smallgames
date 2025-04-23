@@ -1,0 +1,29 @@
+.logs {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .action {
+        display: flex;
+        padding: 5px;
+
+        .clear {
+            margin-left: auto;
+        }
+    }
+
+    .messages {
+        width: calc(100% - 2px);
+        border: solid 1px #efefef;
+        background: white;
+        flex: 1 auto;
+        display: flex
+    ;
+        flex-direction: column;
+        overflow: scroll;
+
+        .message {
+            padding: 10px;
+        }
+    }
+}

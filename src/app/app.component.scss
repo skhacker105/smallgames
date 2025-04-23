@@ -119,35 +119,6 @@
             margin: auto;
         }
     }
-
-    .logs {
-        display: flex;
-        min-height: 30vh;
-        position: relative;
-
-        .messages {
-            width: calc(100% - 2px);
-            height: calc(100% - 2px);
-            border: solid 1px #efefef;
-            background: white;
-
-            .message {
-                padding: 10px;
-            }
-        }
-
-        .close-console {
-            position: absolute;
-            right: 0;
-            top: 0;
-        }
-
-        .close-clear {
-            position: absolute;
-            right: 0;
-            bottom: 0;
-        }
-    }
 }
 
 

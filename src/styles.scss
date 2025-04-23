@@ -23,3 +23,27 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .non-clickable {
     pointer-events: none;
 }
+
+.header-2 {
+    height: 35px;
+    max-height: 50px;
+    background-color: #be972c;
+
+    .title, .title-text {
+        display: flex;
+        margin: inherit;
+        margin-left: auto;
+        margin-right: auto;
+        transition: all 1s ease !important;
+    }
+
+    .shadows {
+        color: #ffffff !important;
+        letter-spacing: -0.05em;
+        font-size: large !important;
+        margin: auto;
+        margin-left: initial;
+        padding: 5px;
+        padding-left: 10px;
+    }
+}
