@@ -142,9 +142,8 @@ export class SnakeNLadderComponent extends BaseComponent {
     const state = this.getGameState();
     this.gameDashboardService.saveGameState(state, (this.gameInfo?.key ?? undefined));
 
-    const mpg = this.multiPlayerService.getMultiPlayerGame(this.gameInfo?.key ?? '');
-    if (mpg) mpg.gameState = state;
-    this.multiPlayerService.saveMultiPlayersToStorage();
+    if (!this.gameInfo) return;
+    this.multiPlayerService.updateMultiPlayerGameState(this.gameId, this.gameInfo.key, state);
   }
 
   removeGame(): void {
