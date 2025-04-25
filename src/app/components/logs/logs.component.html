@@ -1,0 +1,15 @@
+<div class="logs" *ngIf="loggerService.showDeveloperOption">
+
+  <!-- <button mat-icon-button class="clear"> -->
+  <div class="action">
+    <mat-icon class="clear" (click)="clearLogs()">delete_forever</mat-icon>
+  </div>
+  <!-- </button> -->
+
+  <div class="messages">
+    <div class="message" *ngFor="let message of loggerService.logMessages">
+      {{ message }}
+    </div>
+  </div>
+
+</div>

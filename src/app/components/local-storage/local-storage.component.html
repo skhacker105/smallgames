@@ -1,0 +1,40 @@
+<div class="container">
+
+    <div class="flex">
+        <button class="add-btn" (click)="openModalForAdd()">Add +</button>
+
+        <div class="spacer"></div>
+
+        <div *ngIf="selectedKeys.size > 0" class="bulk-actions spacer">
+            <button (click)="deleteSelected()">🗑 Delete Selected ({{ selectedKeys.size }})</button>
+        </div>
+    </div>
+
+    <div *ngFor="let key of keys" class="item">
+        <label>
+            <input type="checkbox" [checked]="isKeySelected(key)" (change)="toggleSelection(key)" />
+            <span (click)="openModalForEdit(key)">
+                <strong>{{ key }}</strong>:
+                <span class="preview">
+                    {{ isJsonPreview(localStorage.getItem(key) || '') ? '📄 JSON' : localStorage.getItem(key) }}
+                </span>
+            </span>
+        </label>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" *ngIf="showModal">
+        <div class="modal-content">
+            <h3>{{ isEditing ? 'Edit' : 'Add' }} Key</h3>
+
+            <input [readonly]="isEditing" [(ngModel)]="modalKey" placeholder="Key" />
+            <textarea rows="10" [(ngModel)]="modalValue" placeholder="Value"></textarea>
+
+            <div class="modal-actions">
+                <button (click)="saveOrUpdate()">{{ isEditing ? 'Update' : 'Save' }}</button>
+                <button (click)="closeModal()">Cancel</button>
+                <button *ngIf="isEditing" (click)="deleteKey(modalKey)" class="delete">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>

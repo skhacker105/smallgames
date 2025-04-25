@@ -14,11 +14,12 @@ import { UserService } from './services/user.service';
 import { SocketService } from './services/socket.service';
 import { MyQRCodeComponent } from './components/my-qrcode/my-qrcode.component';
 import { MultiPlayerService } from './services/multi-player.service';
+import { DevloperOptionComponent } from './components/devloper-option/devloper-option.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, MatIconModule, RouterModule, MatButtonModule],
+  imports: [RouterOutlet, CommonModule, MatIconModule, RouterModule, MatButtonModule, DevloperOptionComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

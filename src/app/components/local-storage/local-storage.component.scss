@@ -1,0 +1,71 @@
+.container {
+    padding: 1rem;
+    max-width: 600px;
+    margin: auto;
+  }
+  
+  h2 {
+    text-align: center;
+  }
+  
+  .item {
+    background: #f1f1f1;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    border-radius: 6px;
+  }
+  
+  .item label {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .preview {
+    font-size: 0.9rem;
+    color: #555;
+  }
+  
+  .add-btn {
+    margin-bottom: 1rem;
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+  
+  .bulk-actions {
+    text-align: right;
+    margin-bottom: 1rem;
+  }
+  
+  .modal {
+    position: fixed;
+    top: 0; left: 0;
+    right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modal-content {
+    background: white;
+    padding: 1rem;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .modal-actions button {
+    margin-right: 0.5rem;
+  }
+  
+  .delete {
+    background: red;
+    color: white;
+  }
+  

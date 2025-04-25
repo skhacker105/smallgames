@@ -85,8 +85,16 @@ export class MultiPlayerService {
   }
 
   private removeGarbageMPG(): void {
+    
+    const gameNotEnd = ((mpg: IGameMultiPlayerConnection) => mpg.gamePlayState !== 'gameEnd');
+    const notInPlayerSetting = ((mpg: IGameMultiPlayerConnection) => mpg.gamePlayState !== 'playerSetting');
+    const multiPlayerLeft = ((mpg: IGameMultiPlayerConnection) => mpg.gamePlayState === 'gameInProgress' && (mpg.players.length >= 2 || mpg.gameState?.players?.length >= 2));
+
     this.multiPlayerGames = this.multiPlayerGames.filter(mpg => {
-      if (mpg.gamePlayState !== 'playerSetting' && mpg.gamePlayState !== 'gameEnd') return true;
+
+      if (notInPlayerSetting(mpg) && gameNotEnd(mpg) && multiPlayerLeft(mpg))
+        return true;
+
       else {
         this.gameDashboardService.removeGameFromLocalStorageByGameId(mpg.gameInfo.key, mpg.gameId);
         return false
@@ -303,12 +311,13 @@ export class MultiPlayerService {
   // Update Game State
   updateMultiPlayerGameState(gameId: string, gameKey: string, newState: any) {
     const mpg = this.getMultiPlayerGame(gameKey);
-    if (!mpg || mpg.gameId !== gameId) {
+    if (!mpg) {
       this.loggerService.log(`Game ${gameKey}(${gameId}) not found in MPG storage.`)
       return;
     }
 
     mpg.gameState = newState;
+    mpg.gameId = newState?.gameId ?? mpg.gameId;
     this.saveMultiPlayersToStorage();
   }
 

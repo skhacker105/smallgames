@@ -1,0 +1,26 @@
+.developer-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.developer-option {
+    height: calc(100% - 30px);
+    width: 100%;
+
+    ::ng-deep .mat-mdc-tab-body-wrapper {
+        flex: 1 auto;
+    }
+}
+
+.header-2 {
+    .action {
+        display: flex;
+
+        mat-icon {
+            margin: auto;
+            color: white;
+            padding-right: 10px;
+        }
+    }
+}

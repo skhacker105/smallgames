@@ -3,12 +3,13 @@ import { QRCodeComponent, QRCodeModule } from 'angularx-qrcode';
 import { IUser } from '../../interfaces';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { UserService } from '../../services/user.service';
-import { Camera, CameraResultType } from '@capacitor/camera';
-import { BrowserQRCodeReader } from '@zxing/browser';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { LoggerService } from '../../services/logger.service';
+import { BarcodeFormat, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { Camera, CameraResultType } from '@capacitor/camera';
 import { CapacitorException } from '@capacitor/core';
+import { BrowserQRCodeReader } from '@zxing/browser';
 
 @Component({
   selector: 'app-scan-user',
@@ -18,12 +19,9 @@ import { CapacitorException } from '@capacitor/core';
   styleUrl: './scan-user.component.scss'
 })
 export class ScanUserComponent {
-  @ViewChild('qrcode', { static: false }) qrcodeElement!: QRCodeComponent;
 
   scannedUser: IUser | null = null;
   scanError = '';
-  localDataAsQRCodeText = '';
-  @ViewChild('qrCode', { static: false }) qrCodeElement!: QRCodeComponent;
 
   constructor(
     public dialogRef: MatDialogRef<ScanUserComponent>,
@@ -31,10 +29,36 @@ export class ScanUserComponent {
     private loggerService: LoggerService,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    this.localDataAsQRCodeText = JSON.stringify(this.userService.me);
   }
 
   async startScan() {
+    this.scannedUser = null;
+    this.scanError = '';
+    const scannedText = await this.scan();
+    if (!scannedText)  return;
+
+    const scannedUser: IUser = JSON.parse(scannedText) as IUser;
+    const validationError = this.validateScannedUser(scannedUser);
+
+    if (!validationError) this.scannedUser = scannedUser;
+    else this.scanError = validationError;
+    
+  }
+
+  async scan(): Promise<string | null> {
+    try {
+      const { barcodes } = await BarcodeScanner.scan({
+        formats: [BarcodeFormat.QrCode],
+      });
+      return barcodes.length > 0 ? barcodes[0].rawValue ?? null : null;
+    } catch (error) {
+      this.scanError = 'QR scan failed';
+      return null;
+    }
+  }
+
+
+  async upload() {
     this.scanError = '';
     try {
       const image = await Camera.getPhoto({
@@ -54,8 +78,6 @@ export class ScanUserComponent {
         }
       }
     } catch (error: any) {
-      console.log({ error })
-      console.log('error type = ', error instanceof CapacitorException)
       if (error && error instanceof CapacitorException && error.message === 'User cancelled photos app') {
         if (this.scannedUser) {
           // do nothing
