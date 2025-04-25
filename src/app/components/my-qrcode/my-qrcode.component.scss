@@ -26,3 +26,29 @@
     align-items: center;
     gap: 20px;
 }
+
+.footer {
+    display: flex;
+    color: white;
+    gap: 10px;
+
+    .name {
+        margin: auto;
+        margin-right: inherit;
+        font-size: large;
+        line-height: 40px;
+    }
+
+    mat-icon {
+        margin: auto;
+        margin-left: inherit;
+        padding: 5px;
+
+        &:hover {
+            cursor: pointer;
+            background-color: white;
+            color: black;
+            animation: normal 1s;
+        }
+    }
+}

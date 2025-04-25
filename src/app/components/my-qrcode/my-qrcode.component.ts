@@ -4,6 +4,7 @@ import { QRCodeComponent, QRCodeModule } from 'angularx-qrcode';
 import { UserService } from '../../services/user.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-my-qrcode',
@@ -15,13 +16,16 @@ import { MatIconModule } from '@angular/material/icon';
 export class MyQRCodeComponent implements OnInit {
 
   userString = '';
+  userName = '';
   @ViewChild('qrCode', { static: false }) qrCodeElement!: QRCodeComponent;
 
   constructor(public userService: UserService, public dialogRef: MatDialogRef<MyQRCodeComponent>) { }
 
   ngOnInit(): void {
-    if (this.userService.me)
-    this.userString = JSON.stringify(this.userService.me)
+    if (!this.userService.me) return;
+
+    this.userString = JSON.stringify(this.userService.me);
+    this.userName = this.userService.me.userName;
   }
 
   downloadQRCode(qrCodeElement: QRCodeComponent) {
@@ -40,5 +44,17 @@ export class MyQRCodeComponent implements OnInit {
         document.body.removeChild(link);
       }
     }, 100); // Delay to allow QR code rendering
+  }
+
+  editMeUser(): void {
+    this.userService.askForMeUser()
+    .afterClosed()
+    .pipe(take(1))
+    .subscribe(userName => {
+      if (!userName || userName === this.userName) return;
+
+      this.userName = userName;
+      this.userService.setMeUser(userName);
+    });
   }
 }

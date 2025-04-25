@@ -16,4 +16,15 @@
         <qrcode [qrdata]="userString" #qrCode [errorCorrectionLevel]="'H'"></qrcode>
     </div>
 
+    <div class="footer">
+        
+        <!-- User Name -->
+        <div class="name" *ngIf="userName">
+            {{ userName }}
+        </div>
+
+        <!-- Edit -->
+        <mat-icon (click)="editMeUser()">edit</mat-icon>
+    </div>
+
 </div>
