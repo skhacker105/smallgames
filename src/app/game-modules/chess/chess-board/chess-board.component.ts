@@ -12,6 +12,8 @@ import { generateHexId, isChessColor } from '../../../utils/support.utils';
 import { UserService } from '../../../services/user.service';
 import { MultiPlayerService } from '../../../services/multi-player.service';
 
+type BoardSquare = Piece | undefined;
+
 @Component({
   selector: 'app-chess-board',
   templateUrl: './chess-board.component.html',
@@ -19,13 +21,14 @@ import { MultiPlayerService } from '../../../services/multi-player.service';
 })
 export class ChessBoardComponent extends BaseComponent {
   chess: Chess; // Instance of the Chess class
-  board: (Piece | undefined)[][] = [];
+  board: BoardSquare[][] = [];
   gameMode: 'humanVsHuman' | 'humanVsComputer' | 'computerVsComputer' = 'humanVsHuman';
   isWhiteTurn: boolean = true;
   gameOver: boolean = false;
   winner: IPlayer | null = null;
   selectedSquare: string | null = null;
   possibleMoves: string[] = []; // List of possible moves for the selected square
+  isBoardRotated = false;
 
   get currentPlayer(): number {
     return this.players.findIndex(p => (p.color === 'white' && this.isWhiteTurn) || (p.color === 'black' && !this.isWhiteTurn))
@@ -86,6 +89,7 @@ export class ChessBoardComponent extends BaseComponent {
     this.selectedSquare = savedState.selectedSquare;
     this.possibleMoves = savedState.possibleMoves;
     this.gameId = savedState.gameId ?? generateHexId(16);
+    this.setBoardRotation();
     this.updateBoard();
   }
 
@@ -208,7 +212,7 @@ export class ChessBoardComponent extends BaseComponent {
       map((players: IPlayer[] | IGameMultiPlayerConnection | undefined) => {
 
         if (!players) {
-            this.router.navigateByUrl('');
+          this.router.navigateByUrl('');
         }
         else {
 
@@ -258,6 +262,21 @@ export class ChessBoardComponent extends BaseComponent {
         this.multiPlayerService.sendGameStart(this.gameId, this.mpg, player.userId)
       }
     });
+
+    this.setBoardRotation();
+    this.updateBoard();
+  }
+
+  setBoardRotation() {
+    // Set board rotate if my player is black
+    let iAmBlack = false;
+    this.players.forEach(player => {
+      if (player.userId === this.userService.me?.userId && player.color === 'black') {
+        iAmBlack = true;
+      }
+    });
+    if (iAmBlack) this.isBoardRotated = true;
+    else this.isBoardRotated = false;
   }
 
   isWhitePlayer(player: IPlayer): boolean {
@@ -287,6 +306,11 @@ export class ChessBoardComponent extends BaseComponent {
   indicesToSquare(i: number, j: number): Square {
     const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
     const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+
+    if (this.isBoardRotated) {
+      files.reverse();
+      ranks.reverse();
+    }
 
     return (files[j] + ranks[i]) as Square;
   }
@@ -391,7 +415,7 @@ export class ChessBoardComponent extends BaseComponent {
         this.multiPlayerService.updateMultiPlayerGamePlayState(this.gameId, this.gameInfo.key, 'gameEnd');
         const winner = this.gameDashboardService.saveGameWinner(this.gameId, (this.winner ?? this.players), (this.winner ? false : true));
         this.multiPlayerService.sendGameEndMessage(this.gameId, this.gameInfo.key, player.userId, winner, this.getGameState());
-        
+
         // Remove MPG Game
         this.multiPlayerService.removeMPGFromLocalStorageByGameId(this.gameInfo.key, this.gameId);
 

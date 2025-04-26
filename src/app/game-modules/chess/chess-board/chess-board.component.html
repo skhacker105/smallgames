@@ -15,16 +15,22 @@
   <div class="chess-board">
     <div *ngFor="let row of board; let i = index" class="row">
       <div *ngFor="let square of row; let j = index" class="square" [attr.indicesToSquare]="indicesToSquare(i, j)"
+        
         [class.selected]="indicesToSquare(i, j) === selectedSquare"
         [class.selected-wtih-moves]="indicesToSquare(i, j) === selectedSquare && possibleMoves.length > 0"
-        [class.possible]="possibleMoves.includes(indicesToSquare(i, j))" [class.dark]="isDarkCell(i, j)"
-        [class.light]="isLightCell(i, j)" (click)="handleSquareClick(i, j)">
-        <span *ngIf="square" class="piece" [class.white-on-white]="isWhiteSquare(square) && isLightCell(i, j)"
-          [class.white-on-black]="isWhiteSquare(square) && isDarkCell(i, j)"
-          [class.black-on-black]="isBlackSquare(square) && isDarkCell(i, j)"
-          [class.black-on-white]="isBlackSquare(square) && isLightCell(i, j)">
-          {{ getPieceSymbol(square) }}
-        </span>
+        [class.possible]="possibleMoves.includes(indicesToSquare(i, j))"
+        
+        [class.dark]="isDarkCell(i, j)" [class.light]="isLightCell(i, j)"
+        
+        (click)="handleSquareClick(i, j)">
+
+          <span *ngIf="square" class="piece" [class.white-on-white]="isWhiteSquare(square) && isLightCell(i, j)"
+            [class.white-on-black]="isWhiteSquare(square) && isDarkCell(i, j)"
+            [class.black-on-black]="isBlackSquare(square) && isDarkCell(i, j)"
+            [class.black-on-white]="isBlackSquare(square) && isLightCell(i, j)">
+            {{ getPieceSymbol(square) }}
+            <!-- {{ indicesToSquare(i, j) }} -->
+          </span>
       </div>
     </div>
   </div>
