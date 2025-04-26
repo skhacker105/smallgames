@@ -238,10 +238,13 @@ export class ChessBoardComponent extends BaseComponent {
 
         this.saveGameState();
 
-        const otherPlayers = this.players.find(p => p.userId !== undefined && p.userId === this.userService.me?.userId) !== undefined;
+        const otherPlayers = this.players.find(p => p.userId && p.userId !== this.userService.me?.userId) !== undefined;
         if (otherPlayers) {
           this.startMultiPlayerGame();
           this.startListening();
+        } else {
+          this.setBoardRotation();
+          this.updateBoard();
         }
       }
     });
@@ -268,6 +271,7 @@ export class ChessBoardComponent extends BaseComponent {
   }
 
   setBoardRotation() {
+    console.log('setBoardRotation')
     // Set board rotate if my player is black
     let iAmBlack = false;
     this.players.forEach(player => {
@@ -293,6 +297,7 @@ export class ChessBoardComponent extends BaseComponent {
   }
 
   updateBoard(): void {
+    console.log('updateBoard')
     this.board = [];
     for (let i = 0; i < 8; i++) {
       this.board[i] = [];

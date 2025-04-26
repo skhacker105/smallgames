@@ -276,7 +276,7 @@ export class SnakeNLadderComponent extends BaseComponent {
         this.playerPositions = Array(this.players.length).fill(0);
         this.saveGameState();
 
-        const otherPlayers = this.players.find(p => p.userId !== undefined && p.userId === this.userService.me?.userId) !== undefined;
+        const otherPlayers = this.players.find(p => p.userId && p.userId !== this.userService.me?.userId) !== undefined;
         if (otherPlayers) {
           this.startMultiPlayerGame();
           this.startListening();
