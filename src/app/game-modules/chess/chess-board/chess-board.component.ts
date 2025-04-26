@@ -271,7 +271,6 @@ export class ChessBoardComponent extends BaseComponent {
   }
 
   setBoardRotation() {
-    console.log('setBoardRotation')
     // Set board rotate if my player is black
     let iAmBlack = false;
     this.players.forEach(player => {
@@ -297,7 +296,6 @@ export class ChessBoardComponent extends BaseComponent {
   }
 
   updateBoard(): void {
-    console.log('updateBoard')
     this.board = [];
     for (let i = 0; i < 8; i++) {
       this.board[i] = [];
